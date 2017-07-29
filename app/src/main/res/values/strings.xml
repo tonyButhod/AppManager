@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Pedometer</string>
+    <string name="main_title">Welcome !</string>
+    <string name="launch">Lancer</string>
+    <string name="stop">Arrêter</string>
+    <string name="save">Sauvegarder</string>
+</resources>
