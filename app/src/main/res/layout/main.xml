@@ -11,26 +11,34 @@
         android:layout_height="wrap_content"
         android:text="@string/main_title"/>
 
-    <TextView
-        android:id="@+id/counter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:layout_below="@id/title_page"/>
-
     <Button
         android:id="@+id/launch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/launch"
-        android:layout_below="@id/counter" />
+        android:layout_below="@id/title_page" />
 
     <Button
         android:id="@+id/stop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/stop"
-        android:layout_below="@id/counter"
+        android:layout_below="@id/title_page"
         android:layout_toRightOf="@id/launch"/>
+
+    <TextView
+        android:id="@+id/steps_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/steps_label"
+        android:layout_below="@id/launch"/>
+
+    <TextView
+        android:id="@+id/steps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:layout_below="@id/launch"
+        android:layout_toRightOf="@id/steps_label"/>
 
 </RelativeLayout>
