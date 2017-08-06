@@ -41,4 +41,10 @@
         android:layout_below="@id/launch"
         android:layout_toRightOf="@id/steps_label"/>
 
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_below="@id/steps"/>
+
 </RelativeLayout>

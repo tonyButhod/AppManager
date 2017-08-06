@@ -7,6 +7,8 @@ import android.database.Cursor;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Created by Tony on 29/07/2017.
@@ -24,7 +26,7 @@ public class PedometerDAO extends DAOBase {
 
     public void storeSteps(Date date, int steps) {
         long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400;
+        dateUTC -= dateUTC % 86400000;
         // First check if an existing row corresponds to the current date.
         Cursor c = mDb.rawQuery("Select "+KEY+" From "+TABLE_NAME+
                 " Where "+DATE+" = ?;", new String[]{String.valueOf(dateUTC)});
@@ -45,7 +47,7 @@ public class PedometerDAO extends DAOBase {
 
     public int getDailySteps(Date date) {
         long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400;
+        dateUTC -= dateUTC % 86400000;
         Cursor c = mDb.rawQuery(
             "Select "+STEPS+" FROM "+TABLE_NAME+
             " Where "+DATE+" = ?;", new String[]{String.valueOf(dateUTC)});
@@ -58,25 +60,26 @@ public class PedometerDAO extends DAOBase {
         }
     }
 
-    public Map<Date, Integer> getSteps(Date startDate, Date endDate) {
+    public SortedMap<Date, Integer> getSteps(Date startDate, Date endDate) {
         long startDateUTC = startDate.getTime();
         long endDateUTC = endDate.getTime();
-        startDateUTC -= startDateUTC % 86400;
-        endDateUTC -= endDateUTC % 86400;
+        startDateUTC -= startDateUTC % 86400000;
+        endDateUTC -= endDateUTC % 86400000;
         Cursor c = mDb.rawQuery(
             "Select * FROM "+TABLE_NAME+
-            " Where "+DATE+" >= ? And "+DATE+" <= endDate",
+            " Where "+DATE+" >= ? And "+DATE+" <= ?"+
+            " Order By "+DATE+" ASC;",
             new String[]{String.valueOf(startDateUTC), String.valueOf(endDateUTC)});
-        Map<Date, Integer> steps = new HashMap<Date, Integer>();
+        SortedMap<Date, Integer> steps = new TreeMap<Date, Integer>();
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             steps.put(new Date(c.getLong(1)), c.getInt(2));
         }
         return steps;
     }
-    public Map<Date, Integer> getSteps(Date startDate) {
+    public SortedMap<Date, Integer> getSteps(Date startDate) {
         return getSteps(startDate, new Date(Long.MAX_VALUE));
     }
-    public Map<Date, Integer> getSteps() {
+    public SortedMap<Date, Integer> getSteps() {
         return getSteps(new Date(Long.MIN_VALUE));
     }
 }

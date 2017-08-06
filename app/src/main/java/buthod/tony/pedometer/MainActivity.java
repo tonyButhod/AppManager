@@ -13,7 +13,16 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.SortedMap;
+
+import com.jjoe64.graphview.DefaultLabelFormatter;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 import buthod.tony.pedometer.database.PedometerDAO;
 
@@ -27,10 +36,10 @@ public class MainActivity extends Activity {
     private int mSteps = 0;
     private int mInitCounter = 0;
     private int mCounter = 0;
-    private int mBackup = 0;
     private TextView mStepsView = null;
     private Button mLaunch = null;
     private Button mStop = null;
+    private GraphView mGraph = null;
 
     private SensorManager mSensorManager = null;
     private Sensor mStepSensor = null;
@@ -46,6 +55,7 @@ public class MainActivity extends Activity {
         mStepsView = (TextView) findViewById(R.id.steps);
         mLaunch = (Button) findViewById(R.id.launch);
         mStop = (Button) findViewById(R.id.stop);
+        mGraph = (GraphView) findViewById(R.id.graph);
         // Initialize sensor.
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mStepSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
@@ -53,9 +63,8 @@ public class MainActivity extends Activity {
         mDao = new PedometerDAO(getApplicationContext());
         // Recover daily steps
         mDao.open();
-        int nb_steps = mDao.getDailySteps(new Date());
+        mSteps = mDao.getDailySteps(new Date());
         mDao.close();
-        mSteps = nb_steps;
 
         // Recover data from a saved instance state
         if (savedInstanceState != null) {
@@ -85,13 +94,47 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 mSensorManager.unregisterListener(mSensorListener, mStepSensor);
                 mIsDetecting = false;
-                mSteps += mCounter;
-                mCounter = 0;
                 mInitCounter = 0;
                 saveInDatabase();
                 Toast.makeText(getApplicationContext(), R.string.stop_toast, Toast.LENGTH_SHORT).show();
+                updateGraph();
             }
         });
+
+        mGraph.getViewport().setScalableY(true); // enables vertical and horizontal zooming and scrolling
+        mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
+            @Override
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    if ((int) value != value)
+                        return "";
+                    // show normal x values
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd-MM");
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis((long) value*86400000);
+                    return formatter.format(calendar.getTime());
+                } else {
+                    if ((int) value != value)
+                        return "";
+                    // show currency for y values
+                    if (value >= 1000)
+                        return String.valueOf(value/1000.0) + "k";
+                    else
+                        return super.formatLabel(value, isValueX);
+                }
+            }
+        });
+        mGraph.getGridLabelRenderer().setNumHorizontalLabels(7);
+        mGraph.getViewport().setYAxisBoundsManual(true);
+        mGraph.getViewport().setXAxisBoundsManual(true);
+        mGraph.getViewport().setMinY(0.0);
+        mGraph.getViewport().setMinX(0.0);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateGraph();
     }
 
     @Override
@@ -102,11 +145,37 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    private void updateGraph() {
+        mDao.open();
+        SortedMap<Date, Integer> steps = mDao.getSteps();
+        mDao.close();
+        DataPoint[] points = new DataPoint[steps.size()];
+        int i = 0;
+        double maxY = 1.0;
+        double minX = steps.firstKey().getTime()/86400000;
+        double maxX = steps.lastKey().getTime()/86400000;
+        for (SortedMap.Entry<Date, Integer> entry : steps.entrySet()) {
+            Date date = entry.getKey();
+            int nb_steps = entry.getValue();
+            if (nb_steps > maxY)
+                maxY = (double) nb_steps;
+            points[i] = new DataPoint(date.getTime()/86400000, nb_steps);
+            i++;
+        }
+        mGraph.removeAllSeries();
+        mGraph.getViewport().setMaxY(maxY);
+        mGraph.getViewport().setMinX(minX);
+        mGraph.getViewport().setMaxX(maxX);
+        mGraph.addSeries(new LineGraphSeries<DataPoint>(points));
+    }
+
     private void saveInDatabase() {
         mDao.open();
-        mDao.storeSteps(new Date(), mSteps+mCounter);
+        mSteps = mDao.getDailySteps(new Date());
+        mSteps += mCounter;
+        mCounter = 0;
+        mDao.storeSteps(new Date(), mSteps);
         mDao.close();
-        mBackup = mCounter;
     }
 
     final SensorEventListener mSensorListener = new SensorEventListener() {
@@ -123,12 +192,13 @@ public class MainActivity extends Activity {
             }
             // Calculate steps taken based on first counter value received.
             mCounter = (int) event.values[0] - mInitCounter;
+            // Save the number of steps in database in case of shutdown
+            if (mCounter >= BACKUP_FREQUENCY) {
+                saveInDatabase();
+                mInitCounter = (int) event.values[0];
+            }
             mStepsView.setText(String.valueOf(mSteps+mCounter));
             mStepsView.invalidate();
-            // Save the number of steps in database in case of shutdown
-            if (mCounter-mBackup >= BACKUP_FREQUENCY) {
-                saveInDatabase();
-            }
         }
 
         @Override
