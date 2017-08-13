@@ -1,0 +1,35 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingLeft="0dp"
+    android:paddingRight="0dp">
+
+    <TextView
+        android:id="@+id/title_page"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/main_title"/>
+
+    <TextView
+        android:id="@+id/steps_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/steps_label"
+        android:layout_below="@id/title_page"/>
+
+    <TextView
+        android:id="@+id/steps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:layout_below="@id/title_page"
+        android:layout_toRightOf="@id/steps_label"/>
+
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graph"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        android:layout_below="@id/steps"/>
+
+</RelativeLayout>

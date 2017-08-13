@@ -5,46 +5,63 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp">
 
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/settings"/>
+
+    </LinearLayout>
+
     <TextView
-        android:id="@+id/title_page"
+        android:id="@+id/pedometer_section_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/main_title"/>
+        android:layout_below="@id/toolbar"
+        android:text="@string/pedometer_section_label"/>
 
-    <Button
-        android:id="@+id/launch"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/pedometer_section"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/launch"
-        android:layout_below="@id/title_page" />
+        android:layout_below="@id/pedometer_section_label">
 
-    <Button
-        android:id="@+id/stop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/stop"
-        android:layout_below="@id/title_page"
-        android:layout_toRightOf="@id/launch"/>
+        <Button
+            android:id="@+id/show_graph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="@string/show_graph"/>
 
-    <TextView
-        android:id="@+id/steps_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/steps_label"
-        android:layout_below="@id/launch"/>
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-    <TextView
-        android:id="@+id/steps"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:layout_below="@id/launch"
-        android:layout_toRightOf="@id/steps_label"/>
+        <Button
+            android:id="@+id/detection_on_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
-    <com.jjoe64.graphview.GraphView
-        android:id="@+id/graph"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:layout_below="@id/steps"/>
+    </LinearLayout>
 
 </RelativeLayout>
