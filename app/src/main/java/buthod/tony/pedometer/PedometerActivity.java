@@ -1,5 +1,6 @@
 package buthod.tony.pedometer;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,7 +13,11 @@ import java.util.SortedMap;
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
 import com.jjoe64.graphview.series.LineGraphSeries;
+import com.jjoe64.graphview.series.OnDataPointTapListener;
+import com.jjoe64.graphview.series.PointsGraphSeries;
+import com.jjoe64.graphview.series.Series;
 
 /**
  * Created by Tony on 22/07/2017.
@@ -21,7 +26,10 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 public class PedometerActivity extends RootActivity {
 
     private TextView mStepsView = null;
+    private TextView mTapInformation = null;
     private GraphView mGraph = null;
+
+    private Calendar calendar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +37,7 @@ public class PedometerActivity extends RootActivity {
         setContentView(R.layout.pedometer);
 
         mStepsView = (TextView) findViewById(R.id.steps);
+        mTapInformation = (TextView) findViewById(R.id.tap_information);
         mGraph = (GraphView) findViewById(R.id.graph);
         // Update steps view every time new steps are detected
         mPedometer.setOnNewStepsListener(new PedometerManager.OnNewStepsListener() {
@@ -38,8 +47,10 @@ public class PedometerActivity extends RootActivity {
                 mStepsView.invalidate();
             }
         });
+        calendar = Calendar.getInstance();
 
-        mGraph.getViewport().setScalableY(true); // enables vertical and horizontal zooming and scrolling
+        mGraph.getViewport().setScalable(true);
+        mGraph.getViewport().setScalableY(false); // enables vertical and horizontal zooming and scrolling
         mGraph.getGridLabelRenderer().setLabelFormatter(new DefaultLabelFormatter() {
             @Override
             public String formatLabel(double value, boolean isValueX) {
@@ -48,7 +59,6 @@ public class PedometerActivity extends RootActivity {
                         return "";
                     // show normal x values
                     SimpleDateFormat formatter = new SimpleDateFormat("dd-MM");
-                    Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis((long) value*86400000);
                     return formatter.format(calendar.getTime());
                 } else {
@@ -62,7 +72,7 @@ public class PedometerActivity extends RootActivity {
                 }
             }
         });
-        mGraph.getGridLabelRenderer().setNumHorizontalLabels(7);
+        mGraph.getGridLabelRenderer().setNumHorizontalLabels(4);
         mGraph.getViewport().setYAxisBoundsManual(true);
         mGraph.getViewport().setXAxisBoundsManual(true);
         mGraph.getViewport().setMinY(0.0);
@@ -94,6 +104,27 @@ public class PedometerActivity extends RootActivity {
         mGraph.getViewport().setMaxY(maxY);
         mGraph.getViewport().setMinX(minX);
         mGraph.getViewport().setMaxX(maxX);
-        mGraph.addSeries(new LineGraphSeries<DataPoint>(points));
+
+        // Draw line series
+        LineGraphSeries<DataPoint> lineSeries = new LineGraphSeries<DataPoint>(points);
+        lineSeries.setColor(Color.LTGRAY);
+        lineSeries.setThickness(2);
+        mGraph.addSeries(lineSeries);
+        // Draw points series
+        PointsGraphSeries<DataPoint> pointsSeries = new PointsGraphSeries<DataPoint>(points);
+        pointsSeries.setShape(PointsGraphSeries.Shape.POINT);
+        pointsSeries.setSize(5.0f);
+        // Add listener to show a particular data information
+        pointsSeries.setOnDataPointTapListener(new OnDataPointTapListener() {
+            @Override
+            public void onTap(Series series, DataPointInterface dataPoint) {
+                SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
+                calendar.setTimeInMillis((long) dataPoint.getX()*86400000);
+                String tapDate = formatter.format(calendar.getTime());
+                int tapSteps = (int) dataPoint.getY();
+                mTapInformation.setText("Le " + tapDate + " : " + tapSteps + " pas");
+            }
+        });
+        mGraph.addSeries(pointsSeries);
     }
 }

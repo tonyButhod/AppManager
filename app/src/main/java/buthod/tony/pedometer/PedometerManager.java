@@ -5,7 +5,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.widget.TextView;
 
 import java.util.Date;
 import java.util.SortedMap;
@@ -49,7 +48,8 @@ public class PedometerManager {
         mSteps = mDao.getDailySteps(new Date());
         mSteps += mCounter;
         mCounter = 0;
-        mDao.storeSteps(new Date(), mSteps);
+        if (mSteps != 0)
+            mDao.storeSteps(new Date(), mSteps);
         mDao.close();
     }
 
