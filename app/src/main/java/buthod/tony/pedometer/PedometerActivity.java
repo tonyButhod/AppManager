@@ -87,6 +87,9 @@ public class PedometerActivity extends RootActivity {
 
     private void updateGraph() {
         SortedMap<Date, Integer> steps = mPedometer.getAllSteps();
+        if (steps.size() == 0)
+            return;
+
         DataPoint[] points = new DataPoint[steps.size()];
         int i = 0;
         double maxY = 1.0;

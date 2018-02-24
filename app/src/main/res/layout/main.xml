@@ -64,4 +64,11 @@
 
     </LinearLayout>
 
+    <Button
+        android:id="@+id/expenses_section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Expenses"
+        android:layout_below="@id/pedometer_section"/>
+
 </RelativeLayout>

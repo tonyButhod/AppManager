@@ -17,6 +17,7 @@ public class MainActivity extends RootActivity {
     private Button mSettings = null;
     private Button mGraphPedometer = null;
     private Button mOnOff = null;
+    private Button mExpenses = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +72,16 @@ public class MainActivity extends RootActivity {
                     mOnOff.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.green));
                     mOnOff.setText(R.string.on);
                 }
+            }
+        });
+
+        ///////////////// Expenses ///////////////
+        mExpenses = (Button) findViewById(R.id.expenses_section);
+        mExpenses.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent expensesIntent = new Intent(getBaseContext(), ExpensesActivity.class);
+                startActivity(expensesIntent);
             }
         });
     }

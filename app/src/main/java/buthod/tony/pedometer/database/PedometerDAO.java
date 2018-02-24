@@ -74,6 +74,7 @@ public class PedometerDAO extends DAOBase {
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             steps.put(new Date(c.getLong(1)), c.getInt(2));
         }
+        c.close();
         return steps;
     }
     public SortedMap<Date, Integer> getSteps(Date startDate) {

@@ -28,6 +28,10 @@
             android:name=".PedometerActivity"
             android:label="@string/pedometer_section_label">
         </activity>
+        <activity
+            android:name=".ExpensesActivity"
+            android:label="@string/expenses_section_label">
+        </activity>
     </application>
 
 </manifest>
