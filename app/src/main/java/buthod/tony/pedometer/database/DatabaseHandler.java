@@ -28,12 +28,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             EXPENSES_TYPE = "type",
             EXPENSES_PRICE = "price",
             EXPENSES_DATE = "date",
+            EXPENSES_COMMENT = "comment",
             EXPENSES_TABLE_CREATE =
                     "Create Table "+EXPENSES_TABLE_NAME+" ("+
                             EXPENSES_KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
                             EXPENSES_TYPE+" INTEGER, "+
                             EXPENSES_PRICE+" INTEGER, "+
-                            EXPENSES_DATE+" INTEGER);",
+                            EXPENSES_DATE+" INTEGER, "+
+                            EXPENSES_COMMENT+" VARCHAR(50));",
             EXPENSES_TABLE_DROP =
                     "Drop Table If Exists "+EXPENSES_TABLE_NAME+";";
 

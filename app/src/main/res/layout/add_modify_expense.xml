@@ -24,16 +24,28 @@
         android:layout_toEndOf="@id/price_label"
         android:layout_toRightOf="@id/price_label"/>
 
-    <!-- TODO : Allow the user to select a date. -->
+    <DatePicker
+        android:id="@+id/date_picker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:datePickerMode="spinner"
+        android:calendarViewShown="false"
+        android:layout_below="@id/price_label">
 
-    <!--<DatePicker-->
-        <!--android:id="@+id/date_picker"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:datePickerMode="spinner"-->
-        <!--android:calendarViewShown="false"-->
-        <!--android:layout_below="@id/price_label">-->
+    </DatePicker>
 
-    <!--</DatePicker>-->
+    <TextView
+        android:id="@+id/comment_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/comment"
+        android:layout_below="@id/date_picker"/>
+
+    <EditText
+        android:id="@+id/expense_comment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxLength="50"
+        android:layout_below="@id/comment_label"/>
 
 </RelativeLayout>

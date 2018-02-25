@@ -14,22 +14,26 @@
     <string name="show_graph">Show graph steps</string>
 
     <!-- Expenses -->
+    <string name="expenses_section_label">Dépenses</string>
     <string name="add_expense">Ajouter une dépense</string>
+    <string name="modify_expense">Modifier la dépense</string>
     <string name="price">Prix</string>
-    <string name="expenses_section_label">Expenses</string>
+    <string name="comment">Commentaire</string>
     <string-array name="expense_types">
         <item>Alimentation générale</item>
         <item>Soirées</item>
         <item>Restaurants</item>
         <item>Charges</item>
         <item>Transports</item>
-        <item>Revenu</item>
+        <item>Loisirs</item>
     </string-array>
     <string name="delete_expense">Supprimer cette dépense ?</string>
 
     <string name="settings">Settings</string>
     <string name="cancel">Annuler</string>
     <string name="add">Ajouter</string>
+    <string name="modify">Modifier</string>
+    <string name="delete">Supprimer</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
 
