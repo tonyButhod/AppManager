@@ -80,7 +80,7 @@ public class MainActivity extends RootActivity {
         mExpenses.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent expensesIntent = new Intent(getBaseContext(), ExpensesActivity.class);
+                Intent expensesIntent = new Intent(getBaseContext(), AccountActivity.class);
                 startActivity(expensesIntent);
             }
         });

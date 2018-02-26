@@ -23,21 +23,21 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         "Drop Table If Exists "+PEDOMETER_TABLE_NAME+";";
 
     public static final String
-            EXPENSES_TABLE_NAME = "Expenses",
-            EXPENSES_KEY = "id",
-            EXPENSES_TYPE = "type",
-            EXPENSES_PRICE = "price",
-            EXPENSES_DATE = "date",
-            EXPENSES_COMMENT = "comment",
+            ACCOUNT_TABLE_NAME = "Account",
+            TRANSACTION_KEY = "id",
+            TRANSACTION_TYPE = "type",
+            TRANSACTION_PRICE = "price",
+            TRANSACTION_DATE = "date",
+            TRANSACTION_COMMENT = "comment",
             EXPENSES_TABLE_CREATE =
-                    "Create Table "+EXPENSES_TABLE_NAME+" ("+
-                            EXPENSES_KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
-                            EXPENSES_TYPE+" INTEGER, "+
-                            EXPENSES_PRICE+" INTEGER, "+
-                            EXPENSES_DATE+" INTEGER, "+
-                            EXPENSES_COMMENT+" VARCHAR(50));",
+                    "Create Table "+ ACCOUNT_TABLE_NAME +" ("+
+                            TRANSACTION_KEY +" INTEGER PRIMARY KEY AUTOINCREMENT, "+
+                            TRANSACTION_TYPE +" INTEGER, "+
+                            TRANSACTION_PRICE +" INTEGER, "+
+                            TRANSACTION_DATE +" INTEGER, "+
+                            TRANSACTION_COMMENT +" VARCHAR(50));",
             EXPENSES_TABLE_DROP =
-                    "Drop Table If Exists "+EXPENSES_TABLE_NAME+";";
+                    "Drop Table If Exists "+ ACCOUNT_TABLE_NAME +";";
 
 
     public DatabaseHandler(Context context, String name, SQLiteDatabase.CursorFactory factory,

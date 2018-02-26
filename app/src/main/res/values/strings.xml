@@ -13,21 +13,33 @@
     <string name="pedometer_section_label">Pedometer</string>
     <string name="show_graph">Show graph steps</string>
 
-    <!-- Expenses -->
-    <string name="expenses_section_label">Dépenses</string>
-    <string name="add_expense">Ajouter une dépense</string>
+    <!-- Account -->
+    <string name="account_section_label">Dépenses / Crédits</string>
+    <string name="add_expense">Nouvelle dépense</string>
+    <string name="add_credit">Nouveau crédit</string>
     <string name="modify_expense">Modifier la dépense</string>
+    <string name="modify_credit">Modifier le crédit</string>
     <string name="price">Prix</string>
     <string name="comment">Commentaire</string>
     <string-array name="expense_types">
         <item>Alimentation générale</item>
         <item>Soirées</item>
         <item>Restaurants</item>
+        <item>Loyer</item>
         <item>Charges</item>
+        <item>Internet, TV, Téléphone</item>
         <item>Transports</item>
         <item>Loisirs</item>
+        <item>Autres</item>
+    </string-array>
+    <string-array name="credit_types">
+        <item>Salaire</item>
+        <item>Aide au logement</item>
+        <item>Famille</item>
+        <item>Autres</item>
     </string-array>
     <string name="delete_expense">Supprimer cette dépense ?</string>
+    <string name="delete_credit">Supprimer ce crédit ?</string>
 
     <string name="settings">Settings</string>
     <string name="cancel">Annuler</string>

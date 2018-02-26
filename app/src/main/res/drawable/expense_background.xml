@@ -5,7 +5,22 @@
             <item>
                 <shape>
                     <solid
-                        android:color="@color/light_gray" />
+                        android:color="@color/soft_red" />
+                    <padding
+                        android:bottom="10dp"
+                        android:left="10dp"
+                        android:right="10dp"
+                        android:top="10dp"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+    <item android:state_selected="true">
+        <layer-list>
+            <item>
+                <shape>
+                    <solid
+                        android:color="@color/soft_red" />
                     <padding
                         android:bottom="10dp"
                         android:left="10dp"
@@ -20,7 +35,7 @@
             <item>
                 <shape>
                     <solid
-                        android:color="@android:color/white" />
+                        android:color="@color/light_soft_red" />
                     <padding
                         android:bottom="10dp"
                         android:left="10dp"

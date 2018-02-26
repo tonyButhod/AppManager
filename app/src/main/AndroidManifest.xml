@@ -29,8 +29,8 @@
             android:label="@string/pedometer_section_label">
         </activity>
         <activity
-            android:name=".ExpensesActivity"
-            android:label="@string/expenses_section_label">
+            android:name=".AccountActivity"
+            android:label="@string/account_section_label">
         </activity>
     </application>
 

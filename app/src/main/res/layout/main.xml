@@ -68,7 +68,7 @@
         android:id="@+id/expenses_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/expenses_section_label"
+        android:text="@string/account_section_label"
         android:layout_below="@id/pedometer_section"/>
 
 </RelativeLayout>

@@ -2,7 +2,6 @@ package buthod.tony.pedometer;
 
 import android.content.DialogInterface;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -24,88 +23,116 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-import buthod.tony.pedometer.database.ExpensesDAO;
+import buthod.tony.pedometer.database.AccountDAO;
 
 /**
  * Created by Tony on 09/10/2017.
  */
 
-public class ExpensesActivity extends RootActivity {
+public class AccountActivity extends RootActivity {
 
     private Button mAddExpense = null;
-    private LinearLayout mExpensesLayout = null;
+    private Button mAddCredit = null;
+    private LinearLayout mTransactionsLayout = null;
 
-    private ExpensesDAO mExpensesDAO = null;
+    private AccountDAO mDao = null;
     private ArrayAdapter<CharSequence> mExpenseTypes = null;
+    private ArrayAdapter<CharSequence> mCreditTypes = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.expenses);
+        setContentView(R.layout.account);
 
         mAddExpense = (Button) findViewById(R.id.add_expense);
-        mExpensesLayout = (LinearLayout) findViewById(R.id.expenses_layout);
-        mExpensesDAO = new ExpensesDAO(getBaseContext());
+        mAddCredit = (Button) findViewById(R.id.add_credit);
+        mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
+        mDao = new AccountDAO(getBaseContext());
 
-        // Add type of expenses
+        // Add type of expenses and credits
         mExpenseTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
         mExpenseTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        String[] types = getResources().getStringArray(R.array.expense_types);
-        mExpenseTypes.addAll(types);
+        mExpenseTypes.addAll(getResources().getStringArray(R.array.expense_types));
+        mCreditTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+        mCreditTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mCreditTypes.addAll(getResources().getStringArray(R.array.credit_types));
 
-        // Add an expense part
+        // Add an expense or a credit part
         mAddExpense.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAddExpenseDialog();
+                showAddTransactionDialog(false);
             }
         });
-        // Show all expenses done
-        updateExpensesLayout();
+        mAddCredit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAddTransactionDialog(true);
+            }
+        });
+        // Show all transactions done
+        updateTransactionsLayout();
     }
 
     /**
-     * Read all expenses stored in database and update the corresponding layout.
+     * Read all transactions stored in database and update the corresponding layout.
      */
-    private void updateExpensesLayout() {
-        mExpensesDAO.open();
-        ArrayList<ExpensesDAO.ExpenseInfo> expenses = mExpensesDAO.getExpenses();
-        mExpensesDAO.close();
-        mExpensesLayout.removeAllViews();
-        for (int i = 0; i < expenses.size(); ++i) {
-            ExpensesDAO.ExpenseInfo expenseInfo = expenses.get(i);
-            addExpenseToLayout(expenseInfo);
+    private void updateTransactionsLayout() {
+        mDao.open();
+        ArrayList<AccountDAO.TransactionInfo> transactions = mDao.getTransactions();
+        mDao.close();
+        mTransactionsLayout.removeAllViews();
+        for (int i = 0; i < transactions.size(); ++i) {
+            addTransactionToLayout(transactions.get(i));
         }
     }
 
     /**
-     * Add an expense with the right format in the expenses layout.
-     * @param expense Class containing all expense informations (id, type, price, date).
+     * Add an expense/credit with the right format in the transactions layout.
+     * @param trans Class containing all expenses/credits information (id, type, price, date).
      */
-    private void addExpenseToLayout(final ExpensesDAO.ExpenseInfo expense) {
-        // Display information about the expense
+    private void addTransactionToLayout(final AccountDAO.TransactionInfo trans) {
+        // Check if it is an expense or a credit
+        final boolean isCredit = (trans.type < 0);
+        // Display information about the expense/credit
         String resumeText = "";
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy");
-        resumeText += formatter.format(expense.date) + " :    ";
-        resumeText += (expense.price / 100.0f) + "€    ";
-        resumeText += "--- " + mExpenseTypes.getItem(expense.type);
-        resumeText += "\n   " + expense.comment;
-        TextView expenseView = new TextView(getBaseContext());
-        expenseView.setText(resumeText);
-        expenseView.setTextColor(Color.GRAY);
-        expenseView.setTextSize(12f);
-        expenseView.setBackground(ContextCompat.getDrawable(getBaseContext(),
-                R.drawable.gray_on_click));
-        // Add a long click event to delete the expense
-        expenseView.setOnLongClickListener(new View.OnLongClickListener() {
+        resumeText += formatter.format(trans.date) + " :    ";
+        resumeText += (trans.price / 100.0f) + "€    ";
+        if (isCredit) {
+            // It is a credit
+            resumeText += "--- " + mCreditTypes.getItem(- trans.type - 1);
+        }
+        else {
+            // It is an expense
+            resumeText += "--- " + mExpenseTypes.getItem(trans.type);
+        }
+        resumeText += "\n   " + trans.comment;
+        TextView transactionView = new TextView(getBaseContext());
+        transactionView.setText(resumeText);
+        transactionView.setTextSize(12f);
+        if (isCredit) {
+            transactionView.setTextColor(ContextCompat.getColor(getBaseContext(),
+                    R.color.dark_soft_green));
+            transactionView.setBackground(ContextCompat.getDrawable(getBaseContext(),
+                    R.drawable.credit_background));
+        }
+        else {
+            transactionView.setTextColor(ContextCompat.getColor(getBaseContext(),
+                    R.color.dark_soft_red));
+            transactionView.setBackground(ContextCompat.getDrawable(getBaseContext(),
+                    R.drawable.expense_background));
+        }
+        // Add a long click event to delete the transaction
+        transactionView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                // Put the background color in gray of the selected expense
-                v.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.light_gray));
+                // Set the view as selected
+                v.setSelected(true);
 
                 // Show a popup menu
-                final PopupMenu popup = new PopupMenu(ExpensesActivity.this, v);
-                popup.inflate(R.menu.expense_menu);
+                final PopupMenu popup = new PopupMenu(AccountActivity.this, v);
+                popup.inflate(R.menu.transaction_menu);
                 // Registering clicks on the popup menu
                 final View currentView = v;
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -114,10 +141,10 @@ public class ExpensesActivity extends RootActivity {
                         popup.dismiss();
                         switch(item.getItemId()) {
                             case R.id.modify:
-                                showModifyExpenseDialog(expense.id);
+                                showModifyTransactionDialog(trans.id, isCredit);
                                 break;
                             case R.id.delete:
-                                showDeleteExpenseDialog(expense.id, currentView);
+                                showDeleteTransactionDialog(trans.id, currentView, isCredit);
                                 break;
                         }
                         return true;
@@ -126,9 +153,8 @@ public class ExpensesActivity extends RootActivity {
                 popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
                     @Override
                     public void onDismiss(PopupMenu menu) {
-                        // Put back the original background
-                        currentView.setBackground(ContextCompat.getDrawable(getBaseContext(),
-                                R.drawable.gray_on_click));
+                        // Unselect the view
+                        currentView.setSelected(false);
                     }
                 });
                 popup.show();
@@ -136,22 +162,22 @@ public class ExpensesActivity extends RootActivity {
             }
         });
         // Finally add the view in the linear layout
-        mExpensesLayout.addView(expenseView);
+        mTransactionsLayout.addView(transactionView);
     }
 
-    private void showAddExpenseDialog() {
+    private void showAddTransactionDialog(final boolean isCredit) {
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.add_expense);
+        builder.setTitle(isCredit ? R.string.add_credit : R.string.add_expense);
         // Set the view of the alert dialog
         LayoutInflater inflater = getLayoutInflater();
-        View alertView = inflater.inflate(R.layout.add_modify_expense, null);
+        View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
         builder.setView(alertView);
         // Get useful view
-        final Spinner expenseType = (Spinner) alertView.findViewById(R.id.expense_type);
-        final EditText expensePrice = (EditText) alertView.findViewById(R.id.expense_price);
-        final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date_picker);
-        final EditText expenseComment = (EditText) alertView.findViewById(R.id.expense_comment);
+        final Spinner typeSpinner = (Spinner) alertView.findViewById(R.id.type);
+        final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
+        final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
+        final EditText commentEdit = (EditText) alertView.findViewById(R.id.comment);
         // Set default date of the date picker
         final Calendar c = Calendar.getInstance();
         int year = c.get(Calendar.YEAR);
@@ -159,7 +185,7 @@ public class ExpensesActivity extends RootActivity {
         int day = c.get(Calendar.DAY_OF_MONTH);
         datePicker.init(year, month, day, null);
         // Populate the spinner of alert dialog with types.
-        expenseType.setAdapter(mExpenseTypes);
+        typeSpinner.setAdapter(isCredit ? mCreditTypes : mExpenseTypes);
         // Set up the buttons
         Resources res = getResources();
         builder.setNegativeButton(res.getString(R.string.cancel),
@@ -178,8 +204,9 @@ public class ExpensesActivity extends RootActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        int type = expenseType.getSelectedItemPosition();
-                        String priceString = expensePrice.getText().toString();
+                        int type = typeSpinner.getSelectedItemPosition();
+                        type = (isCredit) ? -type - 1 : type;
+                        String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
                             Toast.makeText(getApplicationContext(), "Ajoutez un prix", Toast.LENGTH_SHORT).show();
                         }
@@ -199,11 +226,11 @@ public class ExpensesActivity extends RootActivity {
                             c.set(Calendar.MONTH, datePicker.getMonth());
                             c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
                             Date date = c.getTime();
-                            String comment = expenseComment.getText().toString();
-                            mExpensesDAO.open();
-                            mExpensesDAO.addExpense(type, price, date, comment);
-                            mExpensesDAO.close();
-                            updateExpensesLayout();
+                            String comment = commentEdit.getText().toString();
+                            mDao.open();
+                            mDao.addTransaction(type, price, date, comment);
+                            mDao.close();
+                            updateTransactionsLayout();
                             alertDialog.dismiss();
                         }
                     }
@@ -213,36 +240,42 @@ public class ExpensesActivity extends RootActivity {
         alertDialog.show();
     }
 
-    private void showModifyExpenseDialog(final long expenseID) {
+    private void showModifyTransactionDialog(final long transactionID, final boolean isCredit) {
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.modify_expense);
+        builder.setTitle(isCredit ? R.string.modify_expense : R.string.modify_credit);
         // Set the view of the alert dialog
         LayoutInflater inflater = getLayoutInflater();
-        View alertView = inflater.inflate(R.layout.add_modify_expense, null);
+        View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
         builder.setView(alertView);
         // Get useful views
-        final Spinner expenseType = (Spinner) alertView.findViewById(R.id.expense_type);
-        final EditText expensePrice = (EditText) alertView.findViewById(R.id.expense_price);
-        final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date_picker);
-        final EditText expenseComment = (EditText) alertView.findViewById(R.id.expense_comment);
-        // Get expense information
-        mExpensesDAO.open();
-        final ExpensesDAO.ExpenseInfo expenseInfo = mExpensesDAO.getExpense(expenseID);
-        mExpensesDAO.close();
+        final Spinner typeSpinner = (Spinner) alertView.findViewById(R.id.type);
+        final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
+        final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
+        final EditText commentEdit = (EditText) alertView.findViewById(R.id.comment);
+        // Get transaction information
+        mDao.open();
+        final AccountDAO.TransactionInfo transaction = mDao.getTransaction(transactionID);
+        mDao.close();
         // Set default date of the date picker
         final Calendar c = Calendar.getInstance();
-        c.setTime(expenseInfo.date);
+        c.setTime(transaction.date);
         int year = c.get(Calendar.YEAR);
         int month = c.get(Calendar.MONTH);
         int day = c.get(Calendar.DAY_OF_MONTH);
         datePicker.init(year, month, day, null);
         // Populate the spinner of alert dialog with types.
-        expenseType.setAdapter(mExpenseTypes);
-        expenseType.setSelection(expenseInfo.type);
+        if (isCredit) {
+            typeSpinner.setAdapter(mCreditTypes);
+            typeSpinner.setSelection(-transaction.type - 1);
+        }
+        else {
+            typeSpinner.setAdapter(mExpenseTypes);
+            typeSpinner.setSelection(transaction.type);
+        }
         // Set the saved price and comment in the edit text
-        expensePrice.setText(String.valueOf(expenseInfo.price / 100.0f));
-        expenseComment.setText(expenseInfo.comment);
+        priceEdit.setText(String.valueOf(transaction.price / 100.0f));
+        commentEdit.setText(transaction.comment);
         // Set up the buttons
         Resources res = getResources();
         builder.setNegativeButton(res.getString(R.string.cancel),
@@ -261,8 +294,9 @@ public class ExpensesActivity extends RootActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        int type = expenseType.getSelectedItemPosition();
-                        String priceString = expensePrice.getText().toString();
+                        int type = typeSpinner.getSelectedItemPosition();
+                        type = (isCredit) ? -type - 1 : type;
+                        String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
                             Toast.makeText(getApplicationContext(), "Ajoutez un prix", Toast.LENGTH_SHORT).show();
                         }
@@ -282,11 +316,11 @@ public class ExpensesActivity extends RootActivity {
                             c.set(Calendar.MONTH, datePicker.getMonth());
                             c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
                             Date date = c.getTime();
-                            String comment = expenseComment.getText().toString();
-                            mExpensesDAO.open();
-                            mExpensesDAO.modifyExpense(expenseInfo.id, type, price, date, comment);
-                            mExpensesDAO.close();
-                            updateExpensesLayout();
+                            String comment = commentEdit.getText().toString();
+                            mDao.open();
+                            mDao.modifyTransaction(transaction.id, type, price, date, comment);
+                            mDao.close();
+                            updateTransactionsLayout();
                             alertDialog.dismiss();
                         }
                     }
@@ -296,10 +330,11 @@ public class ExpensesActivity extends RootActivity {
         alertDialog.show();
     }
 
-    private void showDeleteExpenseDialog(final long expenseID, final View v) {
+    private void showDeleteTransactionDialog(final long transactionID, final View v,
+                                             boolean isCredit){
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(R.string.delete_expense);
+        builder.setTitle(isCredit ? R.string.delete_credit : R.string.delete_expense);
         // Set up the buttons
         Resources res = getResources();
         builder.setNegativeButton(res.getString(R.string.no),
@@ -318,10 +353,10 @@ public class ExpensesActivity extends RootActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        mExpensesDAO.open();
-                        mExpensesDAO.deleteExpense(expenseID);
-                        mExpensesDAO.close();
-                        mExpensesLayout.removeView(v);
+                        mDao.open();
+                        mDao.deleteTransaction(transactionID);
+                        mDao.close();
+                        mTransactionsLayout.removeView(v);
                         alertDialog.dismiss();
                     }
                 });

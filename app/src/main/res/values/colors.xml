@@ -6,5 +6,10 @@
     <color name="red">#FF0000</color>
     <color name="green">#00AA00</color>
 
-    <color name="light_gray">#CCCCCC</color>
+    <color name="light_soft_green">#ddf2dd</color>
+    <color name="soft_green">#aadcaa</color>
+    <color name="dark_soft_green">#1e5b1c</color>
+    <color name="light_soft_red">#f1e2e2</color>
+    <color name="soft_red">#e1b3b3</color>
+    <color name="dark_soft_red">#601818</color>
 </resources>
