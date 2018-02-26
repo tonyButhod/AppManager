@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -31,6 +32,7 @@ import buthod.tony.pedometer.database.AccountDAO;
 
 public class AccountActivity extends RootActivity {
 
+    private ImageButton mBackButton = null;
     private Button mAddExpense = null;
     private Button mAddCredit = null;
     private LinearLayout mTransactionsLayout = null;
@@ -44,6 +46,7 @@ public class AccountActivity extends RootActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account);
 
+        mBackButton = (ImageButton) findViewById(R.id.back_button);
         mAddExpense = (Button) findViewById(R.id.add_expense);
         mAddCredit = (Button) findViewById(R.id.add_credit);
         mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
@@ -57,6 +60,14 @@ public class AccountActivity extends RootActivity {
         mCreditTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mCreditTypes.addAll(getResources().getStringArray(R.array.credit_types));
 
+
+        // Finish the activity if back button is pressed
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         // Add an expense or a credit part
         mAddExpense.setOnClickListener(new View.OnClickListener() {
             @Override

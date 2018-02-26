@@ -2,7 +2,9 @@ package buthod.tony.pedometer;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -25,6 +27,7 @@ import com.jjoe64.graphview.series.Series;
 
 public class PedometerActivity extends RootActivity {
 
+    private ImageButton mBackButton = null;
     private TextView mStepsView = null;
     private TextView mTapInformation = null;
     private GraphView mGraph = null;
@@ -36,9 +39,18 @@ public class PedometerActivity extends RootActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.pedometer);
 
+        mBackButton = (ImageButton) findViewById(R.id.back_button);
         mStepsView = (TextView) findViewById(R.id.steps);
         mTapInformation = (TextView) findViewById(R.id.tap_information);
         mGraph = (GraphView) findViewById(R.id.graph);
+
+        // Finish the activity if back button is pressed
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
         // Update steps view every time new steps are detected
         mPedometer.setOnNewStepsListener(new PedometerManager.OnNewStepsListener() {
             @Override

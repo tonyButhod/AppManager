@@ -5,11 +5,31 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp">
 
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp">
+
+        <ImageButton
+            android:id="@+id/back_button"
+            style="@style/BackButton"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/title_page"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/main_title"/>
+        android:text="@string/main_title"
+        android:layout_below="@id/toolbar"/>
 
     <TextView
         android:id="@+id/steps_label"
