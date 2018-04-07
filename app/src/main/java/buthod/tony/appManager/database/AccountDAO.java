@@ -1,4 +1,4 @@
-package buthod.tony.pedometer.database;
+package buthod.tony.appManager.database;
 
 import android.content.ContentValues;
 import android.content.Context;

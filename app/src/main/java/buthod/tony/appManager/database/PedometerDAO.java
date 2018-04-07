@@ -1,12 +1,10 @@
-package buthod.tony.pedometer.database;
+package buthod.tony.appManager.database;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 

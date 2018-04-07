@@ -1,4 +1,4 @@
-package buthod.tony.pedometer;
+package buthod.tony.appManager;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -9,7 +9,7 @@ import android.hardware.SensorManager;
 import java.util.Date;
 import java.util.SortedMap;
 
-import buthod.tony.pedometer.database.PedometerDAO;
+import buthod.tony.appManager.database.PedometerDAO;
 
 /**
  * Created by Tony on 09/08/2017.

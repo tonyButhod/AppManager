@@ -1,4 +1,4 @@
-package buthod.tony.pedometer;
+package buthod.tony.appManager;
 
 import android.app.Activity;
 import android.content.Context;

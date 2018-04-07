@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     buildToolsVersion "26.0.0"
     defaultConfig {
-        applicationId "buthod.tony.pedometer"
+        applicationId "buthod.tony.appManager"
         minSdkVersion 16
         targetSdkVersion 25
         versionCode 1

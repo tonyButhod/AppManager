@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 
-    package="buthod.tony.pedometer">
+    package="buthod.tony.appManager">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
@@ -13,7 +13,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".MainActivity"
+            android:name="buthod.tony.appManager.MainActivity"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -21,15 +21,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name="buthod.tony.appManager.SettingsActivity"
             android:label="@string/settings">
         </activity>
         <activity
-            android:name=".PedometerActivity"
+            android:name="buthod.tony.appManager.PedometerActivity"
             android:label="@string/pedometer_section_label">
         </activity>
         <activity
-            android:name=".AccountActivity"
+            android:name="buthod.tony.appManager.AccountActivity"
             android:label="@string/account_section_label">
         </activity>
     </application>

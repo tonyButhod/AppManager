@@ -1,4 +1,4 @@
-package buthod.tony.pedometer.database;
+package buthod.tony.appManager.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

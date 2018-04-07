@@ -1,6 +1,6 @@
 <resources>
     <!-- Pedometer -->
-    <string name="app_name">Pedometer</string>
+    <string name="app_name">AppManager</string>
     <string name="main_title">Gestion du podomètre</string>
     <string name="launch">Lancer</string>
     <string name="launch_toast">Détection lancée !</string>

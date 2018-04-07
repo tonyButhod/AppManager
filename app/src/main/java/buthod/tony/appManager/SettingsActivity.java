@@ -1,4 +1,4 @@
-package buthod.tony.pedometer;
+package buthod.tony.appManager;
 
 import android.app.Activity;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 
 /**
  * Created by Tony on 06/08/2017.

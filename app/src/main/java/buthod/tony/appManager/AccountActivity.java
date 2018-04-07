@@ -1,4 +1,4 @@
-package buthod.tony.pedometer;
+package buthod.tony.appManager;
 
 import android.content.DialogInterface;
 import android.content.res.Resources;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-import buthod.tony.pedometer.database.AccountDAO;
+import buthod.tony.appManager.database.AccountDAO;
 
 /**
  * Created by Tony on 09/10/2017.
