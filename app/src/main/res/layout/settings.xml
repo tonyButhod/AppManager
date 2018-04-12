@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp">
+
+        <ImageButton
+            android:id="@+id/back_button"
+            style="@style/BackButton"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/save_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/save_data"
+        android:layout_below="@id/toolbar"/>
+
+    <!-- Button used to import data from JSON file
+         It is used for development purpose in case the database is cleared -->
+    <Button
+        android:id="@+id/load_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="@string/load_data"
+        android:layout_below="@id/save_data"/>
+
+    <CheckBox
+        android:id="@+id/step_counter_on_start"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/step_counter_on_start"
+        android:layout_below="@id/save_data"/>
+
+</RelativeLayout>

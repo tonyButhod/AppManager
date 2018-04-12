@@ -1,14 +1,17 @@
 package buthod.tony.appManager;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.SortedMap;
 
 import com.jjoe64.graphview.DefaultLabelFormatter;
@@ -19,6 +22,11 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.jjoe64.graphview.series.Series;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import buthod.tony.appManager.database.PedometerDAO;
 
 /**
  * Created by Tony on 22/07/2017.
@@ -140,5 +148,41 @@ public class PedometerActivity extends RootActivity {
             }
         });
         mGraph.addSeries(pointsSeries);
+    }
+
+    /**
+     * Function used to save all data stored on the database in a external file.
+     * @param context The context of the application.
+     * @return The JSONArray containing all data stored on the database.
+     */
+    public static JSONArray saveDataPublicStorage(Context context) throws JSONException {
+        PedometerDAO dao = new PedometerDAO(context);
+        dao.open();
+        SortedMap<Date, Integer> stepsData = dao.getSteps();
+        dao.close();
+
+        JSONArray stepsJson = new JSONArray();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
+        for (SortedMap.Entry<Date, Integer> entry : stepsData.entrySet()) {
+            JSONArray entryJson = new JSONArray();
+            entryJson.put(formatter.format(entry.getKey()));
+            entryJson.put(entry.getValue());
+            stepsJson.put(entryJson);
+        }
+
+        return stepsJson;
+    }
+
+    public static void loadDataPublicStorage(Context context, JSONArray data)
+            throws JSONException, ParseException {
+        PedometerDAO dao = new PedometerDAO(context);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
+
+        dao.open();
+        for (int i = 0; i < data.length(); ++i) {
+            JSONArray entryJson = data.getJSONArray(i);
+            dao.storeSteps(formatter.parse(entryJson.getString(0)), entryJson.getInt(1));
+        }
+        dao.close();
     }
 }

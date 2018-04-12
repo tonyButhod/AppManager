@@ -4,7 +4,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -18,19 +21,20 @@ public class PedometerDAO extends DAOBase {
     public static final String DATE = DatabaseHandler.PEDOMETER_DATE;
     public static final String STEPS = DatabaseHandler.PEDOMETER_STEPS;
 
+    private SimpleDateFormat mDateFormatter = null;
+
     public PedometerDAO(Context context) {
         super(context);
+        mDateFormatter = new SimpleDateFormat("yyyyMMdd", Locale.FRANCE);
     }
 
     public void storeSteps(Date date, int steps) {
-        long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400000;
         // First check if an existing row corresponds to the current date.
         Cursor c = mDb.rawQuery("Select "+KEY+" From "+TABLE_NAME+
-                " Where "+DATE+" = ?;", new String[]{String.valueOf(dateUTC)});
+                " Where "+DATE+" = ?;", new String[]{mDateFormatter.format(date)});
         if (c.getCount() == 0) {
             ContentValues value = new ContentValues();
-            value.put(DATE, dateUTC);
+            value.put(DATE, mDateFormatter.format(date));
             value.put(STEPS, steps);
             mDb.insert(TABLE_NAME, null, value);
         }
@@ -44,11 +48,9 @@ public class PedometerDAO extends DAOBase {
     }
 
     public int getDailySteps(Date date) {
-        long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400000;
         Cursor c = mDb.rawQuery(
             "Select "+STEPS+" FROM "+TABLE_NAME+
-            " Where "+DATE+" = ?;", new String[]{String.valueOf(dateUTC)});
+            " Where "+DATE+" = ?;", new String[]{mDateFormatter.format(date)});
         if (c.getCount() == 0) {
             return 0;
         }
@@ -59,18 +61,21 @@ public class PedometerDAO extends DAOBase {
     }
 
     public SortedMap<Date, Integer> getSteps(Date startDate, Date endDate) {
-        long startDateUTC = startDate.getTime();
-        long endDateUTC = endDate.getTime();
-        startDateUTC -= startDateUTC % 86400000;
-        endDateUTC -= endDateUTC % 86400000;
         Cursor c = mDb.rawQuery(
             "Select * FROM "+TABLE_NAME+
             " Where "+DATE+" >= ? And "+DATE+" <= ?"+
             " Order By "+DATE+" ASC;",
-            new String[]{String.valueOf(startDateUTC), String.valueOf(endDateUTC)});
+            new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
         SortedMap<Date, Integer> steps = new TreeMap<Date, Integer>();
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-            steps.put(new Date(c.getLong(1)), c.getInt(2));
+            Date date = null;
+            try {
+                date = mDateFormatter.parse(c.getString(1));
+            }
+            catch (ParseException e) {
+                e.fillInStackTrace();
+            }
+            steps.put(date, c.getInt(2));
         }
         c.close();
         return steps;
@@ -79,6 +84,6 @@ public class PedometerDAO extends DAOBase {
         return getSteps(startDate, new Date(Long.MAX_VALUE));
     }
     public SortedMap<Date, Integer> getSteps() {
-        return getSteps(new Date(Long.MIN_VALUE));
+        return getSteps(new Date(0));
     }
 }

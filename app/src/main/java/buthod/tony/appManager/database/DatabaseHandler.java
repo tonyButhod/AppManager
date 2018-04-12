@@ -17,7 +17,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             PEDOMETER_TABLE_CREATE =
         "Create Table "+PEDOMETER_TABLE_NAME+" ("+
             PEDOMETER_KEY+" INTEGER PRIMARY KEY AUTOINCREMENT, "+
-            PEDOMETER_DATE+" INTEGER, "+
+            PEDOMETER_DATE+" VARCHAR(8), "+
             PEDOMETER_STEPS+" INTEGER);",
             PEDOMETER_TABLE_DROP =
         "Drop Table If Exists "+PEDOMETER_TABLE_NAME+";";
@@ -34,7 +34,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                             TRANSACTION_KEY +" INTEGER PRIMARY KEY AUTOINCREMENT, "+
                             TRANSACTION_TYPE +" INTEGER, "+
                             TRANSACTION_PRICE +" INTEGER, "+
-                            TRANSACTION_DATE +" INTEGER, "+
+                            TRANSACTION_DATE +" VARCHAR(8), "+
                             TRANSACTION_COMMENT +" VARCHAR(50));",
             EXPENSES_TABLE_DROP =
                     "Drop Table If Exists "+ ACCOUNT_TABLE_NAME +";";

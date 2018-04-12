@@ -4,8 +4,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by Tony on 09/10/2017.
@@ -20,7 +23,7 @@ public class AccountDAO extends DAOBase {
             DATE = DatabaseHandler.TRANSACTION_DATE,
             COMMENT = DatabaseHandler.TRANSACTION_COMMENT;
 
-    public class TransactionInfo {
+    public static class TransactionInfo {
         public long id;
         public int type;
         public int price;
@@ -36,17 +39,18 @@ public class AccountDAO extends DAOBase {
         }
     }
 
+    private SimpleDateFormat mDateFormatter = null;
+
     public AccountDAO(Context context) {
         super(context);
+        mDateFormatter = new SimpleDateFormat("yyyyMMdd", Locale.FRANCE);
     }
 
     public long addTransaction(int type, int price, Date date, String comment) {
-        long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400000;
         ContentValues value = new ContentValues();
         value.put(TYPE, type);
         value.put(PRICE, price);
-        value.put(DATE, dateUTC);
+        value.put(DATE, mDateFormatter.format(date));
         value.put(COMMENT, comment);
         return mDb.insert(TABLE_NAME, null, value);
     }
@@ -69,7 +73,13 @@ public class AccountDAO extends DAOBase {
             long id = c.getInt(0);
             int type = c.getInt(1);
             int price = c.getInt(2);
-            Date date = new Date(c.getLong(3));
+            Date date = null;
+            try {
+                date = mDateFormatter.parse(c.getString(3));
+            }
+            catch (ParseException e) {
+                e.fillInStackTrace();
+            }
             String comment = c.getString(4);
             c.close();
             return new TransactionInfo(id, type, price, date, comment);
@@ -89,7 +99,14 @@ public class AccountDAO extends DAOBase {
             long id = c.getInt(0);
             int type = c.getInt(1);
             int price = c.getInt(2);
-            Date date = new Date(c.getLong(3));
+            Date date = null;
+            try {
+                date = mDateFormatter.parse(c.getString(3));
+            }
+            catch (ParseException e) {
+                e.fillInStackTrace();
+            }
+
             String comment = c.getString(4);
             transactions.add(new TransactionInfo(id, type, price, date, comment));
         }
@@ -98,12 +115,10 @@ public class AccountDAO extends DAOBase {
     }
 
     public void modifyTransaction(long id, int type, int price, Date date, String comment) {
-        long dateUTC = date.getTime();
-        dateUTC -= dateUTC % 86400000;
         ContentValues value = new ContentValues();
         value.put(TYPE, type);
         value.put(PRICE, price);
-        value.put(DATE, dateUTC);
+        value.put(DATE, mDateFormatter.format(date));
         value.put(COMMENT, comment);
         mDb.update(TABLE_NAME, value, KEY + " = ?", new String[] {String.valueOf(id)});
     }

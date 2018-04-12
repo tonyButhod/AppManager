@@ -1,11 +1,13 @@
 package buthod.tony.appManager;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,12 +21,19 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import buthod.tony.appManager.database.AccountDAO;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by Tony on 09/10/2017.
@@ -375,5 +384,44 @@ public class AccountActivity extends RootActivity {
         });
         // Show alert dialog
         alertDialog.show();
+    }
+
+    /**
+     * Function used to save all data stored on the database in a external file.
+     * @param context The context of the application.
+     * @return The JSONArray containing all data stored on the database.
+     */
+    public static JSONArray saveDataPublicStorage(Context context) {
+        AccountDAO dao = new AccountDAO(context);
+        dao.open();
+        ArrayList<AccountDAO.TransactionInfo> transactions = dao.getTransactions();
+        dao.close();
+        JSONArray saveData = new JSONArray();
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
+        for (int i = 0; i < transactions.size(); ++i) {
+            AccountDAO.TransactionInfo info = transactions.get(i);
+            JSONArray infoJson = new JSONArray();
+            infoJson.put(info.id);
+            infoJson.put(info.type);
+            infoJson.put(info.price);
+            infoJson.put(formatter.format(info.date));
+            infoJson.put(info.comment);
+            saveData.put(infoJson);
+        }
+        return saveData;
+    }
+
+    public static void loadDataPublicStorage(Context context, JSONArray data)
+            throws JSONException, ParseException {
+        AccountDAO dao = new AccountDAO(context);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
+        dao.open();
+        for (int i = 0; i < data.length(); ++i) {
+            JSONArray infoJson = data.getJSONArray(i);
+            Log.d(TAG, formatter.parse(infoJson.getString(3)).toString());
+            dao.addTransaction(infoJson.getInt(1), infoJson.getInt(2),
+                    formatter.parse(infoJson.getString(3)), infoJson.getString(4));
+        }
+        dao.close();
     }
 }

@@ -1,9 +1,9 @@
 package buthod.tony.appManager;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +14,8 @@ import android.widget.Button;
 
 public class MainActivity extends RootActivity {
 
+    private SharedPreferences mPreferences = null;
+
     private Button mSettings = null;
     private Button mGraphPedometer = null;
     private Button mOnOff = null;
@@ -23,7 +25,7 @@ public class MainActivity extends RootActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+        mPreferences = getSharedPreferences(SettingsActivity.PREFERENCES_NAME, Context.MODE_PRIVATE);
 
         ////////////// Settings //////////////
         mSettings = (Button) findViewById(R.id.settings);
@@ -31,7 +33,7 @@ public class MainActivity extends RootActivity {
             @Override
             public void onClick(View v) {
                 Intent settingsIntent = new Intent(v.getContext(), SettingsActivity.class);
-                startActivityForResult(settingsIntent, 0);
+                startActivity(settingsIntent);
             }
         });
 
@@ -54,9 +56,9 @@ public class MainActivity extends RootActivity {
             }
         });
 
-        boolean detectOnStart = preferences.getBoolean("detectOnStart", false);
+        boolean stepCounterOnStart = mPreferences.getBoolean(SettingsActivity.PREF_STEP_COUNTER_ON_START, false);
         mOnOff = (Button) findViewById(R.id.detection_on_off);
-        if (savedInstanceState == null && detectOnStart) {
+        if (savedInstanceState == null && stepCounterOnStart) {
             mPedometer.startDetection();
         }
         mOnOff.setOnClickListener(new View.OnClickListener() {
