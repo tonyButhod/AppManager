@@ -8,6 +8,8 @@ import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Button;
 
+import buthod.tony.appManager.account.AccountActivity;
+
 /**
  * Created by Tony on 06/08/2017.
  */

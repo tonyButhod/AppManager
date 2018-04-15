@@ -3,10 +3,14 @@ package buthod.tony.appManager.database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.widget.Toast;
+
+import org.json.JSONException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
@@ -43,7 +47,7 @@ public class AccountDAO extends DAOBase {
 
     public AccountDAO(Context context) {
         super(context);
-        mDateFormatter = new SimpleDateFormat("yyyyMMdd", Locale.FRANCE);
+        mDateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
     }
 
     public long addTransaction(int type, int price, Date date, String comment) {
@@ -121,5 +125,136 @@ public class AccountDAO extends DAOBase {
         value.put(DATE, mDateFormatter.format(date));
         value.put(COMMENT, comment);
         mDb.update(TABLE_NAME, value, KEY + " = ?", new String[] {String.valueOf(id)});
+    }
+
+    /**
+     * Get financial statements group by years.
+     * The statements take into account only credits or expenses depending on given parameters.
+     * @param yearsNumber The number of computation year starting with the current year.
+     * @param credits If true, compute statements on credits. Else, compute it on expenses.
+     * @return An array of statements of size 'yearsNumber'.
+     */
+    public int[] getYearsStatement(int yearsNumber, boolean credits) {
+        // Get the starting and ending dates
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_YEAR, cal.getActualMaximum(Calendar.DAY_OF_YEAR));
+        Date endDate = cal.getTime();
+        cal.add(Calendar.YEAR, -yearsNumber+1);
+        cal.set(Calendar.DAY_OF_YEAR, cal.getActualMinimum(Calendar.DAY_OF_YEAR));
+        Date startDate = cal.getTime();
+        // Execute query
+        Cursor c = mDb.rawQuery(
+                "Select strftime('%Y', " + DATE + ") as year, SUM(" + PRICE + ")" +
+                        " From " + TABLE_NAME +
+                        " Where " + DATE + ">= ? And " + DATE + "<= ? " +
+                        "   And " + TYPE + (credits?" < 0":">= 0") + // Get positive or negative statements
+                        " Group by year;",
+                new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
+        int[] yearsStatement = new int[yearsNumber];
+        int index = 0;
+        int currentYear = cal.get(Calendar.YEAR); // Get the starting year
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            int year = Integer.valueOf(c.getString(0));
+            while (currentYear < year) {
+                yearsStatement[index] = 0;
+                index++;
+                currentYear++;
+            }
+            yearsStatement[index] = c.getInt(1);
+            index++;
+            currentYear++;
+        }
+        c.close();
+        return yearsStatement;
+    }
+
+    /**
+     * Get financial statements group by months.
+     * The statements take into account only credits or expenses depending on given parameters.
+     * @param monthsNumber The number of computation year starting with the current month.
+     * @param credits If true, compute statements on credits. Else, compute it on expenses.
+     * @return An array of statements of size 'monthsNumber'.
+     */
+    public int[] getMonthsStatement(int monthsNumber, boolean credits) {
+        // Get the starting and ending dates
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        Date endDate = cal.getTime();
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+        cal.add(Calendar.MONTH, -monthsNumber+1);
+        Date startDate = cal.getTime();
+        // Execute query
+        Cursor c = mDb.rawQuery(
+                "Select strftime('%Y', " + DATE + ") as year, strftime('%m', " + DATE + ") as month, SUM(" + PRICE + ")" +
+                " From " + TABLE_NAME +
+                " Where " + DATE + ">= ? And " + DATE + "<= ? " +
+                "   And " + TYPE + (credits?" < 0":" >= 0") + // Get positive or negative statements
+                " Group by year, month;",
+                new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
+        int[] monthsStatement = new int[monthsNumber];
+        int index = 0;
+        int currentYear = cal.get(Calendar.YEAR);
+        int currentMonth = cal.get(Calendar.MONTH) + 1;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            int year = Integer.valueOf(c.getString(0));
+            int month = Integer.valueOf(c.getString(1));
+            while (currentYear < year || currentMonth < month) {
+                currentMonth++;
+                if (currentMonth > 12) {
+                    currentMonth = 1;
+                    currentYear++;
+                }
+                monthsStatement[index] = 0;
+                index++;
+            }
+            monthsStatement[index] = c.getInt(2);
+            index++;
+            currentMonth++;
+            if (currentMonth == 12) {
+                currentMonth = 0;
+                currentYear++;
+            }
+        }
+        c.close();
+        return monthsStatement;
+    }
+
+    /**
+     * Get financial statements group by days.
+     * The statements take into account only credits or expenses depending on given parameters.
+     * @param daysNumber The number of computation days starting with the current date.
+     * @param credits If true, compute statements on credits. Else, compute it on expenses.
+     * @return An array of statements of size 'daysNumber'.
+     */
+    public int[] getDaysStatement(int daysNumber, boolean credits) {
+        // Get the starting and ending dates
+        Calendar cal = Calendar.getInstance();
+        Date endDate = cal.getTime();
+        cal.add(Calendar.DATE, -daysNumber+1);
+        Date startDate = cal.getTime();
+        // Execute query
+        Cursor c = mDb.rawQuery(
+                "Select " + DATE + " as date, SUM(" + PRICE + ")" +
+                        " From " + TABLE_NAME +
+                        " Where " + DATE + ">= ? And " + DATE + "<= ? " +
+                        "   And " + TYPE + (credits?" < 0":" >= 0") + 
+                        " Group by date;",
+                new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
+        int[] daysStatement = new int[daysNumber];
+        Calendar currentDate = cal;
+        int index = 0;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            String date = c.getString(0);
+            while (mDateFormatter.format(cal.getTime()).compareTo(date) < 0) {
+                currentDate.add(Calendar.DATE, 1);
+                daysStatement[index] = 0;
+                index++;
+            }
+            daysStatement[index] = c.getInt(1);
+            index++;
+            currentDate.add(Calendar.DATE, 1);
+        }
+        c.close();
+        return daysStatement;
     }
 }

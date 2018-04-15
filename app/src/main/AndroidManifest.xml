@@ -15,7 +15,8 @@
 
         <activity
             android:name="buthod.tony.appManager.MainActivity"
-            android:label="@string/app_name">
+            android:label="@string/app_name"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -23,15 +24,28 @@
         </activity>
         <activity
             android:name="buthod.tony.appManager.SettingsActivity"
-            android:label="@string/settings">
+            android:label="@string/settings"
+            android:screenOrientation="portrait">
         </activity>
         <activity
             android:name="buthod.tony.appManager.PedometerActivity"
-            android:label="@string/pedometer_section_label">
+            android:label="@string/pedometer_section_label"
+            android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name="buthod.tony.appManager.AccountActivity"
-            android:label="@string/account_section_label">
+            android:name="buthod.tony.appManager.account.AccountActivity"
+            android:label="@string/account_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.account.AccountHistoryActivity"
+            android:label="@string/account_history_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.account.AccountStatementActivity"
+            android:label="@string/account_statement_section_label"
+            android:screenOrientation="portrait">
         </activity>
     </application>
 

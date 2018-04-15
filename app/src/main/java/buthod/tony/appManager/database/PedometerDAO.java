@@ -25,7 +25,7 @@ public class PedometerDAO extends DAOBase {
 
     public PedometerDAO(Context context) {
         super(context);
-        mDateFormatter = new SimpleDateFormat("yyyyMMdd", Locale.FRANCE);
+        mDateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
     }
 
     public void storeSteps(Date date, int steps) {

@@ -15,6 +15,10 @@
 
     <!-- Account -->
     <string name="account_section_label">Dépenses / Crédits</string>
+    <string name="history">Historique</string>
+    <string name="statement">Bilan</string>
+    <!-- Account History -->
+    <string name="account_history_section_label">Historique</string>
     <string name="add_expense">Nouvelle dépense</string>
     <string name="add_credit">Nouveau crédit</string>
     <string name="modify_expense">Modifier la dépense</string>
@@ -40,6 +44,19 @@
     </string-array>
     <string name="delete_expense">Supprimer cette dépense ?</string>
     <string name="delete_credit">Supprimer ce crédit ?</string>
+    <!-- Account statement -->
+    <string name="account_statement_section_label">Bilan</string>
+    <string name="statement_label">Bilan sur</string>
+    <string name="statement_value_label">Bilan total :</string>
+    <string-array name="dayMonthYear">
+        <item>Jours</item>
+        <item>Mois</item>
+        <item>Années</item>
+    </string-array>
+    <string name="cumulative_credits">Crédits cumulés</string>
+    <string name="cumulative_expenses">Dépenses cumulées</string>
+    <string name="mean_credit_label">Crédit moyen</string>
+    <string name="mean_expense_label">Dépense moyenne</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
@@ -58,5 +75,6 @@
     <string name="delete">Supprimer</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
+    <string name="ok">Ok</string>
 
 </resources>
