@@ -73,7 +73,7 @@ public class AccountActivity extends RootActivity {
     public static JSONArray saveDataPublicStorage(Context context) {
         AccountDAO dao = new AccountDAO(context);
         dao.open();
-        ArrayList<AccountDAO.TransactionInfo> transactions = dao.getTransactions();
+        ArrayList<AccountDAO.TransactionInfo> transactions = dao.getTransactions(Integer.MAX_VALUE);
         dao.close();
         JSONArray saveData = new JSONArray();
         SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);

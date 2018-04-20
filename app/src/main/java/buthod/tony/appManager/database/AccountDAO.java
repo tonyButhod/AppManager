@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 
+import java.security.Key;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -94,10 +95,28 @@ public class AccountDAO extends DAOBase {
         }
     }
 
-    public ArrayList<TransactionInfo> getTransactions() {
+    /**
+     * Get information about transactions starting at last id.
+     * @param limit The total number of transactions returned.
+     * @param lastDate The last transaction date to start returning information.
+     * @param lastId The last transaction id to start returning information.
+     * @return A list of all transactions.
+     */
+    public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId) {
+        // Construct the where clause depending on the given parameters
+        String whereClause = "";
+        if (lastDate != null) {
+            whereClause += " Where " + DATE + " < '" + mDateFormatter.format(lastDate) + "'";
+            if (lastId != -1)
+                whereClause += " Or ( " + DATE + " = '" + mDateFormatter.format(lastDate) + "'" +
+                        " And " + KEY + " < " + String.valueOf(lastId) + " )";
+        }
+        // Execute query
         Cursor c = mDb.rawQuery(
                 "Select * From " + TABLE_NAME +
-                " Order By " + DATE + " DESC, " + KEY + " DESC;", new String[0]);
+                whereClause +
+                " Order By " + DATE + " DESC, " + KEY + " DESC" +
+                " Limit " + String.valueOf(limit) + ";", new String[0]);
         ArrayList<TransactionInfo> transactions = new ArrayList<TransactionInfo>();
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             long id = c.getInt(0);
@@ -116,6 +135,9 @@ public class AccountDAO extends DAOBase {
         }
         c.close();
         return transactions;
+    }
+    public ArrayList<TransactionInfo> getTransactions(int limit) {
+        return getTransactions(limit, null, -1);
     }
 
     public void modifyTransaction(long id, int type, int price, Date date, String comment) {

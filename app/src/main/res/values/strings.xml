@@ -44,6 +44,9 @@
     </string-array>
     <string name="delete_expense">Supprimer cette dépense ?</string>
     <string name="delete_credit">Supprimer ce crédit ?</string>
+    <string name="add_price">Ajoutez un prix</string>
+    <string name="price_not_valid">Le prix n\'est pas valide</string>
+    <string name="append_transactions">Afficher plus de transactions</string>
     <!-- Account statement -->
     <string name="account_statement_section_label">Bilan</string>
     <string name="statement_label">Bilan sur</string>

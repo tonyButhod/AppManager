@@ -19,6 +19,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -39,10 +41,17 @@ public class AccountHistoryActivity extends RootActivity {
     private Button mAddExpense = null;
     private Button mAddCredit = null;
     private LinearLayout mTransactionsLayout = null;
+    private Button mAppendTransactions = null;
 
     private AccountDAO mDao = null;
     private ArrayAdapter<CharSequence> mExpenseTypes = null;
     private ArrayAdapter<CharSequence> mCreditTypes = null;
+
+    // Fields used to append new transactions if the user goes to the end of the linear layout.
+    private Date mLastTransactionDate = null;
+    private long mLastTransactionId = -1;
+
+    private SimpleDateFormat mDateFormatter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +62,9 @@ public class AccountHistoryActivity extends RootActivity {
         mAddExpense = (Button) findViewById(R.id.add_expense);
         mAddCredit = (Button) findViewById(R.id.add_credit);
         mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
+        mAppendTransactions = (Button) findViewById(R.id.append_transactions_button);
         mDao = new AccountDAO(getBaseContext());
+        mDateFormatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
 
         // Add type of expenses and credits
         mExpenseTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
@@ -84,21 +95,39 @@ public class AccountHistoryActivity extends RootActivity {
                 showAddTransactionDialog(true);
             }
         });
-        // Show all transactions done
-        updateTransactionsLayout();
+        // Populate the linear layout of transactions
+        mTransactionsLayout.removeAllViews();
+        appendNewTransactions();
+        // Add listener to display more transactions
+        mAppendTransactions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                appendNewTransactions();
+            }
+        });
     }
 
     /**
-     * Read all transactions stored in database and update the corresponding layout.
+     * Append new transactions to the linear layout.
+     * @param numberOfTransactions The number of transactions to append.
      */
-    private void updateTransactionsLayout() {
+    private void appendNewTransactions(int numberOfTransactions) {
         mDao.open();
-        ArrayList<AccountDAO.TransactionInfo> transactions = mDao.getTransactions();
+        ArrayList<AccountDAO.TransactionInfo> transactions =
+                mDao.getTransactions(numberOfTransactions, mLastTransactionDate, mLastTransactionId);
         mDao.close();
-        mTransactionsLayout.removeAllViews();
         for (int i = 0; i < transactions.size(); ++i) {
             addTransactionToLayout(transactions.get(i));
         }
+        // Save last transaction date and id in case we want to append new transactions
+        if (transactions.size() > 0) {
+            AccountDAO.TransactionInfo lastTransaction = transactions.get(transactions.size() - 1);
+            mLastTransactionDate = lastTransaction.date;
+            mLastTransactionId = lastTransaction.id;
+        }
+    }
+    private void appendNewTransactions() {
+        appendNewTransactions(50);
     }
 
     /**
@@ -109,21 +138,8 @@ public class AccountHistoryActivity extends RootActivity {
         // Check if it is an expense or a credit
         final boolean isCredit = (trans.type < 0);
         // Display information about the expense/credit
-        String resumeText = "";
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
-        resumeText += formatter.format(trans.date) + " :    ";
-        resumeText += (trans.price / 100.0f) + "€    ";
-        if (isCredit) {
-            // It is a credit
-            resumeText += "--- " + mCreditTypes.getItem(- trans.type - 1);
-        }
-        else {
-            // It is an expense
-            resumeText += "--- " + mExpenseTypes.getItem(trans.type);
-        }
-        resumeText += "\n   " + trans.comment;
         TextView transactionView = new TextView(getBaseContext());
-        transactionView.setText(resumeText);
+        transactionView.setText( formatTransactionText(trans) );
         transactionView.setTextSize(12f);
         if (isCredit) {
             transactionView.setTextColor(ContextCompat.getColor(getBaseContext(),
@@ -148,14 +164,14 @@ public class AccountHistoryActivity extends RootActivity {
                 final PopupMenu popup = new PopupMenu(AccountHistoryActivity.this, v);
                 popup.inflate(R.menu.transaction_menu);
                 // Registering clicks on the popup menu
-                final View currentView = v;
+                final TextView currentView = (TextView) v;
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         popup.dismiss();
                         switch(item.getItemId()) {
                             case R.id.modify:
-                                showModifyTransactionDialog(trans.id, isCredit);
+                                showModifyTransactionDialog(trans.id, currentView, isCredit);
                                 break;
                             case R.id.delete:
                                 showDeleteTransactionDialog(trans.id, currentView, isCredit);
@@ -167,7 +183,7 @@ public class AccountHistoryActivity extends RootActivity {
                 popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
                     @Override
                     public void onDismiss(PopupMenu menu) {
-                        // Unselect the view
+                        // Deselect the view
                         currentView.setSelected(false);
                     }
                 });
@@ -177,6 +193,27 @@ public class AccountHistoryActivity extends RootActivity {
         });
         // Finally add the view in the linear layout
         mTransactionsLayout.addView(transactionView);
+    }
+
+    /**
+     * Format a transaction as a text easily readable.
+     * @param trans The transaction data.
+     * @return The string resuming the transaction.
+     */
+    private String formatTransactionText(AccountDAO.TransactionInfo trans) {
+        String resumeText = "";
+        resumeText += mDateFormatter.format(trans.date) + " :    ";
+        resumeText += (trans.price / 100.0f) + "€    ";
+        if (trans.type < 0) {
+            // It is a credit
+            resumeText += "--- " + mCreditTypes.getItem(- trans.type - 1);
+        }
+        else {
+            // It is an expense
+            resumeText += "--- " + mExpenseTypes.getItem(trans.type);
+        }
+        resumeText += "\n   " + trans.comment;
+        return resumeText;
     }
 
     private void showAddTransactionDialog(final boolean isCredit) {
@@ -222,7 +259,7 @@ public class AccountHistoryActivity extends RootActivity {
                         type = (isCredit) ? -type - 1 : type;
                         String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
-                            Toast.makeText(getApplicationContext(), "Ajoutez un prix", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), R.string.add_price, Toast.LENGTH_SHORT).show();
                         }
                         else {
                             // Check if the price is correct
@@ -231,7 +268,7 @@ public class AccountHistoryActivity extends RootActivity {
                                 price = (int) (Float.parseFloat(priceString) * 100);
                             }
                             catch (NumberFormatException e) {
-                                Toast.makeText(getApplicationContext(), "Le prix n'est pas valide",
+                                Toast.makeText(getApplicationContext(), R.string.price_not_valid,
                                         Toast.LENGTH_SHORT).show();
                                 return;
                             }
@@ -244,7 +281,11 @@ public class AccountHistoryActivity extends RootActivity {
                             mDao.open();
                             mDao.addTransaction(type, price, date, comment);
                             mDao.close();
-                            updateTransactionsLayout();
+
+                            mTransactionsLayout.removeAllViews();
+                            mLastTransactionId = -1;
+                            mLastTransactionDate = null;
+                            appendNewTransactions();
                             alertDialog.dismiss();
                         }
                     }
@@ -254,7 +295,8 @@ public class AccountHistoryActivity extends RootActivity {
         alertDialog.show();
     }
 
-    private void showModifyTransactionDialog(final long transactionID, final boolean isCredit) {
+    private void showModifyTransactionDialog(final long transactionID, final TextView transactionView,
+                                             final boolean isCredit) {
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(isCredit ? R.string.modify_expense : R.string.modify_credit);
@@ -333,8 +375,10 @@ public class AccountHistoryActivity extends RootActivity {
                             String comment = commentEdit.getText().toString();
                             mDao.open();
                             mDao.modifyTransaction(transaction.id, type, price, date, comment);
+                            AccountDAO.TransactionInfo updatedTransaction = mDao.getTransaction(transactionID);
                             mDao.close();
-                            updateTransactionsLayout();
+                            // Update the view in the linear layout
+                            transactionView.setText( formatTransactionText(updatedTransaction) );
                             alertDialog.dismiss();
                         }
                     }
