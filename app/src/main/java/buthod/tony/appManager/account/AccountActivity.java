@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +29,7 @@ public class AccountActivity extends RootActivity {
 
     private Button mHistoryButton = null;
     private Button mStatementButton = null;
+    private Button mPiechartButton = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +39,7 @@ public class AccountActivity extends RootActivity {
         mBackButton = (ImageButton) findViewById(R.id.back_button);
         mHistoryButton = (Button) findViewById(R.id.history);
         mStatementButton = (Button) findViewById(R.id.statement);
+        mPiechartButton = (Button) findViewById(R.id.pie_chart);
 
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -63,10 +63,17 @@ public class AccountActivity extends RootActivity {
                 startActivity(statementIntent);
             }
         });
+        mPiechartButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent pieChartIntent = new Intent(v.getContext(), AccountPieChartActivity.class);
+                startActivity(pieChartIntent);
+            }
+        });
     }
 
     /**
-     * Function used to save all data stored on the database in a external file.
+     * Function used to save all data stored on the database in an external file.
      * @param context The context of the application.
      * @return The JSONArray containing all data stored on the database.
      */

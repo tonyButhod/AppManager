@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/toolbar"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp">
+
+            <ImageButton
+                android:id="@+id/back_button"
+                style="@style/BackButton"/>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/from"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/from"
+            android:textSize="10pt"
+            android:layout_margin="10dp"
+            android:layout_below="@id/toolbar"/>
+
+        <Button
+            android:id="@+id/start_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/toolbar"
+            android:layout_toRightOf="@id/from"
+            android:layout_toEndOf="@id/from"
+            android:layout_alignBaseline="@id/from"/>
+
+        <TextView
+            android:id="@+id/to"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/to"
+            android:textSize="10pt"
+            android:layout_margin="10dp"
+            android:layout_below="@id/toolbar"
+            android:layout_toRightOf="@id/start_date"
+            android:layout_toEndOf="@id/start_date"
+            android:layout_alignBaseline="@id/from"/>
+
+        <Button
+            android:id="@+id/end_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/toolbar"
+            android:layout_toRightOf="@id/to"
+            android:layout_toEndOf="@id/to"
+            android:layout_alignBaseline="@id/from"/>
+
+        <TextView
+            android:id="@+id/expenses_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/expenses_pie_chart_label"
+            android:textSize="10pt"
+            android:layout_margin="10dp"
+            android:layout_below="@id/from"/>
+
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/expenses_pie_chart"
+            android:layout_width="fill_parent"
+            android:layout_height="350dp"
+            android:layout_below="@id/expenses_label">
+
+        </com.github.mikephil.charting.charts.PieChart>
+
+        <TextView
+            android:id="@+id/credits_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/credits_pie_chart_label"
+            android:textSize="10pt"
+            android:layout_margin="10dp"
+            android:layout_below="@id/expenses_pie_chart"/>
+
+        <com.github.mikephil.charting.charts.PieChart
+            android:id="@+id/credits_pie_chart"
+            android:layout_width="fill_parent"
+            android:layout_height="300dp"
+            android:layout_below="@id/credits_label">
+
+        </com.github.mikephil.charting.charts.PieChart>
+
+    </RelativeLayout>
+
+</ScrollView>

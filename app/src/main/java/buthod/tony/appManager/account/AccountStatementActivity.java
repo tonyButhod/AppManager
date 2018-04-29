@@ -49,6 +49,8 @@ public class AccountStatementActivity extends RootActivity {
     private LineChart mLineChart = null;
     private TextView mMeanExpenseView = null;
     private TextView mMeanCreditView = null;
+    private TextView mLastExpenseView = null;
+    private TextView mLastCreditView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +64,9 @@ public class AccountStatementActivity extends RootActivity {
         mLineChart = (LineChart) findViewById(R.id.line_chart);
         mMeanExpenseView = (TextView) findViewById(R.id.mean_expense);
         mMeanCreditView = (TextView) findViewById(R.id.mean_credit);
-        mDao = new AccountDAO(getBaseContext());
+        mLastExpenseView = (TextView) findViewById(R.id.last_expense);
+        mLastCreditView = (TextView) findViewById(R.id.last_credit);
+        mDao = new AccountDAO(this);
 
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -72,6 +76,7 @@ public class AccountStatementActivity extends RootActivity {
             }
         });
         // Add listener in the activity
+        mPeriodNumberButton.setText("31");
         mPeriodNumberButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,6 +86,14 @@ public class AccountStatementActivity extends RootActivity {
         mPeriodTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                // Set default values for the selected choice
+                if (position == 0)
+                    mPeriodNumberButton.setText("31");
+                else if (position == 1)
+                    mPeriodNumberButton.setText("12");
+                else if (position == 2)
+                    mPeriodNumberButton.setText("5");
+
                 computeStatements();
             }
 
@@ -255,5 +268,9 @@ public class AccountStatementActivity extends RootActivity {
         // Update the mean expense and credit over the selected period
         mMeanExpenseView.setText(String.valueOf(cumulativeExpenses / periodNumber / 100.0f) + "€");
         mMeanCreditView.setText(String.valueOf(cumulativeCredits / periodNumber / 100.0f) + "€");
+
+        // Update the last expense and credit over the selected period
+        mLastExpenseView.setText(String.valueOf(expenseStatements[periodNumber - 1] / 100.0f) + "€");
+        mLastCreditView.setText(String.valueOf(creditStatements[periodNumber - 1] / 100.0f) + "€");
     }
 }

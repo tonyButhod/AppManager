@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Pedometer">
-        <CheckBoxPreference
-            android:key="detectOnStart"
-            android:title="Detection on Start"
-            android:summary="Launch the step counter when the app is started."/>
-    </PreferenceCategory>
-</PreferenceScreen>

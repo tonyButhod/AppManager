@@ -3,6 +3,8 @@ package buthod.tony.appManager.database;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.util.SparseArray;
+import android.util.SparseIntArray;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -13,6 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Locale;
 
 /**
@@ -278,5 +282,29 @@ public class AccountDAO extends DAOBase {
         }
         c.close();
         return daysStatement;
+    }
+
+    /**
+     * Get the statement between 2 dates by category.
+     * @param start The starting date.
+     * @param end The ending date.
+     * @return A SparseIntArray with the type as key and the price as value.
+     */
+    public SparseIntArray getStatementByCategory(Date start, Date end) {
+        SparseIntArray result = new SparseIntArray();
+        // Execute query
+        Cursor c = mDb.rawQuery(
+                "Select " + TYPE + ", SUM(" + PRICE + ")" +
+                        " From " + TABLE_NAME +
+                        " Where " + DATE + ">= ? And " + DATE + "<= ? " +
+                        " Group By " + TYPE + ";",
+                new String[]{mDateFormatter.format(start), mDateFormatter.format(end)}
+        );
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            result.append(c.getInt(0), c.getInt(1));
+        }
+        c.close();
+
+        return result;
     }
 }

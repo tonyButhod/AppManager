@@ -47,6 +47,11 @@
             android:label="@string/account_statement_section_label"
             android:screenOrientation="portrait">
         </activity>
+        <activity
+            android:name="buthod.tony.appManager.account.AccountPieChartActivity"
+            android:label="@string/account_piechart_section_label"
+            android:screenOrientation="portrait">
+        </activity>
     </application>
 
 </manifest>
