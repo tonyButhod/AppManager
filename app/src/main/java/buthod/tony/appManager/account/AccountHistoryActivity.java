@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -18,8 +19,6 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import buthod.tony.appManager.database.AccountDAO;
 public class AccountHistoryActivity extends RootActivity {
 
     private ImageButton mBackButton = null;
+    private Button mTypeSelectionButton = null;
     private Button mAddExpense = null;
     private Button mAddCredit = null;
     private LinearLayout mTransactionsLayout = null;
@@ -51,6 +51,10 @@ public class AccountHistoryActivity extends RootActivity {
     private Date mLastTransactionDate = null;
     private long mLastTransactionId = -1;
 
+    // Fields used during the selection of specific types.
+    private boolean[] mExpenseTypesSelected;
+    private boolean[] mCreditTypesSelected;
+
     private SimpleDateFormat mDateFormatter = null;
 
     @Override
@@ -59,6 +63,7 @@ public class AccountHistoryActivity extends RootActivity {
         setContentView(R.layout.account_history);
 
         mBackButton = (ImageButton) findViewById(R.id.back_button);
+        mTypeSelectionButton = (Button) findViewById(R.id.type_selection);
         mAddExpense = (Button) findViewById(R.id.add_expense);
         mAddCredit = (Button) findViewById(R.id.add_credit);
         mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
@@ -74,12 +79,18 @@ public class AccountHistoryActivity extends RootActivity {
         mCreditTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mCreditTypes.addAll(getResources().getStringArray(R.array.credit_types));
 
-
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+        // Show the type selection popup
+        mTypeSelectionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTypeSelectionDialog();
             }
         });
         // Add an expense or a credit part
@@ -102,19 +113,26 @@ public class AccountHistoryActivity extends RootActivity {
         mAppendTransactions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                appendNewTransactions();
+                appendNewTransactions( buildInClauseFromSelectedTypes() );
             }
         });
+
+        // Initialize selected types
+        mExpenseTypesSelected = new boolean[mExpenseTypes.getCount()];
+        mCreditTypesSelected = new boolean[mCreditTypes.getCount()];
+        for (int i = 0; i < mExpenseTypesSelected.length; ++i) mExpenseTypesSelected[i] = true;
+        for (int i = 0; i < mCreditTypesSelected.length; ++i) mCreditTypesSelected[i] = true;
     }
 
     /**
      * Append new transactions to the linear layout.
      * @param numberOfTransactions The number of transactions to append.
      */
-    private void appendNewTransactions(int numberOfTransactions) {
+    private void appendNewTransactions(int numberOfTransactions, String inClause) {
         mDao.open();
         ArrayList<AccountDAO.TransactionInfo> transactions =
-                mDao.getTransactions(numberOfTransactions, mLastTransactionDate, mLastTransactionId);
+                mDao.getTransactions(numberOfTransactions, mLastTransactionDate, mLastTransactionId,
+                        inClause);
         mDao.close();
         for (int i = 0; i < transactions.size(); ++i) {
             addTransactionToLayout(transactions.get(i));
@@ -125,9 +143,17 @@ public class AccountHistoryActivity extends RootActivity {
             mLastTransactionDate = lastTransaction.date;
             mLastTransactionId = lastTransaction.id;
         }
+        // If the size is lower than the wanted number, hide the button to show more transactions
+        if (transactions.size() < numberOfTransactions)
+            mAppendTransactions.setVisibility(View.GONE);
+        else
+            mAppendTransactions.setVisibility(View.VISIBLE);
+    }
+    private void appendNewTransactions(String inClause) {
+        appendNewTransactions(50, inClause);
     }
     private void appendNewTransactions() {
-        appendNewTransactions(50);
+        appendNewTransactions(50, null);
     }
 
     /**
@@ -285,7 +311,7 @@ public class AccountHistoryActivity extends RootActivity {
                             mTransactionsLayout.removeAllViews();
                             mLastTransactionId = -1;
                             mLastTransactionDate = null;
-                            appendNewTransactions();
+                            appendNewTransactions( buildInClauseFromSelectedTypes() );
                             alertDialog.dismiss();
                         }
                     }
@@ -422,5 +448,150 @@ public class AccountHistoryActivity extends RootActivity {
         });
         // Show alert dialog
         alertDialog.show();
+    }
+
+    /**
+     * Show a popup with different checkbox allowing the user to select which type
+     *  he wants to keep in the history of expenses/credits.
+     */
+    private void showTypeSelectionDialog() {
+        // Initialize an alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("");
+        // Set popup content view
+        LayoutInflater inflater = getLayoutInflater();
+        View alertView = inflater.inflate(R.layout.check_account_type, null);
+        final LinearLayout expenseTypesGrid = (LinearLayout) alertView.findViewById(R.id.expenses_grid);
+        final LinearLayout creditTypesGrid = (LinearLayout) alertView.findViewById(R.id.credits_grid);
+        String[] expenseTypes = getResources().getStringArray(R.array.expense_types);
+        String[] creditTypes = getResources().getStringArray(R.array.credit_types);
+        // Set up the layout to use
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        // Populate expenses grid
+        for (int i = 0; i < expenseTypes.length; ++i) {
+            // Create the new checkbox
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(expenseTypes[i]);
+            checkBox.setChecked(mExpenseTypesSelected[i]);
+            checkBox.setLayoutParams(layoutParams);
+            // Add the view
+            expenseTypesGrid.addView(checkBox);
+        }
+        // Populate credits grid
+        for (int i = 0; i < creditTypes.length; ++i) {
+            // Create the new checkbox
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setText(creditTypes[i]);
+            checkBox.setChecked(mCreditTypesSelected[i]);
+            checkBox.setLayoutParams(layoutParams);
+            // Add the view
+            creditTypesGrid.addView(checkBox);
+        }
+        // Add listeners to buttons present in the view
+        Button selectAllButton = (Button) alertView.findViewById(R.id.select_all);
+        Button selectNothingButton = (Button) alertView.findViewById(R.id.select_nothing);
+        Button selectExpensesButton = (Button) alertView.findViewById(R.id.select_expenses);
+        Button selectCreditsButton = (Button) alertView.findViewById(R.id.select_credits);
+        selectAllButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCheckBoxesState(expenseTypesGrid, true);
+                setCheckBoxesState(creditTypesGrid, true);
+            }
+        });
+        selectNothingButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCheckBoxesState(expenseTypesGrid, false);
+                setCheckBoxesState(creditTypesGrid, false);
+            }
+        });
+        selectExpensesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCheckBoxesState(expenseTypesGrid, true);
+                setCheckBoxesState(creditTypesGrid, false);
+            }
+        });
+        selectCreditsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setCheckBoxesState(expenseTypesGrid, false);
+                setCheckBoxesState(creditTypesGrid, true);
+            }
+        });
+        builder.setView(alertView);
+        // Set up the buttons
+        Resources res = getResources();
+        builder.setNegativeButton(res.getString(R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.setPositiveButton(res.getString(R.string.yes), null);
+        final AlertDialog alertDialog = builder.create();
+        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialog) {
+                Button b = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                b.setOnClickListener(new View.OnClickListener(){
+                    @Override
+                    public void onClick(View view) {
+                        updateSelectedTypes(expenseTypesGrid, creditTypesGrid);
+                        mTransactionsLayout.removeAllViews();
+                        mLastTransactionId = -1;
+                        mLastTransactionDate = null;
+                        appendNewTransactions( buildInClauseFromSelectedTypes() );
+                        alertDialog.dismiss();
+                    }
+                });
+            }
+        });
+        // Show alert dialog
+        alertDialog.show();
+    }
+
+    private void setCheckBoxesState(LinearLayout layout, boolean state) {
+        for (int i = 0; i < layout.getChildCount(); ++i)
+            ((CheckBox) layout.getChildAt(i)).setChecked(state);
+        layout.invalidate();
+    }
+
+    /**
+     * Update private fields using checkbox in grid layouts.
+     * @param expenseTypes Expenses types linear layout containing check boxes.
+     * @param creditTypes Credits types linear layout containing check boxes.
+     */
+    private void updateSelectedTypes(LinearLayout expenseTypes, LinearLayout creditTypes) {
+        for (int i = 0; i < expenseTypes.getChildCount(); ++i)
+            mExpenseTypesSelected[i] = ((CheckBox) expenseTypes.getChildAt(i)).isChecked();
+        for (int i = 0; i < creditTypes.getChildCount(); ++i)
+            mCreditTypesSelected[i] = ((CheckBox) creditTypes.getChildAt(i)).isChecked();
+    }
+
+    /**
+     * Browse expenses and credits grid layout to find selected types.
+     * @return The where clause build with selected types : '(type1,typ2,...)'.
+     */
+    private String buildInClauseFromSelectedTypes() {
+        String inClause = "";
+        boolean isFirst = true;
+        for (int i = 0; i < mExpenseTypesSelected.length; ++i) {
+            if (mExpenseTypesSelected[i]) {
+                inClause += (isFirst ? "" : ",") + i;
+                isFirst = false;
+            }
+        }
+        for (int i = 0; i < mCreditTypesSelected.length; ++i) {
+            if (mCreditTypesSelected[i]) {
+                inClause += (isFirst ? "" : ",") + (-i - 1);
+                isFirst = false;
+            }
+        }
+
+        return "(" + inClause + ")";
     }
 }

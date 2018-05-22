@@ -18,6 +18,8 @@
     <string name="history">Historique</string>
     <string name="statement">Bilan</string>
     <string name="piechart">Diagramme circulaire</string>
+    <string name="expenses">Dépenses</string>
+    <string name="credits">Crédits</string>
     <!-- Account History -->
     <string name="account_history_section_label">Historique</string>
     <string name="add_expense">Nouvelle dépense</string>
@@ -48,6 +50,9 @@
     <string name="add_price">Ajoutez un prix</string>
     <string name="price_not_valid">Le prix n\'est pas valide</string>
     <string name="append_transactions">Afficher plus de transactions</string>
+    <string name="types">Catégories</string>
+    <string name="select_all">Tous</string>
+    <string name="select_nothing">Rien</string>
     <!-- Account statement -->
     <string name="account_statement_section_label">Bilan</string>
     <string name="statement_label">Bilan sur</string>
@@ -66,8 +71,6 @@
     <string name="account_piechart_section_label">Diagramme circulaire</string>
     <string name="from">Du</string>
     <string name="to">Au</string>
-    <string name="expenses_pie_chart_label">Dépenses</string>
-    <string name="credits_pie_chart_label">Crédits</string>
     <string name="pie_chart_dataset_label">(en €)</string>
 
     <!-- Settings -->

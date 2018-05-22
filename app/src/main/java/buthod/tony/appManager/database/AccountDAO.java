@@ -106,15 +106,19 @@ public class AccountDAO extends DAOBase {
      * @param lastId The last transaction id to start returning information.
      * @return A list of all transactions.
      */
-    public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId) {
+    public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId,
+                                                      String inClause) {
         // Construct the where clause depending on the given parameters
         String whereClause = "";
         if (lastDate != null) {
-            whereClause += " Where " + DATE + " < '" + mDateFormatter.format(lastDate) + "'";
+            whereClause += " Where (" + DATE + " < '" + mDateFormatter.format(lastDate) + "'";
             if (lastId != -1)
                 whereClause += " Or ( " + DATE + " = '" + mDateFormatter.format(lastDate) + "'" +
                         " And " + KEY + " < " + String.valueOf(lastId) + " )";
+            whereClause += " )";
         }
+        if (inClause != null)
+            whereClause += (lastDate != null ? " And " : " Where ") + TYPE + " IN " + inClause;
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select * From " + TABLE_NAME +
@@ -139,6 +143,9 @@ public class AccountDAO extends DAOBase {
         }
         c.close();
         return transactions;
+    }
+    public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId) {
+        return getTransactions(limit, lastDate, lastId, null);
     }
     public ArrayList<TransactionInfo> getTransactions(int limit) {
         return getTransactions(limit, null, -1);
@@ -189,6 +196,11 @@ public class AccountDAO extends DAOBase {
             yearsStatement[index] = c.getInt(1);
             index++;
             currentYear++;
+        }
+        // Initialize the rest of the array
+        while (index < yearsNumber) {
+            yearsStatement[index] = 0;
+            index++;
         }
         c.close();
         return yearsStatement;
@@ -241,6 +253,11 @@ public class AccountDAO extends DAOBase {
                 currentYear++;
             }
         }
+        // Initialize the rest of the array
+        while (index < monthsNumber) {
+            monthsStatement[index] = 0;
+            index++;
+        }
         c.close();
         return monthsStatement;
     }
@@ -279,6 +296,11 @@ public class AccountDAO extends DAOBase {
             daysStatement[index] = c.getInt(1);
             index++;
             currentDate.add(Calendar.DATE, 1);
+        }
+        // Initialize the rest of the array
+        while (index < daysNumber) {
+            daysStatement[index] = 0;
+            index++;
         }
         c.close();
         return daysStatement;

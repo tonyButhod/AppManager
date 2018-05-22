@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/top_layout"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="0dp"
+            android:paddingRight="0dp">
+
+            <Button
+                android:id="@+id/select_all"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/select_all"
+                android:textAllCaps="false"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/select_nothing"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/select_nothing"
+                android:textAllCaps="false"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/select_expenses"
+            android:text="@string/expenses"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:layout_below="@id/top_layout"/>
+
+        <LinearLayout
+            android:id="@+id/expenses_grid"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/select_expenses">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/select_credits"
+            android:text="@string/credits"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:layout_below="@id/expenses_grid"/>
+
+        <LinearLayout
+            android:id="@+id/credits_grid"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/select_credits">
+
+        </LinearLayout>
+
+    </RelativeLayout>
+
+</ScrollView>

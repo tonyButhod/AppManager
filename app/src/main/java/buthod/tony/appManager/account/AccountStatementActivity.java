@@ -265,9 +265,11 @@ public class AccountStatementActivity extends RootActivity {
             mStatementValueView.setTextColor(ContextCompat.getColor(this, R.color.dark_soft_red));
         mStatementValueView.invalidate();
 
-        // Update the mean expense and credit over the selected period
-        mMeanExpenseView.setText(String.valueOf(cumulativeExpenses / periodNumber / 100.0f) + "€");
-        mMeanCreditView.setText(String.valueOf(cumulativeCredits / periodNumber / 100.0f) + "€");
+        // Update the mean expense and credit over the selected period without last day/month/year.
+        cumulativeExpenses -= expenseStatements[periodNumber - 1];
+        cumulativeCredits -= creditStatements[periodNumber - 1];
+        mMeanExpenseView.setText(String.valueOf(cumulativeExpenses / (periodNumber - 1) / 100.0f) + "€");
+        mMeanCreditView.setText(String.valueOf(cumulativeCredits / (periodNumber - 1) / 100.0f) + "€");
 
         // Update the last expense and credit over the selected period
         mLastExpenseView.setText(String.valueOf(expenseStatements[periodNumber - 1] / 100.0f) + "€");

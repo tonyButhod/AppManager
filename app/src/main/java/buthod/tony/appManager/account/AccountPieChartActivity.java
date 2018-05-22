@@ -89,7 +89,7 @@ public class AccountPieChartActivity extends RootActivity {
         cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
         mEndDateButton.setText(mDateFormatter.format(cal.getTime()));
         cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
-        cal.add(Calendar.MONTH, -3);
+        cal.add(Calendar.MONTH, -2);
         mStartDateButton.setText(mDateFormatter.format(cal.getTime()));
 
         // Set default style
