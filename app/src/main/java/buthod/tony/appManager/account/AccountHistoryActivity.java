@@ -1,14 +1,21 @@
 package buthod.tony.appManager.account;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -38,6 +45,7 @@ public class AccountHistoryActivity extends RootActivity {
 
     private ImageButton mBackButton = null;
     private Button mTypeSelectionButton = null;
+    private EditText mSearchField = null;
     private Button mAddExpense = null;
     private Button mAddCredit = null;
     private LinearLayout mTransactionsLayout = null;
@@ -64,6 +72,7 @@ public class AccountHistoryActivity extends RootActivity {
 
         mBackButton = (ImageButton) findViewById(R.id.back_button);
         mTypeSelectionButton = (Button) findViewById(R.id.type_selection);
+        mSearchField = (EditText) findViewById(R.id.search_field);
         mAddExpense = (Button) findViewById(R.id.add_expense);
         mAddCredit = (Button) findViewById(R.id.add_credit);
         mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
@@ -93,6 +102,19 @@ public class AccountHistoryActivity extends RootActivity {
                 showTypeSelectionDialog();
             }
         });
+        // Update search elements
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                onSearchFieldChanged(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
         // Add an expense or a credit part
         mAddExpense.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,7 +135,7 @@ public class AccountHistoryActivity extends RootActivity {
         mAppendTransactions.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                appendNewTransactions( buildInClauseFromSelectedTypes() );
+                appendNewTransactions( buildInClauseFromSelectedTypes(), mSearchField.getText().toString() );
             }
         });
 
@@ -128,11 +150,11 @@ public class AccountHistoryActivity extends RootActivity {
      * Append new transactions to the linear layout.
      * @param numberOfTransactions The number of transactions to append.
      */
-    private void appendNewTransactions(int numberOfTransactions, String inClause) {
+    private void appendNewTransactions(int numberOfTransactions, String inClause, String likeClause) {
         mDao.open();
         ArrayList<AccountDAO.TransactionInfo> transactions =
                 mDao.getTransactions(numberOfTransactions, mLastTransactionDate, mLastTransactionId,
-                        inClause);
+                        inClause, likeClause);
         mDao.close();
         for (int i = 0; i < transactions.size(); ++i) {
             addTransactionToLayout(transactions.get(i));
@@ -149,11 +171,11 @@ public class AccountHistoryActivity extends RootActivity {
         else
             mAppendTransactions.setVisibility(View.VISIBLE);
     }
-    private void appendNewTransactions(String inClause) {
-        appendNewTransactions(50, inClause);
+    private void appendNewTransactions(String inClause, String likeClause) {
+        appendNewTransactions(50, inClause, likeClause);
     }
     private void appendNewTransactions() {
-        appendNewTransactions(50, null);
+        appendNewTransactions(50, null, null);
     }
 
     /**
@@ -242,6 +264,20 @@ public class AccountHistoryActivity extends RootActivity {
         return resumeText;
     }
 
+    /**
+     * Update the layout of transactions.
+     * Reset the number of transactions displayed and uses the type selection and search string
+     * for update.
+     */
+    private void resetTransactionLayout() {
+        mTransactionsLayout.removeAllViews();
+        mLastTransactionId = -1;
+        mLastTransactionDate = null;
+        appendNewTransactions( buildInClauseFromSelectedTypes(), mSearchField.getText().toString() );
+    }
+
+    //region ADD_MODIFY_REMOVE_DIALOGS
+
     private void showAddTransactionDialog(final boolean isCredit) {
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -291,7 +327,7 @@ public class AccountHistoryActivity extends RootActivity {
                             // Check if the price is correct
                             int price = 0;
                             try {
-                                price = (int) (Float.parseFloat(priceString) * 100);
+                                price = Math.round(Float.parseFloat(priceString) * 100);
                             }
                             catch (NumberFormatException e) {
                                 Toast.makeText(getApplicationContext(), R.string.price_not_valid,
@@ -308,10 +344,7 @@ public class AccountHistoryActivity extends RootActivity {
                             mDao.addTransaction(type, price, date, comment);
                             mDao.close();
 
-                            mTransactionsLayout.removeAllViews();
-                            mLastTransactionId = -1;
-                            mLastTransactionDate = null;
-                            appendNewTransactions( buildInClauseFromSelectedTypes() );
+                            resetTransactionLayout();
                             alertDialog.dismiss();
                         }
                     }
@@ -386,7 +419,7 @@ public class AccountHistoryActivity extends RootActivity {
                             // Check if the price is correct
                             int price = 0;
                             try {
-                                price = (int) (Float.parseFloat(priceString) * 100);
+                                price = Math.round(Float.parseFloat(priceString) * 100);
                             }
                             catch (NumberFormatException e) {
                                 Toast.makeText(getApplicationContext(), "Le prix n'est pas valide",
@@ -449,6 +482,10 @@ public class AccountHistoryActivity extends RootActivity {
         // Show alert dialog
         alertDialog.show();
     }
+
+    //endregion
+
+    //region TYPE_SELECTION
 
     /**
      * Show a popup with different checkbox allowing the user to select which type
@@ -541,10 +578,7 @@ public class AccountHistoryActivity extends RootActivity {
                     @Override
                     public void onClick(View view) {
                         updateSelectedTypes(expenseTypesGrid, creditTypesGrid);
-                        mTransactionsLayout.removeAllViews();
-                        mLastTransactionId = -1;
-                        mLastTransactionDate = null;
-                        appendNewTransactions( buildInClauseFromSelectedTypes() );
+                        resetTransactionLayout();
                         alertDialog.dismiss();
                     }
                 });
@@ -593,5 +627,44 @@ public class AccountHistoryActivity extends RootActivity {
         }
 
         return "(" + inClause + ")";
+    }
+
+    //endregion
+
+    //region SEARCH
+
+    private Handler handler = new Handler();
+
+    private void onSearchFieldChanged(final String newSearchString) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (newSearchString.compareTo(mSearchField.getText().toString()) == 0)
+                    resetTransactionLayout();
+            }
+        }, 400);
+    }
+
+    //endregion
+
+    /**
+     * Clear focus of any edit text when the user click next to it.
+     */
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm =
+                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event);
     }
 }

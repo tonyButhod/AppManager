@@ -8,6 +8,8 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
@@ -51,6 +53,7 @@ public class AccountStatementActivity extends RootActivity {
     private TextView mMeanCreditView = null;
     private TextView mLastExpenseView = null;
     private TextView mLastCreditView = null;
+    private CheckBox mCumulativeCheckbox = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +69,7 @@ public class AccountStatementActivity extends RootActivity {
         mMeanCreditView = (TextView) findViewById(R.id.mean_credit);
         mLastExpenseView = (TextView) findViewById(R.id.last_expense);
         mLastCreditView = (TextView) findViewById(R.id.last_credit);
+        mCumulativeCheckbox = (CheckBox) findViewById(R.id.cumulative_checkbox);
         mDao = new AccountDAO(this);
 
         // Finish the activity if back button is pressed
@@ -90,9 +94,9 @@ public class AccountStatementActivity extends RootActivity {
                 if (position == 0)
                     mPeriodNumberButton.setText("31");
                 else if (position == 1)
-                    mPeriodNumberButton.setText("12");
+                    mPeriodNumberButton.setText("6");
                 else if (position == 2)
-                    mPeriodNumberButton.setText("5");
+                    mPeriodNumberButton.setText("3");
 
                 computeStatements();
             }
@@ -100,6 +104,14 @@ public class AccountStatementActivity extends RootActivity {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 // Do nothing
+            }
+        });
+        mPeriodTypeSpinner.setSelection(1);
+        mPeriodNumberButton.setText("6");
+        mCumulativeCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                computeStatements();
             }
         });
 
@@ -164,6 +176,7 @@ public class AccountStatementActivity extends RootActivity {
         Resources resources = getResources();
         // Compute financial statement depending on the the selected information
         int periodNumber = Integer.valueOf(mPeriodNumberButton.getText().toString());
+        boolean isCumulative = mCumulativeCheckbox.isChecked();
         String selectedPeriodType = mPeriodTypeSpinner.getSelectedItem().toString();
         String[] periodTypes = resources.getStringArray(R.array.dayMonthYear);
         mDao.open();
@@ -228,21 +241,27 @@ public class AccountStatementActivity extends RootActivity {
             // Add a new entry only if the statement is not zero for intermediate values
             if (creditStatements[i] != 0 || isFirstOrLast) {
                 cumulativeCredits += creditStatements[i];
-                creditEntries.add(new Entry(i + 1 - periodNumber, cumulativeCredits / 100.0f));
+                if (isCumulative)
+                    creditEntries.add(new Entry(i + 1 - periodNumber, cumulativeCredits / 100.0f));
+                else
+                    creditEntries.add(new Entry(i + 1 - periodNumber, creditStatements[i] / 100.0f));
             }
             if (expenseStatements[i] != 0 || isFirstOrLast) {
                 cumulativeExpenses += expenseStatements[i];
-                expenseEntries.add(new Entry(i + 1 - periodNumber, cumulativeExpenses / 100.0f));
+                if (isCumulative)
+                    expenseEntries.add(new Entry(i + 1 - periodNumber, cumulativeExpenses / 100.0f));
+                else
+                    expenseEntries.add(new Entry(i + 1 - periodNumber, expenseStatements[i] / 100.0f));
             }
         }
         // Update lines of the line chart
         LineDataSet creditDataset = new LineDataSet(creditEntries,
-                resources.getString(R.string.cumulative_credits));
+                resources.getString(isCumulative ? R.string.cumulative_credits : R.string.credits));
         creditDataset.setColor(ContextCompat.getColor(this, R.color.green));
         creditDataset.setCircleColor(ContextCompat.getColor(this, R.color.green));
         creditDataset.setDrawValues(false);
         LineDataSet expenseDataset = new LineDataSet(expenseEntries,
-                resources.getString(R.string.cumulative_expenses));
+                resources.getString(isCumulative ? R.string.cumulative_expenses : R.string.expenses));
         expenseDataset.setColor(ContextCompat.getColor(this, R.color.red));
         expenseDataset.setCircleColor(ContextCompat.getColor(this, R.color.red));
         expenseDataset.setDrawValues(false);

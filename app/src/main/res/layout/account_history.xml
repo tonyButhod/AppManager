@@ -3,6 +3,8 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     android:paddingLeft="0dp"
     android:paddingRight="0dp">
 
@@ -18,10 +20,12 @@
             android:id="@+id/back_button"
             style="@style/BackButton"/>
 
-        <View
+        <EditText
+            android:id="@+id/search_field"
+            android:hint="@string/search"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/type_selection"

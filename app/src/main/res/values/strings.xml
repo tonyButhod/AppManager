@@ -53,6 +53,7 @@
     <string name="types">Catégories</string>
     <string name="select_all">Tous</string>
     <string name="select_nothing">Rien</string>
+    <string name="regex">RegEx</string>
     <!-- Account statement -->
     <string name="account_statement_section_label">Bilan</string>
     <string name="statement_label">Bilan sur</string>
@@ -67,6 +68,7 @@
     <string name="mean_credit_label">Crédit moyen</string>
     <string name="mean_expense_label">Dépense moyenne</string>
     <string name="last_statement_label">Dernier bilan :</string>
+    <string name="is_cumulative_label">Bilan cumulé</string>
     <!-- Account pie chart -->
     <string name="account_piechart_section_label">Diagramme circulaire</string>
     <string name="from">Du</string>
@@ -91,5 +93,8 @@
     <string name="yes">Oui</string>
     <string name="no">Non</string>
     <string name="ok">Ok</string>
+    <string name="reset">Reset</string>
+    <string name="apply">Appliquer</string>
+    <string name="search">Rechercher</string>
 
 </resources>

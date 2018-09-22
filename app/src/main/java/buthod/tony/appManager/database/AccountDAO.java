@@ -107,22 +107,24 @@ public class AccountDAO extends DAOBase {
      * @return A list of all transactions.
      */
     public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId,
-                                                      String inClause) {
+                                                      String inClause, String likeClause) {
         // Construct the where clause depending on the given parameters
         String whereClause = "";
         if (lastDate != null) {
-            whereClause += " Where (" + DATE + " < '" + mDateFormatter.format(lastDate) + "'";
+            whereClause += " (" + DATE + " < '" + mDateFormatter.format(lastDate) + "'";
             if (lastId != -1)
                 whereClause += " Or ( " + DATE + " = '" + mDateFormatter.format(lastDate) + "'" +
                         " And " + KEY + " < " + String.valueOf(lastId) + " )";
             whereClause += " )";
         }
         if (inClause != null)
-            whereClause += (lastDate != null ? " And " : " Where ") + TYPE + " IN " + inClause;
+            whereClause += (whereClause.isEmpty() ? "" : " And ") + TYPE + " IN " + inClause;
+        if (likeClause != null && !likeClause.isEmpty())
+            whereClause += (whereClause.isEmpty() ? "" : " And ") + COMMENT + " LIKE '%" + likeClause + "%'";
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select * From " + TABLE_NAME +
-                whereClause +
+                (whereClause.isEmpty() ? "" : " Where " + whereClause) +
                 " Order By " + DATE + " DESC, " + KEY + " DESC" +
                 " Limit " + String.valueOf(limit) + ";", new String[0]);
         ArrayList<TransactionInfo> transactions = new ArrayList<TransactionInfo>();
@@ -143,6 +145,10 @@ public class AccountDAO extends DAOBase {
         }
         c.close();
         return transactions;
+    }
+    public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId,
+                                                      String inCLause) {
+        return getTransactions(limit, lastDate, lastId, inCLause, null);
     }
     public ArrayList<TransactionInfo> getTransactions(int limit, Date lastDate, long lastId) {
         return getTransactions(limit, lastDate, lastId, null);

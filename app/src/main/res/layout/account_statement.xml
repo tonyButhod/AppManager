@@ -54,11 +54,19 @@
 
         </Spinner>
 
+        <CheckBox
+            android:id="@+id/cumulative_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"
+            android:text="@string/is_cumulative_label"
+            android:layout_below="@id/statement_label"/>
+
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/line_chart"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            android:layout_below="@id/statement_label">
+            android:layout_below="@id/cumulative_checkbox">
 
         </com.github.mikephil.charting.charts.LineChart>
 
