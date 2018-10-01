@@ -21,6 +21,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 import buthod.tony.appManager.account.AccountActivity;
+import buthod.tony.appManager.database.DAOBase;
+import buthod.tony.appManager.recipes.RecipesActivity;
 
 /**
  * Created by Tony on 06/08/2017.
@@ -64,13 +66,13 @@ public class SettingsActivity extends RootActivity {
         mSaveDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveDataPublicStorage();
+                DAOBase.saveDataExternalStorage(SettingsActivity.this);
             }
         });
         mLoadDataButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loadDataPublicStorage();
+                DAOBase.loadDataExternalStorage(SettingsActivity.this);
             }
         });
         mStepCounterOnStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -82,77 +84,5 @@ public class SettingsActivity extends RootActivity {
                 editor.apply();
             }
         });
-    }
-
-    /// SAVE AND RESTORE DATA PART ///
-
-    private static String SAVE_JSON_FILE = "SavedData.json";
-
-    /**
-     * Function used to save all data stored on the database in an external file.
-     * The data is saved in the file SAVE_JSON_FILE.
-     */
-    private void saveDataPublicStorage() {
-        // First check if we have the permission to write the file
-        verifyStoragePermissions();
-
-        try {
-            // Get data from other classes
-            JSONObject objectToSave = new JSONObject();
-            objectToSave.put(PedometerActivity.class.getName(), PedometerActivity.saveDataPublicStorage(this));
-            objectToSave.put(AccountActivity.class.getName(), AccountActivity.saveDataPublicStorage(this));
-
-            // Write file
-            File file = new File(getExternalFilesDir(null), SAVE_JSON_FILE);
-            FileWriter writer = new FileWriter(file);
-            writer.write(objectToSave.toString());
-            writer.flush();
-            writer.close();
-            Toast.makeText(this, getResources().getString(R.string.save_data_success), Toast.LENGTH_LONG).show();
-        }
-        catch (Exception e) {
-            Toast.makeText(this, getResources().getString(R.string.write_error), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Load data from an external file SAVE_JSON_FILE.
-     * The data are added in the different databases.
-     */
-    private void loadDataPublicStorage() {
-        // First check if we have the permission to write the file
-        verifyStoragePermissions();
-
-        File file = new File(getExternalFilesDir(null), SAVE_JSON_FILE);
-        try {
-            // Read the file
-            FileReader reader = new FileReader(file);
-            BufferedReader buffer = new BufferedReader(reader);
-            String content = "", line;
-            while ((line = buffer.readLine()) != null)
-                content += line;
-            // Parse content to populate databases
-            JSONObject objectToLoad = new JSONObject(content);
-            PedometerActivity.loadDataPublicStorage(this,
-                    objectToLoad.getJSONArray(PedometerActivity.class.getName()));
-            AccountActivity.loadDataPublicStorage(this,
-                    objectToLoad.getJSONArray(AccountActivity.class.getName()));
-            Toast.makeText(this, getResources().getString(R.string.load_data_success), Toast.LENGTH_LONG).show();
-        }
-        catch (Exception e) {
-            Toast.makeText(this, getResources().getString(R.string.read_error), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    /**
-     * Verify the storage permissions. If writing and reading are not allowed, then ask the user the access.
-     */
-    private void verifyStoragePermissions() {
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-        }
     }
 }

@@ -1,13 +1,18 @@
 package buthod.tony.appManager.database;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.SparseArray;
 import android.util.SparseIntArray;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.security.Key;
 import java.text.ParseException;
@@ -18,6 +23,8 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Locale;
+
+import buthod.tony.appManager.Utils;
 
 /**
  * Created by Tony on 09/10/2017.
@@ -54,6 +61,8 @@ public class AccountDAO extends DAOBase {
         super(context);
         mDateFormatter = new SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE);
     }
+
+    //region TRANSACTION
 
     public long addTransaction(int type, int price, Date date, String comment) {
         ContentValues value = new ContentValues();
@@ -165,6 +174,10 @@ public class AccountDAO extends DAOBase {
         value.put(COMMENT, comment);
         mDb.update(TABLE_NAME, value, KEY + " = ?", new String[] {String.valueOf(id)});
     }
+
+    //endregion
+
+    //region STATEMENT
 
     /**
      * Get financial statements group by years.
@@ -335,4 +348,75 @@ public class AccountDAO extends DAOBase {
 
         return result;
     }
+
+    //endregion
+
+    //region LOAD_SAVE_EXTERNAL_STORAGE
+
+    public static String EXTERNAL_ACCOUNT_FILENAME = "Account.json";
+
+    /**
+     * Save transactions data to external storage in file EXTERNAL_ACCOUNT_FILENAME.
+     * @param activity The current activity.
+     * @param db The database.
+     * @return True in case of success, false otherwise.
+     */
+    public static boolean saveDataExternalStorage(Activity activity, SQLiteDatabase db) throws JSONException {
+        // First check if we have the permission to write the file
+        Utils.verifyStoragePermissions(activity);
+
+        JSONObject obj = new JSONObject();
+        JSONArray transactionsObj = new JSONArray();
+        Cursor c = db.rawQuery("Select * From " + DatabaseHandler.ACCOUNT_TABLE_NAME, new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            JSONObject transactionObj = new JSONObject();
+            transactionObj.put(DatabaseHandler.TRANSACTION_KEY, c.getLong(c.getColumnIndex(DatabaseHandler.TRANSACTION_KEY)));
+            transactionObj.put(DatabaseHandler.TRANSACTION_TYPE, c.getInt(c.getColumnIndex(DatabaseHandler.TRANSACTION_TYPE)));
+            transactionObj.put(DatabaseHandler.TRANSACTION_PRICE, c.getInt(c.getColumnIndex(DatabaseHandler.TRANSACTION_PRICE)));
+            transactionObj.put(DatabaseHandler.TRANSACTION_DATE, c.getString(c.getColumnIndex(DatabaseHandler.TRANSACTION_DATE)));
+            transactionObj.put(DatabaseHandler.TRANSACTION_COMMENT, c.getString(c.getColumnIndex(DatabaseHandler.TRANSACTION_COMMENT)));
+            transactionsObj.put(transactionObj);
+        }
+        obj.put(DatabaseHandler.ACCOUNT_TABLE_NAME, transactionsObj);
+        c.close();
+
+        return Utils.writeToExternalStorage(activity, EXTERNAL_ACCOUNT_FILENAME, obj.toString());
+    }
+
+    /**
+     * Load transactions data from external storage in file EXTERNAL_ACCOUNT_FILENAME.
+     * @param activity The current activity.
+     * @param db The database.
+     * @return True in case of success, false otherwise.
+     */
+    public static boolean loadDataExternalStorage(Activity activity, SQLiteDatabase db) throws JSONException {
+        // First check if we have the permission to read the file
+        Utils.verifyStoragePermissions(activity);
+
+        String fileContent = Utils.readFromExternalStorage(activity, EXTERNAL_ACCOUNT_FILENAME);
+        if (fileContent == null)
+            return false;
+
+        JSONObject obj = new JSONObject(fileContent);
+        JSONArray transactionsObj = obj.getJSONArray(DatabaseHandler.ACCOUNT_TABLE_NAME);
+        if (transactionsObj.length() > 0) {
+            for (int i = 0; i < transactionsObj.length(); ++i) {
+                JSONObject transactionObj = transactionsObj.getJSONObject(i);
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHandler.TRANSACTION_KEY, transactionObj.getLong(DatabaseHandler.TRANSACTION_KEY));
+                values.put(DatabaseHandler.TRANSACTION_TYPE, transactionObj.getInt(DatabaseHandler.TRANSACTION_TYPE));
+                values.put(DatabaseHandler.TRANSACTION_PRICE, transactionObj.getInt(DatabaseHandler.TRANSACTION_PRICE));
+                values.put(DatabaseHandler.TRANSACTION_DATE, transactionObj.getString(DatabaseHandler.TRANSACTION_DATE));
+                values.put(DatabaseHandler.TRANSACTION_COMMENT, transactionObj.getString(DatabaseHandler.TRANSACTION_COMMENT));
+                try {
+                    db.insertOrThrow(DatabaseHandler.ACCOUNT_TABLE_NAME, null, values);
+                }
+                catch (SQLException e) { }
+            }
+        }
+
+        return true;
+    }
+
+    //endregion
 }

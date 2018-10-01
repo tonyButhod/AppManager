@@ -75,6 +75,36 @@
     <string name="to">Au</string>
     <string name="pie_chart_dataset_label">(en €)</string>
 
+    <!-- Recipes -->
+    <string name="recipes_section_label">Recettes cuisine</string>
+    <string name="add_recipe">Ajouter</string>
+    <string name="recipe_name">Nom recette</string>
+    <string name="recipe_type">Type</string>
+    <string-array name="recipe_types">
+        <item>Entrée</item>
+        <item>Plat</item>
+        <item>Dessert</item>
+        <item>Autre</item>
+    </string-array>
+    <string-array name="units_array">
+        <item></item>
+        <item>g</item>
+        <item>Kg</item>
+        <item>L</item>
+        <item>cL</item>
+        <item>Cuillère à café</item>
+        <item>Cuillère à soupe</item>
+    </string-array>
+    <string name="recipe_difficulty">Difficulté</string>
+    <string name="recipe_grade">Note</string>
+    <string name="recipe_time">Temps (minutes)</string>
+    <string name="add_ingredient">Ajouter un ingrédiant</string>
+    <string name="add_step">Ajouter une étape</string>
+    <string name="quantity">Quantité</string>
+    <string name="unit">Unité</string>
+    <string name="ingredient">Ingrédiant</string>
+    <string name="step_description">Description de l\'étape</string>
+
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
     <string name="save_data">Save data to external storage</string>
@@ -96,5 +126,9 @@
     <string name="reset">Reset</string>
     <string name="apply">Appliquer</string>
     <string name="search">Rechercher</string>
+    <string name="data_saved_success">Données sauvegardées sur stockage externe</string>
+    <string name="data_saved_error">Erreur lors de la sauvegarde des données sur stockage externe</string>
+    <string name="data_loaded_success">Données chargées depuis stockage externe</string>
+    <string name="data_loaded_error">Erreur lors du chargement des données depuis stockage externe</string>
 
 </resources>

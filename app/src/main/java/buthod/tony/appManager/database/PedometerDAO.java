@@ -1,8 +1,16 @@
 package buthod.tony.appManager.database;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -10,6 +18,8 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import buthod.tony.appManager.Utils;
 
 /**
  * Created by Tony on 29/07/2017.
@@ -86,4 +96,69 @@ public class PedometerDAO extends DAOBase {
     public SortedMap<Date, Integer> getSteps() {
         return getSteps(new Date(0));
     }
+
+    //region LOAD_SAVE_EXTERNAL_STORAGE
+
+    public static String EXTERNAL_PEDOMETER_FILENAME = "Pedometer.json";
+
+    /**
+     * Save pedometer data to external storage in file EXTERNAL_PEDOMETER_FILENAME.
+     * @param activity The current activity.
+     * @param db The database.
+     * @return True in case of success, false otherwise.
+     */
+    public static boolean saveDataExternalStorage(Activity activity, SQLiteDatabase db) throws JSONException {
+        // First check if we have the permission to write the file
+        Utils.verifyStoragePermissions(activity);
+
+        JSONObject obj = new JSONObject();
+        JSONArray pedometersObj = new JSONArray();
+        Cursor c = db.rawQuery("Select * From " + DatabaseHandler.PEDOMETER_TABLE_NAME, new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            JSONObject pedometerObj = new JSONObject();
+            pedometerObj.put(DatabaseHandler.PEDOMETER_KEY, c.getLong(c.getColumnIndex(DatabaseHandler.PEDOMETER_KEY)));
+            pedometerObj.put(DatabaseHandler.PEDOMETER_STEPS, c.getInt(c.getColumnIndex(DatabaseHandler.PEDOMETER_STEPS)));
+            pedometerObj.put(DatabaseHandler.PEDOMETER_DATE, c.getString(c.getColumnIndex(DatabaseHandler.PEDOMETER_DATE)));
+            pedometersObj.put(pedometerObj);
+        }
+        obj.put(DatabaseHandler.PEDOMETER_TABLE_NAME, pedometersObj);
+        c.close();
+
+        return Utils.writeToExternalStorage(activity, EXTERNAL_PEDOMETER_FILENAME, obj.toString());
+    }
+
+    /**
+     * Load pedometer data from external storage in file EXTERNAL_PEDOMETER_FILENAME.
+     * @param activity The current activity.
+     * @param db The database.
+     * @return True in case of success, false otherwise.
+     */
+    public static boolean loadDataExternalStorage(Activity activity, SQLiteDatabase db) throws JSONException {
+        // First check if we have the permission to read the file
+        Utils.verifyStoragePermissions(activity);
+
+        String fileContent = Utils.readFromExternalStorage(activity, EXTERNAL_PEDOMETER_FILENAME);
+        if (fileContent == null)
+            return false;
+
+        JSONObject obj = new JSONObject(fileContent);
+        JSONArray pedometersObj = obj.getJSONArray(DatabaseHandler.PEDOMETER_TABLE_NAME);
+        if (pedometersObj.length() > 0) {
+            for (int i = 0; i < pedometersObj.length(); ++i) {
+                JSONObject pedometerObj = pedometersObj.getJSONObject(i);
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHandler.PEDOMETER_KEY, pedometerObj.getLong(DatabaseHandler.PEDOMETER_KEY));
+                values.put(DatabaseHandler.PEDOMETER_DATE, pedometerObj.getString(DatabaseHandler.PEDOMETER_DATE));
+                values.put(DatabaseHandler.PEDOMETER_STEPS, pedometerObj.getInt(DatabaseHandler.PEDOMETER_STEPS));
+                try {
+                    db.insertOrThrow(DatabaseHandler.PEDOMETER_TABLE_NAME, null, values);
+                }
+                catch (SQLException e) { }
+            }
+        }
+
+        return true;
+    }
+
+    //endregion
 }

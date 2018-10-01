@@ -97,6 +97,11 @@ public class AccountActivity extends RootActivity {
         return saveData;
     }
 
+    /**
+     * Function used to load all data stored on the database in an external file.
+     * @param context The context of the application.
+     * @param data The JSONArray containing all data to load.
+     */
     public static void loadDataPublicStorage(Context context, JSONArray data)
             throws JSONException, ParseException {
         AccountDAO dao = new AccountDAO(context);

@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 
+    xmlns:tools="http://schemas.android.com/tools"
     package="buthod.tony.appManager">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -11,7 +12,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="GoogleAppIndexingWarning">
 
         <activity
             android:name="buthod.tony.appManager.MainActivity"
@@ -50,6 +52,21 @@
         <activity
             android:name="buthod.tony.appManager.account.AccountPieChartActivity"
             android:label="@string/account_piechart_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.recipes.RecipesActivity"
+            android:label="@string/recipes_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.recipes.AddEditRecipeActivity"
+            android:label="@string/recipes_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.recipes.RecipeActivity"
+            android:label="@string/recipes_section_label"
             android:screenOrientation="portrait">
         </activity>
     </application>

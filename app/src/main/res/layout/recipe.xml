@@ -21,28 +21,10 @@
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/save_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/save_data"
-        android:layout_below="@id/toolbar"/>
-
-    <!-- Button used to import data from JSON file
-         It is used for development purpose in case the database is cleared -->
-    <Button
-        android:id="@+id/load_data"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="visible"
-        android:text="@string/load_data"
-        android:layout_below="@id/save_data"/>
-
-    <CheckBox
-        android:id="@+id/step_counter_on_start"
+    <TextView
+        android:id="@+id/recipe_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/step_counter_on_start"
-        android:layout_below="@id/load_data"/>
+        android:layout_below="@id/toolbar"/>
 
 </RelativeLayout>
