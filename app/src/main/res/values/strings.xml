@@ -75,6 +75,9 @@
     <string name="to">Au</string>
     <string name="pie_chart_dataset_label">(en €)</string>
 
+    <!-- Recipes -->
+    <string name="recipes_section_label">Recettes cuisine</string>
+
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
     <string name="save_data">Save data to external storage</string>

@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 
 import buthod.tony.appManager.account.AccountActivity;
+import buthod.tony.appManager.recipes.RecipesActivity;
 
 /**
  * Created by Tony on 06/08/2017.
@@ -22,6 +23,7 @@ public class MainActivity extends RootActivity {
     private Button mGraphPedometer = null;
     private Button mOnOff = null;
     private Button mExpenses = null;
+    private Button mRecipes = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +88,16 @@ public class MainActivity extends RootActivity {
             public void onClick(View v) {
                 Intent expensesIntent = new Intent(getBaseContext(), AccountActivity.class);
                 startActivity(expensesIntent);
+            }
+        });
+
+        //////////////// Recipes /////////////////
+        mRecipes = (Button) findViewById(R.id.recipes_section);
+        mRecipes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent recipesIntent = new Intent(getBaseContext(), RecipesActivity.class);
+                startActivity(recipesIntent);
             }
         });
     }
