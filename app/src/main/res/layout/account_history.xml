@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -8,61 +9,15 @@
     android:paddingLeft="0dp"
     android:paddingRight="0dp">
 
-    <LinearLayout
-        android:id="@+id/toolbar"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/colorPrimary"
-        android:paddingLeft="0dp"
-        android:paddingRight="0dp">
-
-        <ImageButton
-            android:id="@+id/back_button"
-            style="@style/BackButton"/>
-
-        <EditText
-            android:id="@+id/search_field"
-            android:hint="@string/search"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-
-        <Button
-            android:id="@+id/type_selection"
-            android:text="@string/types"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <LinearLayout
+    <ImageButton
         android:id="@+id/add_transaction"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:weightSum="1.0"
-        android:layout_below="@id/toolbar">
-
-        <Button
-            android:id="@+id/add_expense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/add_expense"
-            android:layout_weight="0.5"/>
-
-        <Button
-            android:id="@+id/add_credit"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/add_credit"
-            android:layout_weight="0.5"/>
-
-    </LinearLayout>
+        style="@style/AddButton"/>
 
     <ScrollView
         android:id="@+id/expenses_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/add_transaction">
+        android:layout_below="@id/toolbar">
 
         <RelativeLayout
             android:layout_width="match_parent"

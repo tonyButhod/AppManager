@@ -1,10 +1,9 @@
 package buthod.tony.appManager.account;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
-import android.graphics.Rect;
-import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -13,16 +12,16 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,20 +33,19 @@ import java.util.Date;
 import java.util.Locale;
 
 import buthod.tony.appManager.R;
-import buthod.tony.appManager.RootActivity;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
- * Created by Tony on 09/10/2017.
+ * Class used in AccountActivity to display the history of all transactions in a page viewer.
  */
+public class AccountHistoryActivity {
+    // Fields used for the page viewer
+    private Activity mRootActivity = null;
+    private View mAccountView = null;
 
-public class AccountHistoryActivity extends RootActivity {
-
-    private ImageButton mBackButton = null;
     private Button mTypeSelectionButton = null;
     private EditText mSearchField = null;
-    private Button mAddExpense = null;
-    private Button mAddCredit = null;
+    private ImageButton mAddTransaction = null;
     private LinearLayout mTransactionsLayout = null;
     private Button mAppendTransactions = null;
 
@@ -65,36 +63,37 @@ public class AccountHistoryActivity extends RootActivity {
 
     private SimpleDateFormat mDateFormatter = null;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.account_history);
+    /**
+     * @return The created view to use in the page viewer.
+     */
+    public View getView() {
+        return mAccountView;
+    }
 
-        mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mTypeSelectionButton = (Button) findViewById(R.id.type_selection);
-        mSearchField = (EditText) findViewById(R.id.search_field);
-        mAddExpense = (Button) findViewById(R.id.add_expense);
-        mAddCredit = (Button) findViewById(R.id.add_credit);
-        mTransactionsLayout = (LinearLayout) findViewById(R.id.transactions_layout);
-        mAppendTransactions = (Button) findViewById(R.id.append_transactions_button);
-        mDao = new AccountDAO(getBaseContext());
+    /**
+     * Instantiate all elements needed and update the account view with transactions' history.
+     * @param rootActivity The activity containing the page viewer.
+     */
+    public void onCreate(Activity rootActivity) {
+        mRootActivity = rootActivity;
+        mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_history, null);
+
+        mTypeSelectionButton = (Button) mRootActivity.findViewById(R.id.type_selection);
+        mSearchField = (EditText) mRootActivity.findViewById(R.id.search_field);
+        mAddTransaction = (ImageButton) mAccountView.findViewById(R.id.add_transaction);
+        mTransactionsLayout = (LinearLayout) mAccountView.findViewById(R.id.transactions_layout);
+        mAppendTransactions = (Button) mAccountView.findViewById(R.id.append_transactions_button);
+        mDao = new AccountDAO(mRootActivity);
         mDateFormatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
 
         // Add type of expenses and credits
-        mExpenseTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+        mExpenseTypes = new ArrayAdapter<CharSequence>(mRootActivity, android.R.layout.simple_spinner_item);
         mExpenseTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mExpenseTypes.addAll(getResources().getStringArray(R.array.expense_types));
-        mCreditTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
+        mExpenseTypes.addAll(mRootActivity.getResources().getStringArray(R.array.expense_types));
+        mCreditTypes = new ArrayAdapter<CharSequence>(mRootActivity, android.R.layout.simple_spinner_item);
         mCreditTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mCreditTypes.addAll(getResources().getStringArray(R.array.credit_types));
+        mCreditTypes.addAll(mRootActivity.getResources().getStringArray(R.array.credit_types));
 
-        // Finish the activity if back button is pressed
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
         // Show the type selection popup
         mTypeSelectionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,16 +115,10 @@ public class AccountHistoryActivity extends RootActivity {
             public void afterTextChanged(Editable s) { }
         });
         // Add an expense or a credit part
-        mAddExpense.setOnClickListener(new View.OnClickListener() {
+        mAddTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAddTransactionDialog(false);
-            }
-        });
-        mAddCredit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAddTransactionDialog(true);
+                showAddTransactionDialog();
             }
         });
         // Populate the linear layout of transactions
@@ -144,6 +137,13 @@ public class AccountHistoryActivity extends RootActivity {
         mCreditTypesSelected = new boolean[mCreditTypes.getCount()];
         for (int i = 0; i < mExpenseTypesSelected.length; ++i) mExpenseTypesSelected[i] = true;
         for (int i = 0; i < mCreditTypesSelected.length; ++i) mCreditTypesSelected[i] = true;
+    }
+
+    /**
+     * Update the view with elements in database.
+     */
+    public void updateView() {
+        // Nothing to do
     }
 
     /**
@@ -183,23 +183,17 @@ public class AccountHistoryActivity extends RootActivity {
      * @param trans Class containing all expenses/credits information (id, type, price, date).
      */
     private void addTransactionToLayout(final AccountDAO.TransactionInfo trans) {
-        // Check if it is an expense or a credit
-        final boolean isCredit = (trans.type < 0);
         // Display information about the expense/credit
-        TextView transactionView = new TextView(getBaseContext());
+        TextView transactionView = new TextView(mRootActivity);
         transactionView.setText( formatTransactionText(trans) );
         transactionView.setTextSize(12f);
-        if (isCredit) {
-            transactionView.setTextColor(ContextCompat.getColor(getBaseContext(),
-                    R.color.dark_soft_green));
-            transactionView.setBackground(ContextCompat.getDrawable(getBaseContext(),
-                    R.drawable.credit_background));
+        if (trans.type < 0) {
+            transactionView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
+            transactionView.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.credit_background));
         }
         else {
-            transactionView.setTextColor(ContextCompat.getColor(getBaseContext(),
-                    R.color.dark_soft_red));
-            transactionView.setBackground(ContextCompat.getDrawable(getBaseContext(),
-                    R.drawable.expense_background));
+            transactionView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
+            transactionView.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.expense_background));
         }
         // Add a long click event to delete the transaction
         transactionView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -209,7 +203,7 @@ public class AccountHistoryActivity extends RootActivity {
                 v.setSelected(true);
 
                 // Show a popup menu
-                final PopupMenu popup = new PopupMenu(AccountHistoryActivity.this, v);
+                final PopupMenu popup = new PopupMenu(mRootActivity, v);
                 popup.inflate(R.menu.transaction_menu);
                 // Registering clicks on the popup menu
                 final TextView currentView = (TextView) v;
@@ -219,10 +213,10 @@ public class AccountHistoryActivity extends RootActivity {
                         popup.dismiss();
                         switch(item.getItemId()) {
                             case R.id.modify:
-                                showModifyTransactionDialog(trans.id, currentView, isCredit);
+                                showModifyTransactionDialog(trans.id, currentView);
                                 break;
                             case R.id.delete:
-                                showDeleteTransactionDialog(trans.id, currentView, isCredit);
+                                showDeleteTransactionDialog(trans.id, currentView);
                                 break;
                         }
                         return true;
@@ -241,6 +235,21 @@ public class AccountHistoryActivity extends RootActivity {
         });
         // Finally add the view in the linear layout
         mTransactionsLayout.addView(transactionView);
+    }
+
+    /**
+     * Update a transaction view. It updates its text and color.
+     */
+    private void updateTransactionView(TextView view, AccountDAO.TransactionInfo transaction) {
+        view.setText(formatTransactionText(transaction));
+        if (transaction.type < 0) {
+            view.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
+            view.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.credit_background));
+        }
+        else {
+            view.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
+            view.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.expense_background));
+        }
     }
 
     /**
@@ -278,15 +287,16 @@ public class AccountHistoryActivity extends RootActivity {
 
     //region ADD_MODIFY_REMOVE_DIALOGS
 
-    private void showAddTransactionDialog(final boolean isCredit) {
+    private void showAddTransactionDialog() {
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(isCredit ? R.string.add_credit : R.string.add_expense);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
+        builder.setTitle(R.string.add_transaction);
         // Set the view of the alert dialog
-        LayoutInflater inflater = getLayoutInflater();
+        LayoutInflater inflater = mRootActivity.getLayoutInflater();
         View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
         builder.setView(alertView);
         // Get useful view
+        final RadioButton expenseRadioButton = (RadioButton) alertView.findViewById(R.id.expense_radio_button);
         final Spinner typeSpinner = (Spinner) alertView.findViewById(R.id.type);
         final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
         final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
@@ -297,10 +307,16 @@ public class AccountHistoryActivity extends RootActivity {
         int month = c.get(Calendar.MONTH);
         int day = c.get(Calendar.DAY_OF_MONTH);
         datePicker.init(year, month, day, null);
-        // Populate the spinner of alert dialog with types.
-        typeSpinner.setAdapter(isCredit ? mCreditTypes : mExpenseTypes);
+        // Populate the spinner of alert dialog with types depending on the selected radio button
+        typeSpinner.setAdapter(expenseRadioButton.isChecked() ? mExpenseTypes : mCreditTypes);
+        expenseRadioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                typeSpinner.setAdapter(b ? mExpenseTypes : mCreditTypes);
+            }
+        });
         // Set up the buttons
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         builder.setNegativeButton(res.getString(R.string.cancel),
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -318,10 +334,10 @@ public class AccountHistoryActivity extends RootActivity {
                     @Override
                     public void onClick(View view) {
                         int type = typeSpinner.getSelectedItemPosition();
-                        type = (isCredit) ? -type - 1 : type;
+                        type = (expenseRadioButton.isChecked()) ? type : -type - 1;
                         String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
-                            Toast.makeText(getApplicationContext(), R.string.add_price, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mRootActivity, R.string.add_price, Toast.LENGTH_SHORT).show();
                         }
                         else {
                             // Check if the price is correct
@@ -330,7 +346,7 @@ public class AccountHistoryActivity extends RootActivity {
                                 price = Math.round(Float.parseFloat(priceString) * 100);
                             }
                             catch (NumberFormatException e) {
-                                Toast.makeText(getApplicationContext(), R.string.price_not_valid,
+                                Toast.makeText(mRootActivity, R.string.price_not_valid,
                                         Toast.LENGTH_SHORT).show();
                                 return;
                             }
@@ -354,16 +370,17 @@ public class AccountHistoryActivity extends RootActivity {
         alertDialog.show();
     }
 
-    private void showModifyTransactionDialog(final long transactionID, final TextView transactionView,
-                                             final boolean isCredit) {
+    private void showModifyTransactionDialog(final long transactionID, final TextView transactionView) {
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(isCredit ? R.string.modify_expense : R.string.modify_credit);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
+        builder.setTitle(R.string.modify_transaction);
         // Set the view of the alert dialog
-        LayoutInflater inflater = getLayoutInflater();
+        LayoutInflater inflater = mRootActivity.getLayoutInflater();
         View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
         builder.setView(alertView);
         // Get useful views
+        final RadioButton expenseRadioButton = (RadioButton) alertView.findViewById(R.id.expense_radio_button);
+        final RadioButton creditRadioButton = (RadioButton) alertView.findViewById(R.id.credit_radio_button);
         final Spinner typeSpinner = (Spinner) alertView.findViewById(R.id.type);
         final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
         final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
@@ -380,19 +397,30 @@ public class AccountHistoryActivity extends RootActivity {
         int day = c.get(Calendar.DAY_OF_MONTH);
         datePicker.init(year, month, day, null);
         // Populate the spinner of alert dialog with types.
-        if (isCredit) {
+        if (transaction.type < 0) {
+            expenseRadioButton.setChecked(false);
+            creditRadioButton.setChecked(true);
             typeSpinner.setAdapter(mCreditTypes);
             typeSpinner.setSelection(-transaction.type - 1);
         }
         else {
+            expenseRadioButton.setChecked(true);
+            creditRadioButton.setChecked(false);
             typeSpinner.setAdapter(mExpenseTypes);
             typeSpinner.setSelection(transaction.type);
         }
+        // Update spinner if the user choose expense or credit
+        expenseRadioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                typeSpinner.setAdapter(b ? mExpenseTypes : mCreditTypes);
+            }
+        });
         // Set the saved price and comment in the edit text
         priceEdit.setText(String.valueOf(transaction.price / 100.0f));
         commentEdit.setText(transaction.comment);
         // Set up the buttons
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         builder.setNegativeButton(res.getString(R.string.cancel),
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -410,10 +438,10 @@ public class AccountHistoryActivity extends RootActivity {
                     @Override
                     public void onClick(View view) {
                         int type = typeSpinner.getSelectedItemPosition();
-                        type = (isCredit) ? -type - 1 : type;
+                        type = (expenseRadioButton.isChecked()) ? type : -type - 1;
                         String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
-                            Toast.makeText(getApplicationContext(), "Ajoutez un prix", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mRootActivity, "Ajoutez un prix", Toast.LENGTH_SHORT).show();
                         }
                         else {
                             // Check if the price is correct
@@ -422,7 +450,7 @@ public class AccountHistoryActivity extends RootActivity {
                                 price = Math.round(Float.parseFloat(priceString) * 100);
                             }
                             catch (NumberFormatException e) {
-                                Toast.makeText(getApplicationContext(), "Le prix n'est pas valide",
+                                Toast.makeText(mRootActivity, "Le prix n'est pas valide",
                                         Toast.LENGTH_SHORT).show();
                                 return;
                             }
@@ -437,7 +465,7 @@ public class AccountHistoryActivity extends RootActivity {
                             AccountDAO.TransactionInfo updatedTransaction = mDao.getTransaction(transactionID);
                             mDao.close();
                             // Update the view in the linear layout
-                            transactionView.setText( formatTransactionText(updatedTransaction) );
+                            updateTransactionView(transactionView, updatedTransaction);
                             alertDialog.dismiss();
                         }
                     }
@@ -447,13 +475,12 @@ public class AccountHistoryActivity extends RootActivity {
         alertDialog.show();
     }
 
-    private void showDeleteTransactionDialog(final long transactionID, final View v,
-                                             boolean isCredit){
+    private void showDeleteTransactionDialog(final long transactionID, final View v){
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(isCredit ? R.string.delete_credit : R.string.delete_expense);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
+        builder.setTitle(R.string.delete_transaction);
         // Set up the buttons
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         builder.setNegativeButton(res.getString(R.string.no),
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -493,22 +520,22 @@ public class AccountHistoryActivity extends RootActivity {
      */
     private void showTypeSelectionDialog() {
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
         builder.setTitle("");
         // Set popup content view
-        LayoutInflater inflater = getLayoutInflater();
+        LayoutInflater inflater = mRootActivity.getLayoutInflater();
         View alertView = inflater.inflate(R.layout.check_account_type, null);
         final LinearLayout expenseTypesGrid = (LinearLayout) alertView.findViewById(R.id.expenses_grid);
         final LinearLayout creditTypesGrid = (LinearLayout) alertView.findViewById(R.id.credits_grid);
-        String[] expenseTypes = getResources().getStringArray(R.array.expense_types);
-        String[] creditTypes = getResources().getStringArray(R.array.credit_types);
+        String[] expenseTypes = mRootActivity.getResources().getStringArray(R.array.expense_types);
+        String[] creditTypes = mRootActivity.getResources().getStringArray(R.array.credit_types);
         // Set up the layout to use
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         // Populate expenses grid
         for (int i = 0; i < expenseTypes.length; ++i) {
             // Create the new checkbox
-            CheckBox checkBox = new CheckBox(this);
+            CheckBox checkBox = new CheckBox(mRootActivity);
             checkBox.setText(expenseTypes[i]);
             checkBox.setChecked(mExpenseTypesSelected[i]);
             checkBox.setLayoutParams(layoutParams);
@@ -518,7 +545,7 @@ public class AccountHistoryActivity extends RootActivity {
         // Populate credits grid
         for (int i = 0; i < creditTypes.length; ++i) {
             // Create the new checkbox
-            CheckBox checkBox = new CheckBox(this);
+            CheckBox checkBox = new CheckBox(mRootActivity);
             checkBox.setText(creditTypes[i]);
             checkBox.setChecked(mCreditTypesSelected[i]);
             checkBox.setLayoutParams(layoutParams);
@@ -560,7 +587,7 @@ public class AccountHistoryActivity extends RootActivity {
         });
         builder.setView(alertView);
         // Set up the buttons
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         builder.setNegativeButton(res.getString(R.string.no),
                 new DialogInterface.OnClickListener() {
                     @Override
@@ -646,25 +673,4 @@ public class AccountHistoryActivity extends RootActivity {
     }
 
     //endregion
-
-    /**
-     * Clear focus of any edit text when the user click next to it.
-     */
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            View v = getCurrentFocus();
-            if (v instanceof EditText) {
-                Rect outRect = new Rect();
-                v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
-                    v.clearFocus();
-                    InputMethodManager imm =
-                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                }
-            }
-        }
-        return super.dispatchTouchEvent(event);
-    }
 }

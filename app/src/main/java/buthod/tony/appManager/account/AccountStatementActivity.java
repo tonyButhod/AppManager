@@ -1,5 +1,7 @@
 package buthod.tony.appManager.account;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -36,14 +38,14 @@ import buthod.tony.appManager.RootActivity;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
- * Created by Tony on 09/10/2017.
+ * Class used in AccountActivity to display the statement of all transactions in a page viewer.
  */
-
-public class AccountStatementActivity extends RootActivity {
+public class AccountStatementActivity {
+    // Fields used for the page viewer
+    private Activity mRootActivity = null;
+    private View mAccountView = null;
 
     private AccountDAO mDao = null;
-
-    private ImageButton mBackButton = null;
 
     private Button mPeriodNumberButton = null;
     private Spinner mPeriodTypeSpinner = null;
@@ -55,30 +57,32 @@ public class AccountStatementActivity extends RootActivity {
     private TextView mLastCreditView = null;
     private CheckBox mCumulativeCheckbox = null;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.account_statement);
+    /**
+     * @return The created view to use in the page viewer.
+     */
+    public View getView() {
+        return mAccountView;
+    }
 
-        mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mPeriodNumberButton = (Button) findViewById(R.id.period_number_button);
-        mPeriodTypeSpinner = (Spinner) findViewById(R.id.period_type_spinner);
-        mStatementValueView = (TextView) findViewById(R.id.statement_value);
-        mLineChart = (LineChart) findViewById(R.id.line_chart);
-        mMeanExpenseView = (TextView) findViewById(R.id.mean_expense);
-        mMeanCreditView = (TextView) findViewById(R.id.mean_credit);
-        mLastExpenseView = (TextView) findViewById(R.id.last_expense);
-        mLastCreditView = (TextView) findViewById(R.id.last_credit);
-        mCumulativeCheckbox = (CheckBox) findViewById(R.id.cumulative_checkbox);
-        mDao = new AccountDAO(this);
+    /**
+     * Instantiate all elements needed and update the account view with transactions' history.
+     * @param rootActivity The activity containing the page viewer.
+     */
+    public void onCreate(Activity rootActivity) {
+        mRootActivity = rootActivity;
+        mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_statement, null);
 
-        // Finish the activity if back button is pressed
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mPeriodNumberButton = (Button) mAccountView.findViewById(R.id.period_number_button);
+        mPeriodTypeSpinner = (Spinner) mAccountView.findViewById(R.id.period_type_spinner);
+        mStatementValueView = (TextView) mAccountView.findViewById(R.id.statement_value);
+        mLineChart = (LineChart) mAccountView.findViewById(R.id.line_chart);
+        mMeanExpenseView = (TextView) mAccountView.findViewById(R.id.mean_expense);
+        mMeanCreditView = (TextView) mAccountView.findViewById(R.id.mean_credit);
+        mLastExpenseView = (TextView) mAccountView.findViewById(R.id.last_expense);
+        mLastCreditView = (TextView) mAccountView.findViewById(R.id.last_credit);
+        mCumulativeCheckbox = (CheckBox) mAccountView.findViewById(R.id.cumulative_checkbox);
+        mDao = new AccountDAO(mRootActivity);
+
         // Add listener in the activity
         mPeriodNumberButton.setText("31");
         mPeriodNumberButton.setOnClickListener(new View.OnClickListener() {
@@ -121,18 +125,22 @@ public class AccountStatementActivity extends RootActivity {
         mLineChart.setOnChartGestureListener(null);
         mLineChart.setOnChartValueSelectedListener(null);
         mLineChart.setOnHoverListener(null);
+    }
 
-        // Update views
+    /**
+     * Update the view with elements in database.
+     */
+    public void updateView() {
         computeStatements();
     }
 
     private void showNumberPickerDialog() {
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
         builder.setTitle("");
         // Set the view of the alert dialog
-        final NumberPicker numberPicker = new NumberPicker(getApplicationContext());
+        final NumberPicker numberPicker = new NumberPicker(mRootActivity);
         numberPicker.setMinValue(1);
         numberPicker.setMaxValue(100); // The maximum number set by default
         numberPicker.setValue(Integer.valueOf(mPeriodNumberButton.getText().toString()));
@@ -173,7 +181,7 @@ public class AccountStatementActivity extends RootActivity {
         int[] creditStatements = null;
         int[] expenseStatements = null;
         IAxisValueFormatter xAxisValueFormatter = null;
-        Resources resources = getResources();
+        Resources resources = mRootActivity.getResources();
         // Compute financial statement depending on the the selected information
         int periodNumber = Integer.valueOf(mPeriodNumberButton.getText().toString());
         boolean isCumulative = mCumulativeCheckbox.isChecked();
@@ -257,13 +265,13 @@ public class AccountStatementActivity extends RootActivity {
         // Update lines of the line chart
         LineDataSet creditDataset = new LineDataSet(creditEntries,
                 resources.getString(isCumulative ? R.string.cumulative_credits : R.string.credits));
-        creditDataset.setColor(ContextCompat.getColor(this, R.color.green));
-        creditDataset.setCircleColor(ContextCompat.getColor(this, R.color.green));
+        creditDataset.setColor(ContextCompat.getColor(mRootActivity, R.color.green));
+        creditDataset.setCircleColor(ContextCompat.getColor(mRootActivity, R.color.green));
         creditDataset.setDrawValues(false);
         LineDataSet expenseDataset = new LineDataSet(expenseEntries,
                 resources.getString(isCumulative ? R.string.cumulative_expenses : R.string.expenses));
-        expenseDataset.setColor(ContextCompat.getColor(this, R.color.red));
-        expenseDataset.setCircleColor(ContextCompat.getColor(this, R.color.red));
+        expenseDataset.setColor(ContextCompat.getColor(mRootActivity, R.color.red));
+        expenseDataset.setCircleColor(ContextCompat.getColor(mRootActivity, R.color.red));
         expenseDataset.setDrawValues(false);
         List<ILineDataSet> lines = new ArrayList<>();
         lines.add(creditDataset);
@@ -279,9 +287,9 @@ public class AccountStatementActivity extends RootActivity {
         int finalStatement = (cumulativeCredits - cumulativeExpenses);
         mStatementValueView.setText(String.valueOf(finalStatement / 100.0f) + "€");
         if (finalStatement >= 0)
-            mStatementValueView.setTextColor(ContextCompat.getColor(this, R.color.dark_soft_green));
+            mStatementValueView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
         else
-            mStatementValueView.setTextColor(ContextCompat.getColor(this, R.color.dark_soft_red));
+            mStatementValueView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
         mStatementValueView.invalidate();
 
         // Update the mean expense and credit over the selected period without last day/month/year.

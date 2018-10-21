@@ -2,9 +2,17 @@ package buthod.tony.appManager.account;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 
 import org.json.JSONArray;
@@ -20,16 +28,23 @@ import buthod.tony.appManager.RootActivity;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
- * Created by Tony on 09/10/2017.
+ * Main account activity containing a page viewer with different sections.
  */
-
 public class AccountActivity extends RootActivity {
 
     private ImageButton mBackButton = null;
 
-    private Button mHistoryButton = null;
-    private Button mStatementButton = null;
-    private Button mPiechartButton = null;
+    // Pager management
+    private ViewPager mViewPager = null;
+    private AccountPagerAdapter mAccountPagerAdapter = null;
+    private Button mHistoryButton = null, mStatementButton = null, mPieChartButton = null;
+    // Custom element in toolbar for account history page
+    private EditText mSearchEdit = null;
+    private Button mTypeSelectionButton = null;
+    // Classes used in the view pager
+    private AccountHistoryActivity mAccountHistory = null;
+    private AccountPieChartActivity mAccountPieChart = null;
+    private AccountStatementActivity mAccountStatement = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,9 +52,12 @@ public class AccountActivity extends RootActivity {
         setContentView(R.layout.account);
 
         mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mHistoryButton = (Button) findViewById(R.id.history);
-        mStatementButton = (Button) findViewById(R.id.statement);
-        mPiechartButton = (Button) findViewById(R.id.pie_chart);
+        mViewPager = (ViewPager) findViewById(R.id.view_pager);
+        mSearchEdit = (EditText) findViewById(R.id.search_field);
+        mTypeSelectionButton = (Button) findViewById(R.id.type_selection);
+        mHistoryButton = (Button) findViewById(R.id.account_history_button);
+        mStatementButton = (Button) findViewById(R.id.account_statement_button);
+        mPieChartButton = (Button) findViewById(R.id.account_piechart_button);
 
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -48,70 +66,155 @@ public class AccountActivity extends RootActivity {
                 finish();
             }
         });
-        // Add listener for all buttons in the activity
+
+        // Page management
+        mAccountHistory = new AccountHistoryActivity();
+        mAccountPieChart = new AccountPieChartActivity();
+        mAccountStatement = new AccountStatementActivity();
+        mAccountPagerAdapter = new AccountPagerAdapter();
+        mViewPager.setAdapter(mAccountPagerAdapter);
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
+
+            @Override
+            public void onPageSelected(int position) {
+                AccountActivity.this.onPageSelected(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {}
+        });
+        onPageSelected(0);
         mHistoryButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent historyIntent = new Intent(v.getContext(), AccountHistoryActivity.class);
-                startActivity(historyIntent);
+            public void onClick(View view) {
+                mViewPager.setCurrentItem(0);
             }
         });
         mStatementButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent statementIntent = new Intent(v.getContext(), AccountStatementActivity.class);
-                startActivity(statementIntent);
+            public void onClick(View view) {
+                mViewPager.setCurrentItem(1);
             }
         });
-        mPiechartButton.setOnClickListener(new View.OnClickListener() {
+        mPieChartButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                Intent pieChartIntent = new Intent(v.getContext(), AccountPieChartActivity.class);
-                startActivity(pieChartIntent);
+            public void onClick(View view) {
+                mViewPager.setCurrentItem(2);
             }
         });
     }
 
     /**
-     * Function used to save all data stored on the database in an external file.
-     * @param context The context of the application.
-     * @return The JSONArray containing all data stored on the database.
+     * Called when a new page is selected. Updates the view.
+     * @param position The selected page's position.
      */
-    public static JSONArray saveDataPublicStorage(Context context) {
-        AccountDAO dao = new AccountDAO(context);
-        dao.open();
-        ArrayList<AccountDAO.TransactionInfo> transactions = dao.getTransactions(Integer.MAX_VALUE);
-        dao.close();
-        JSONArray saveData = new JSONArray();
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
-        for (int i = 0; i < transactions.size(); ++i) {
-            AccountDAO.TransactionInfo info = transactions.get(i);
-            JSONArray infoJson = new JSONArray();
-            infoJson.put(info.id);
-            infoJson.put(info.type);
-            infoJson.put(info.price);
-            infoJson.put(formatter.format(info.date));
-            infoJson.put(info.comment);
-            saveData.put(infoJson);
+    private void onPageSelected(int position) {
+        mTypeSelectionButton.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+        mSearchEdit.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+        mHistoryButton.setSelected(position == 0);
+        mStatementButton.setSelected(position == 1);
+        mPieChartButton.setSelected(position == 2);
+        if (position == 0) {
+            mAccountHistory.updateView();
         }
-        return saveData;
+        else if (position == 1) {
+            mAccountStatement.updateView();
+        }
+        else if (position == 2) {
+            mAccountPieChart.updateView();
+        }
     }
 
     /**
-     * Function used to load all data stored on the database in an external file.
-     * @param context The context of the application.
-     * @param data The JSONArray containing all data to load.
+     * Clear focus of any edit text when the user click next to it.
      */
-    public static void loadDataPublicStorage(Context context, JSONArray data)
-            throws JSONException, ParseException {
-        AccountDAO dao = new AccountDAO(context);
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
-        dao.open();
-        for (int i = 0; i < data.length(); ++i) {
-            JSONArray infoJson = data.getJSONArray(i);
-            dao.addTransaction(infoJson.getInt(1), infoJson.getInt(2),
-                    formatter.parse(infoJson.getString(3)), infoJson.getString(4));
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            View v = getCurrentFocus();
+            if (v instanceof EditText) {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                    v.clearFocus();
+                    InputMethodManager imm =
+                            (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
         }
-        dao.close();
+        return super.dispatchTouchEvent(event);
+    }
+
+    /**
+     * Custom pager adapter for account page.
+     * Allow to switch easily between pages.
+     */
+    public class AccountPagerAdapter extends PagerAdapter {
+
+        public AccountPagerAdapter() {
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup collection, int position) {
+            View view;
+            switch (position) {
+                case 0:
+                    view = mAccountHistory.getView();
+                    if (view == null)
+                        mAccountHistory.onCreate(AccountActivity.this);
+                    view = mAccountHistory.getView();
+                    collection.addView(view);
+                    return view;
+                case 1:
+                    view = mAccountStatement.getView();
+                    if (view == null)
+                        mAccountStatement.onCreate(AccountActivity.this);
+                    view = mAccountStatement.getView();
+                    collection.addView(view);
+                    return view;
+                case 2:
+                    view = mAccountPieChart.getView();
+                    if (view == null)
+                        mAccountPieChart.onCreate(AccountActivity.this);
+                    view = mAccountPieChart.getView();
+                    collection.addView(view);
+                    return view;
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public void destroyItem(ViewGroup collection, int position, Object view) {
+            switch (position) {
+                case 0:
+                    collection.removeView(mAccountHistory.getView());
+                    break;
+                case 1:
+                    collection.removeView(mAccountStatement.getView());
+                    break;
+                case 2:
+                    collection.removeView(mAccountPieChart.getView());
+                    break;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+
+        @Override
+        public boolean isViewFromObject(View view, Object object) {
+            return view == object;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return "Title custom view pager";
+        }
     }
 }

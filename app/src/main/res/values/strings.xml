@@ -24,8 +24,10 @@
     <string name="account_history_section_label">Historique</string>
     <string name="add_expense">Nouvelle dépense</string>
     <string name="add_credit">Nouveau crédit</string>
+    <string name="add_transaction">Nouvelle transaction</string>
     <string name="modify_expense">Modifier la dépense</string>
     <string name="modify_credit">Modifier le crédit</string>
+    <string name="modify_transaction">Modifier la transaction</string>
     <string name="price">Prix</string>
     <string name="comment">Commentaire</string>
     <string-array name="expense_types">
@@ -47,6 +49,7 @@
     </string-array>
     <string name="delete_expense">Supprimer cette dépense ?</string>
     <string name="delete_credit">Supprimer ce crédit ?</string>
+    <string name="delete_transaction">Supprimer la transaction ?</string>
     <string name="add_price">Ajoutez un prix</string>
     <string name="price_not_valid">Le prix n\'est pas valide</string>
     <string name="append_transactions">Afficher plus de transactions</string>
@@ -70,7 +73,7 @@
     <string name="last_statement_label">Dernier bilan :</string>
     <string name="is_cumulative_label">Bilan cumulé</string>
     <!-- Account pie chart -->
-    <string name="account_piechart_section_label">Diagramme circulaire</string>
+    <string name="account_piechart_section_label">Répartition</string>
     <string name="from">Du</string>
     <string name="to">Au</string>
     <string name="pie_chart_dataset_label">(en €)</string>

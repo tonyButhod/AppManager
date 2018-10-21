@@ -5,25 +5,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
-            android:id="@+id/toolbar"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/colorPrimary"
-            android:paddingLeft="0dp"
-            android:paddingRight="0dp">
-
-            <ImageButton
-                android:id="@+id/back_button"
-                style="@style/BackButton"/>
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
         <TextView
             android:id="@+id/statement_label"
             android:layout_width="wrap_content"

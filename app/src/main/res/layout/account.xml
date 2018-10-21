@@ -14,32 +14,63 @@
             android:id="@+id/back_button"
             style="@style/BackButton"/>
 
-        <View
+        <EditText
+            android:id="@+id/search_field"
+            android:hint="@string/search"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+
+        <Button
+            android:id="@+id/type_selection"
+            android:text="@string/types"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 
-    <Button
-        android:id="@+id/history"
+    <LinearLayout
+        android:id="@+id/page_selection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/history"
-        android:layout_below="@id/toolbar"/>
+        android:orientation="horizontal"
+        android:layout_below="@id/toolbar">
 
-    <Button
-        android:id="@+id/statement"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/statement"
-        android:layout_below="@id/history"/>
+        <Button
+            android:id="@+id/account_history_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/account_history_section_label"
+            android:background="@drawable/blue_flat_button"
+            android:textColor="@android:color/white"/>
 
-    <Button
-        android:id="@+id/pie_chart"
+        <Button
+            android:id="@+id/account_statement_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/account_statement_section_label"
+            android:background="@drawable/blue_flat_button"
+            android:textColor="@android:color/white"/>
+
+        <Button
+            android:id="@+id/account_piechart_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/account_piechart_section_label"
+            android:background="@drawable/blue_flat_button"
+            android:textColor="@android:color/white"/>
+
+    </LinearLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/piechart"
-        android:layout_below="@id/statement"/>
+        android:layout_below="@id/page_selection">
+
+    </android.support.v4.view.ViewPager>
 
 </RelativeLayout>

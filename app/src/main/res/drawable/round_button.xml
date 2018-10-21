@@ -4,23 +4,8 @@
         <layer-list>
             <item>
                 <shape>
-                    <solid
-                        android:color="@color/colorPrimaryDark" />
-                    <padding
-                        android:bottom="10dp"
-                        android:left="10dp"
-                        android:right="10dp"
-                        android:top="10dp"/>
-                </shape>
-            </item>
-        </layer-list>
-    </item>
-    <item android:state_selected="true">
-        <layer-list>
-            <item>
-                <shape>
-                    <solid
-                        android:color="@color/colorPrimaryDark" />
+                    <solid android:color="@color/colorPrimaryDark" />
+                    <corners android:radius="100dp" />
                     <padding
                         android:bottom="10dp"
                         android:left="10dp"
@@ -34,8 +19,8 @@
         <layer-list>
             <item>
                 <shape>
-                    <solid
-                        android:color="@color/colorPrimary" />
+                    <solid android:color="@color/colorPrimary" />
+                    <corners android:radius="100dp" />
                     <padding
                         android:bottom="10dp"
                         android:left="10dp"

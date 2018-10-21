@@ -149,40 +149,4 @@ public class PedometerActivity extends RootActivity {
         });
         mGraph.addSeries(pointsSeries);
     }
-
-    /**
-     * Function used to save all data stored on the database in a external file.
-     * @param context The context of the application.
-     * @return The JSONArray containing all data stored on the database.
-     */
-    public static JSONArray saveDataPublicStorage(Context context) throws JSONException {
-        PedometerDAO dao = new PedometerDAO(context);
-        dao.open();
-        SortedMap<Date, Integer> stepsData = dao.getSteps();
-        dao.close();
-
-        JSONArray stepsJson = new JSONArray();
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
-        for (SortedMap.Entry<Date, Integer> entry : stepsData.entrySet()) {
-            JSONArray entryJson = new JSONArray();
-            entryJson.put(formatter.format(entry.getKey()));
-            entryJson.put(entry.getValue());
-            stepsJson.put(entryJson);
-        }
-
-        return stepsJson;
-    }
-
-    public static void loadDataPublicStorage(Context context, JSONArray data)
-            throws JSONException, ParseException {
-        PedometerDAO dao = new PedometerDAO(context);
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
-
-        dao.open();
-        for (int i = 0; i < data.length(); ++i) {
-            JSONArray entryJson = data.getJSONArray(i);
-            dao.storeSteps(formatter.parse(entryJson.getString(0)), entryJson.getInt(1));
-        }
-        dao.close();
-    }
 }

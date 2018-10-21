@@ -1,6 +1,8 @@
 package buthod.tony.appManager.account;
 
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -32,12 +34,13 @@ import buthod.tony.appManager.RootActivity;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
- * Created by Tony on 28/04/2018.
+ * Class used in AccountActivity to display the pie chart of all transactions in a page viewer.
  */
+public class AccountPieChartActivity {
+    // Fields used for the page viewer
+    private Activity mRootActivity = null;
+    private View mAccountView = null;
 
-public class AccountPieChartActivity extends RootActivity {
-
-    private ImageButton mBackButton = null;
     private Button mStartDateButton = null;
     private Button mEndDateButton = null;
     private PieChart mExpensesPieChart = null;
@@ -57,25 +60,27 @@ public class AccountPieChartActivity extends RootActivity {
             LEGEND_TEXT_SIZE = 14.0f,
             VALUE_TEXT_SIZE = 12.0f;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.account_pie_chart);
+    /**
+     * @return The created view to use in the page viewer.
+     */
+    public View getView() {
+        return mAccountView;
+    }
 
-        mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mStartDateButton = (Button) findViewById(R.id.start_date);
-        mEndDateButton = (Button) findViewById(R.id.end_date);
-        mExpensesPieChart = (PieChart) findViewById(R.id.expenses_pie_chart);
-        mCreditsPieChart = (PieChart) findViewById(R.id.credits_pie_chart);
-        mDao = new AccountDAO(this);
+    /**
+     * Instantiate all elements needed and update the account view with transactions' history.
+     * @param rootActivity The activity containing the page viewer.
+     */
+    public void onCreate(Activity rootActivity) {
+        mRootActivity = rootActivity;
+        mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_pie_chart, null);
 
-        // Finish the activity if back button is pressed
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        mStartDateButton = (Button) mAccountView.findViewById(R.id.start_date);
+        mEndDateButton = (Button) mAccountView.findViewById(R.id.end_date);
+        mExpensesPieChart = (PieChart) mAccountView.findViewById(R.id.expenses_pie_chart);
+        mCreditsPieChart = (PieChart) mAccountView.findViewById(R.id.credits_pie_chart);
+        mDao = new AccountDAO(mRootActivity);
+
         View.OnClickListener selectDateListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -94,16 +99,21 @@ public class AccountPieChartActivity extends RootActivity {
 
         // Set default style
         mExpensesPieChart.getDescription().setEnabled(false);
-        mExpensesPieChart.setCenterTextColor(ContextCompat.getColor(this, R.color.dark_soft_red));
+        mExpensesPieChart.setCenterTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
         mExpensesPieChart.setDrawEntryLabels(false);
         mExpensesPieChart.getLegend().setWordWrapEnabled(true);
         mExpensesPieChart.getLegend().setTextSize(LEGEND_TEXT_SIZE);
         mCreditsPieChart.getDescription().setEnabled(false);
-        mCreditsPieChart.setCenterTextColor(ContextCompat.getColor(this, R.color.dark_soft_green));
+        mCreditsPieChart.setCenterTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
         mCreditsPieChart.setDrawEntryLabels(false);
         mCreditsPieChart.getLegend().setWordWrapEnabled(true);
         mCreditsPieChart.getLegend().setTextSize(LEGEND_TEXT_SIZE);
+    }
 
+    /**
+     * Update the view with elements in database.
+     */
+    public void updateView() {
         computeStatementByCategory();
     }
 
@@ -113,12 +123,12 @@ public class AccountPieChartActivity extends RootActivity {
      * @param clickedView The clicked view to update text.
      */
     private void showSelectDatePopup(final TextView clickedView) {
-        Resources res = getResources();
+        Resources res = mRootActivity.getResources();
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
         builder.setTitle("");
         // Set the view of the alert dialog
-        final DatePicker datePicker = new DatePicker(this);
+        final DatePicker datePicker = new DatePicker(mRootActivity);
         builder.setView(datePicker);
         // Set the date of the date picker depending on the clicked element
         final Calendar cal = Calendar.getInstance();
@@ -179,8 +189,8 @@ public class AccountPieChartActivity extends RootActivity {
         SparseIntArray statementByCategory = mDao.getStatementByCategory(startDate, endDate);
         mDao.close();
 
-        String[] expenseLabels = getResources().getStringArray(R.array.expense_types);
-        String[] creditLabels = getResources().getStringArray(R.array.credit_types);
+        String[] expenseLabels = mRootActivity.getResources().getStringArray(R.array.expense_types);
+        String[] creditLabels = mRootActivity.getResources().getStringArray(R.array.credit_types);
         // Populate the pie charts
         List<PieEntry> expenseEntries = new ArrayList<>(),
                 creditEntries = new ArrayList<>();
@@ -197,7 +207,7 @@ public class AccountPieChartActivity extends RootActivity {
                 creditsStatement += price;
             }
         }
-        String datasetLabel = getResources().getString(R.string.pie_chart_dataset_label);
+        String datasetLabel = mRootActivity.getResources().getString(R.string.pie_chart_dataset_label);
         PieDataSet expensesDataset = new PieDataSet(expenseEntries, datasetLabel),
                 creditsDataset = new PieDataSet(creditEntries, datasetLabel);
         expensesDataset.setValueTextColor(Color.WHITE);
