@@ -21,18 +21,15 @@
 
     </LinearLayout>
 
-    <Button
+    <ImageButton
         android:id="@+id/add_recipe_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/add_recipe"
-        android:layout_below="@id/toolbar"/>
+        style="@style/AddButton"/>
 
     <ScrollView
         android:id="@+id/recipes_scroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/add_recipe_button">
+        android:layout_below="@id/toolbar">
 
         <RelativeLayout
             android:layout_width="match_parent"

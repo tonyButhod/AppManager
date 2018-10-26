@@ -101,6 +101,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_DIFFICULTY = "difficulty",
             RECIPES_TIME = "time",
             RECIPES_GRADE = "grade",
+            RECIPES_PEOPLE = "people",
             RECIPES_TABLE_CREATE =
                     "Create Table "+ RECIPES_TABLE_NAME +" ("+
                             RECIPES_KEY +" INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -108,7 +109,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                             RECIPES_TYPE + " INTEGER, " +
                             RECIPES_DIFFICULTY + " INTEGER, " +
                             RECIPES_TIME + " INTEGER, " +
-                            RECIPES_GRADE + " INTEGER);",
+                            RECIPES_GRADE + " INTEGER, " +
+                            RECIPES_PEOPLE + " INTEGER);",
             RECIPES_TABLE_DROP =
                     "Drop Table If Exists "+ RECIPES_TABLE_NAME +";";
 

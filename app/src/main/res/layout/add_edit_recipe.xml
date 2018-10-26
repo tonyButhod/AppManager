@@ -146,10 +146,32 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/ingredients_list"
+                android:id="@+id/people_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/time_section"
+                android:orientation="horizontal">
+
+
+                <TextView
+                    android:id="@+id/people_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipe_people"/>
+
+                <EditText
+                    android:id="@+id/people"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ingredients_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/people_section"
                 android:orientation="vertical">
 
             </LinearLayout>
@@ -177,11 +199,44 @@
                 android:layout_below="@id/steps_list"
                 android:text="@string/add_step"/>
 
+            <RelativeLayout
+                android:id="@+id/image_view_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/add_step_button">
+
+                <ImageView
+                    android:id="@+id/image_view"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:background="@drawable/no_image"
+                    android:layout_centerHorizontal="true"/>
+
+                <ImageButton
+                    android:id="@+id/add_image"
+                    android:background="@drawable/round_button"
+                    android:src="@drawable/add_image"
+                    android:scaleType="fitXY"
+                    android:layout_height="40dp"
+                    android:layout_width="40dp"
+                    android:layout_centerInParent="true"
+                    android:layout_centerHorizontal="true"/>
+
+                <ImageButton
+                    android:id="@+id/delete_image"
+                    style="@style/DeleteButton"
+                    android:visibility="gone"
+                    android:layout_alignEnd="@id/image_view"
+                    android:layout_alignRight="@id/image_view"
+                    android:layout_alignTop="@id/image_view"/>
+
+            </RelativeLayout>
+
             <Button
                 android:id="@+id/add_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/add_step_button"
+                android:layout_below="@id/image_view_layout"
                 android:text="@string/add"/>
 
         </RelativeLayout>

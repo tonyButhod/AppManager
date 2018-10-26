@@ -47,6 +47,7 @@ public class RecipesDAO extends DAOBase {
         public int difficulty;
         public int time; // Preparation time
         public int grade;
+        public int people;
         public ArrayList<Ingredient> ingredients;
         public ArrayList<Step> steps;
 
@@ -125,6 +126,7 @@ public class RecipesDAO extends DAOBase {
         value.put(DatabaseHandler.RECIPES_DIFFICULTY, recipe.difficulty);
         value.put(DatabaseHandler.RECIPES_TIME, recipe.time);
         value.put(DatabaseHandler.RECIPES_GRADE, recipe.grade);
+        value.put(DatabaseHandler.RECIPES_PEOPLE, recipe.people);
         long recipeId = recipe.id;
         if (isNew)
             recipeId = mDb.insert(DatabaseHandler.RECIPES_TABLE_NAME, null, value);
@@ -156,6 +158,7 @@ public class RecipesDAO extends DAOBase {
             recipe.difficulty = c.getInt(3);
             recipe.time = c.getInt(4);
             recipe.grade = c.getInt(5);
+            recipe.people = c.getInt(6);
         }
         c.close();
         // Then also get ingredients and steps for each recipe.
@@ -219,6 +222,7 @@ public class RecipesDAO extends DAOBase {
             newRecipe.difficulty = c.getInt(3);
             newRecipe.time = c.getInt(4);
             newRecipe.grade = c.getInt(5);
+            newRecipe.people = c.getInt(6);
             recipes.add(newRecipe);
         }
         c.close();
@@ -231,15 +235,15 @@ public class RecipesDAO extends DAOBase {
         return getRecipes(-1);
     }
 
-    public void deleteRecipe(Recipe recipe) {
+    public void deleteRecipe(long recipeId) {
         // Delete the recipe itself
         mDb.delete(DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY + " = ?",
-                new String[] {String.valueOf(recipe.id)});
+                new String[] {String.valueOf(recipeId)});
         // Delete all ingredients and steps.
         mDb.delete(DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.QUANTITIES_RECIPE + " = ?",
-                new String[] {String.valueOf(recipe.id)});
+                new String[] {String.valueOf(recipeId)});
         mDb.delete(DatabaseHandler.STEPS_TABLE_NAME, DatabaseHandler.STEPS_RECIPE + " = ?",
-                new String[] {String.valueOf(recipe.id)});
+                new String[] {String.valueOf(recipeId)});
     }
 
     //endregion

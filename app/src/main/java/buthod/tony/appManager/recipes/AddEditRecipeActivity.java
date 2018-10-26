@@ -1,9 +1,14 @@
 package buthod.tony.appManager.recipes;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -11,6 +16,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -42,8 +48,11 @@ public class AddEditRecipeActivity extends RootActivity {
     private SeekBar mGradeSeekBar = null;
     private TextView mGradeView = null;
     private EditText mTimeEdit = null;
+    private EditText mPeopleEdit = null;
     private LinearLayout mIngredientsLayout = null, mStepsLayout = null;
     private Button mAddIngredientButton = null, mAddStepButton = null;
+    private ImageView mRecipeImageView = null;
+    private ImageButton mAddImageButton = null, mDeleteImageButton = null;
 
     private ArrayAdapter<CharSequence>
             mRecipeTypes = null,
@@ -55,6 +64,7 @@ public class AddEditRecipeActivity extends RootActivity {
     private ArrayList<RecipesDAO.Ingredient> mIngredients;
     private ArrayList<RecipesDAO.Step> mSteps;
     private ArrayList<Long> mIngredientsToDelete, mStepsToDelete;
+    private Bitmap mRecipeImage = null;
 
     // Object used for drag and drop
     private DragAndDropLinearLayout mDragAndDrop;
@@ -79,10 +89,14 @@ public class AddEditRecipeActivity extends RootActivity {
         mGradeSeekBar = (SeekBar) findViewById(R.id.grade_seek_bar);
         mGradeView = (TextView) findViewById(R.id.grade);
         mTimeEdit = (EditText) findViewById(R.id.time);
+        mPeopleEdit = (EditText) findViewById(R.id.people);
         mIngredientsLayout = (LinearLayout) findViewById(R.id.ingredients_list);
         mStepsLayout = (LinearLayout) findViewById(R.id.steps_list);
         mAddIngredientButton = (Button) findViewById(R.id.add_ingredient_button);
         mAddStepButton = (Button) findViewById(R.id.add_step_button);
+        mAddImageButton = (ImageButton) findViewById(R.id.add_image);
+        mRecipeImageView = (ImageView) findViewById(R.id.image_view);
+        mDeleteImageButton = (ImageButton) findViewById(R.id.delete_image);
         // Private lists
         mIngredients = new ArrayList<>();
         mSteps = new ArrayList<>();
@@ -120,12 +134,20 @@ public class AddEditRecipeActivity extends RootActivity {
                 recipe.difficulty = Integer.valueOf(mDifficultyView.getText().toString());
                 recipe.grade = Integer.valueOf(mGradeView.getText().toString());
                 recipe.time = Integer.valueOf(mTimeEdit.getText().toString());
+                recipe.people = Integer.valueOf(mPeopleEdit.getText().toString());
                 recipe.ingredients = mIngredients;
                 updateStepsNumber();
                 recipe.steps = mSteps;
-                mDao.addEditRecipe(recipe);
+                mRecipeId = mDao.addEditRecipe(recipe);
                 mDao.deleteQuantities(mIngredientsToDelete);
                 mDao.deleteSteps(mStepsToDelete);
+                // Save the image to external storage
+                if (mRecipeImage == null)
+                    Utils.deleteLocalFile(AddEditRecipeActivity.this, getExternalFilesDir(null),
+                            RecipesActivity.getImageNameFromId(mRecipeId));
+                else
+                    Utils.saveLocalImage(AddEditRecipeActivity.this, mRecipeImage,
+                            getExternalFilesDir(null), RecipesActivity.getImageNameFromId(mRecipeId));
                 finish();
             }
         });
@@ -178,6 +200,25 @@ public class AddEditRecipeActivity extends RootActivity {
         if (mRecipeId != -1) {
             fillActivityWithRecipe();
         }
+        // Add or delete the image
+        mAddImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
+            }
+        });
+        mDeleteImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mRecipeImageView.setImageBitmap(null);
+                mRecipeImage = null;
+                mDeleteImageButton.setVisibility(View.GONE);
+                mAddImageButton.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     /**
@@ -190,11 +231,20 @@ public class AddEditRecipeActivity extends RootActivity {
         mDifficultySeekBar.setProgress(recipe.difficulty - 1);
         mGradeSeekBar.setProgress(recipe.grade - 1);
         mTimeEdit.setText(String.valueOf(recipe.time));
+        mPeopleEdit.setText(String.valueOf(recipe.people));
         for (int i = 0; i < recipe.ingredients.size(); ++i) {
             addEditIngredient(recipe.ingredients.get(i), -1);
         }
         for (int i = 0; i < recipe.steps.size(); ++i) {
             addEditStep(recipe.steps.get(i), -1);
+        }
+        // Load the image
+        mRecipeImage = Utils.loadLocalImage(this, getExternalFilesDir(null),
+                RecipesActivity.getImageNameFromId(mRecipeId));
+        if (mRecipeImage != null) {
+            mRecipeImageView.setImageBitmap(mRecipeImage);
+            mAddImageButton.setVisibility(View.GONE);
+            mDeleteImageButton.setVisibility(View.VISIBLE);
         }
     }
 
@@ -434,6 +484,38 @@ public class AddEditRecipeActivity extends RootActivity {
         // Update text view information
         stepView.setText(step.description);
         stepView.invalidate();
+    }
+
+    //endregion
+
+    //region ASSIGN_PICTURE
+
+    public static int PICK_IMAGE = 1;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (data.getData() != null) {
+                Uri uri = data.getData();
+                try {
+                    mRecipeImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+                    mRecipeImage = Utils.getSquareBitmap(mRecipeImage, 512);
+                    mRecipeImageView.setImageBitmap(mRecipeImage);
+                    mAddImageButton.setVisibility(View.GONE);
+                    mDeleteImageButton.setVisibility(View.VISIBLE);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                mRecipeImage = (Bitmap) data.getExtras().get("data");
+                mRecipeImageView.setImageBitmap(mRecipeImage);
+                mAddImageButton.setVisibility(View.GONE);
+                mDeleteImageButton.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     //endregion

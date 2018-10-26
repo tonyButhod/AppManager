@@ -1,9 +1,11 @@
 package buthod.tony.appManager.recipes;
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Locale;
@@ -25,6 +27,7 @@ public class RecipeActivity extends RootActivity {
 
     private ImageButton mBackButton = null;
     private TextView mRecipeView = null;
+    private ImageView mImageView = null;
 
     private RecipesDAO.Recipe mRecipe = null;
 
@@ -40,6 +43,7 @@ public class RecipeActivity extends RootActivity {
         mDao.open();
         mBackButton = (ImageButton) findViewById(R.id.back_button);
         mRecipeView = (TextView) findViewById(R.id.recipe_view);
+        mImageView = (ImageView) findViewById(R.id.image_view);
         // Get resources
         Resources res = getResources();
         mRecipeTypes = res.getStringArray(R.array.recipe_types);
@@ -58,11 +62,11 @@ public class RecipeActivity extends RootActivity {
 
     private void populateWithRecipe(long recipeId) {
         mRecipe = mDao.getRecipe(recipeId);
-
+        // Set the text information
         String contentView = String.format(Locale.getDefault(),
-                "%d : %s (%d : %s)\nNote : %d   Difficulté : %d\nTemps de préparation : %d\n",
+                "%d : %s (%d : %s)\nNote : %d   Difficulté : %d\nTemps de préparation : %d   Personnes : %d\n",
                 mRecipe.id, mRecipe.name, mRecipe.type, mRecipeTypes[mRecipe.type], mRecipe.grade,
-                mRecipe.difficulty, mRecipe.time);
+                mRecipe.difficulty, mRecipe.time, mRecipe.people);
         contentView += "Ingrédiants : \n";
         for (int i = 0; i < mRecipe.ingredients.size(); ++i) {
             RecipesDAO.Ingredient ingredient = mRecipe.ingredients.get(i);
@@ -76,6 +80,16 @@ public class RecipeActivity extends RootActivity {
                     step.id, step.number, step.description);
         }
         mRecipeView.setText(contentView);
+        // Set the image if exists
+        Bitmap image = Utils.loadLocalImage(this, getExternalFilesDir(null),
+                RecipesActivity.getImageNameFromId(mRecipe.id));
+        if (image != null) {
+            mImageView.setImageBitmap(image);
+            mImageView.setVisibility(View.VISIBLE);
+        }
+        else {
+            mImageView.setVisibility(View.GONE);
+        }
     }
 
     @Override
