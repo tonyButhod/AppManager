@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:focusable="true" android:focusableInTouchMode="true">
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp">
+
+        <ImageButton
+            android:id="@+id/back_button"
+            style="@style/BackButton"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/recipes_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/image_view"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_margin="3dp"
+                android:background="@drawable/no_image"/>
+
+            <TextView
+                android:id="@+id/recipe_name"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_toRightOf="@id/image_view"
+                android:layout_toEndOf="@id/image_view"
+                android:layout_marginTop="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginEnd="3dp"
+                android:textAlignment="center"
+                android:textSize="17sp"
+                android:textAllCaps="true"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:textColor="@color/colorPrimaryDark"/>
+
+            <LinearLayout
+                android:id="@+id/first_line"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:orientation="horizontal"
+                android:layout_below="@id/image_view"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/recipe_grade_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipe_grade"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginRight="3dp"
+                    android:layout_marginEnd="3dp"/>
+
+                <ImageView
+                    android:id="@+id/grade_star_1"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/grade_star_2"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/grade_star_3"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/grade_star_4"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/grade_star_5"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"/>
+
+                <TextView
+                    android:id="@+id/recipe_difficulty_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipe_difficulty"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="7dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_marginRight="3dp"
+                    android:layout_marginEnd="3dp"/>
+
+                <ImageView
+                    android:id="@+id/difficulty_star_1"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/difficulty_star_2"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/difficulty_star_3"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/difficulty_star_4"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <ImageView
+                    android:id="@+id/difficulty_star_5"
+                    android:layout_width="15dp"
+                    android:layout_height="15dp"
+                    android:background="@drawable/star_empty"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/second_line"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:orientation="horizontal"
+                android:layout_below="@id/first_line"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/recipe_time_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipe_time"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_marginEnd="7dp"/>
+
+                <TextView
+                    android:id="@+id/recipe_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colorAccent"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/third_line"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:orientation="horizontal"
+                android:layout_below="@id/second_line"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/recipe_people"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginRight="7dp"
+                    android:layout_marginEnd="7dp"/>
+
+                <EditText
+                    android:id="@+id/recipe_people"
+                    android:layout_width="50dp"
+                    android:layout_height="match_parent"
+                    android:inputType="number"
+                    android:textColor="@color/colorAccent"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/ingredients_label"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/third_line"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:text="@string/ingredients"/>
+
+            <LinearLayout
+                android:id="@+id/ingredients_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_below="@id/ingredients_label"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/steps_label"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_below="@id/ingredients_list"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:text="@string/steps"/>
+
+            <LinearLayout
+                android:id="@+id/steps_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_below="@id/steps_label"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/bottom_line"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/steps_list"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/delete_recipe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/delete"/>
+
+                <Button
+                    android:id="@+id/edit_recipe"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/modify"/>
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

@@ -24,7 +24,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 import buthod.tony.appManager.DragAndDropLinearLayout;
 import buthod.tony.appManager.R;
@@ -52,15 +51,17 @@ public class AddEditRecipeActivity extends RootActivity {
     private LinearLayout mIngredientsLayout = null, mStepsLayout = null;
     private Button mAddIngredientButton = null, mAddStepButton = null;
     private ImageView mRecipeImageView = null;
-    private ImageButton mAddImageButton = null, mDeleteImageButton = null;
+    private ImageButton mAddImageButton = null, mDeleteImageButton = null,
+            mRotateLeftButton = null, mRotateRightButton = null;
+    private TextView mErrorView = null;
 
     private ArrayAdapter<CharSequence>
             mRecipeTypes = null,
             mUnits = null,
             mIngredientsNames = null;
 
-    // Fields containing recipes information
-    private long mRecipeId = -1; // If -1, new recipe, otherwise, recipe modified
+    // Fields containing recipes_activity information
+    private long mRecipeId = -1; // If -1, new recipe_activity, otherwise, recipe_activity modified
     private ArrayList<RecipesDAO.Ingredient> mIngredients;
     private ArrayList<RecipesDAO.Step> mSteps;
     private ArrayList<Long> mIngredientsToDelete, mStepsToDelete;
@@ -73,7 +74,7 @@ public class AddEditRecipeActivity extends RootActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_edit_recipe);
-        // Get the recipe id if exists
+        // Get the recipe_activity id if exists
         mRecipeId = getIntent().getLongExtra(DatabaseHandler.RECIPES_KEY, -1);
         /* Set private variables */
         mDao = new RecipesDAO(getBaseContext());
@@ -97,6 +98,9 @@ public class AddEditRecipeActivity extends RootActivity {
         mAddImageButton = (ImageButton) findViewById(R.id.add_image);
         mRecipeImageView = (ImageView) findViewById(R.id.image_view);
         mDeleteImageButton = (ImageButton) findViewById(R.id.delete_image);
+        mRotateLeftButton = (ImageButton) findViewById(R.id.rotate_left);
+        mRotateRightButton = (ImageButton) findViewById(R.id.rotate_right);
+        mErrorView = (TextView) findViewById(R.id.error_message);
         // Private lists
         mIngredients = new ArrayList<>();
         mSteps = new ArrayList<>();
@@ -120,38 +124,11 @@ public class AddEditRecipeActivity extends RootActivity {
                 finish();
             }
         });
-        // Add or edit recipe
+        // Add or edit recipe_activity
         mAddRecipeButton.setText(getResources().getString(
                 mRecipeId == -1 ? R.string.add : R.string.modify));
-        mAddRecipeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Add the recipe and exit the activity
-                RecipesDAO.Recipe recipe = new RecipesDAO.Recipe();
-                recipe.id = mRecipeId;
-                recipe.name = mRecipeName.getText().toString();
-                recipe.type = mRecipeTypeSpinner.getSelectedItemPosition();
-                recipe.difficulty = Integer.valueOf(mDifficultyView.getText().toString());
-                recipe.grade = Integer.valueOf(mGradeView.getText().toString());
-                recipe.time = Integer.valueOf(mTimeEdit.getText().toString());
-                recipe.people = Integer.valueOf(mPeopleEdit.getText().toString());
-                recipe.ingredients = mIngredients;
-                updateStepsNumber();
-                recipe.steps = mSteps;
-                mRecipeId = mDao.addEditRecipe(recipe);
-                mDao.deleteQuantities(mIngredientsToDelete);
-                mDao.deleteSteps(mStepsToDelete);
-                // Save the image to external storage
-                if (mRecipeImage == null)
-                    Utils.deleteLocalFile(AddEditRecipeActivity.this, getExternalFilesDir(null),
-                            RecipesActivity.getImageNameFromId(mRecipeId));
-                else
-                    Utils.saveLocalImage(AddEditRecipeActivity.this, mRecipeImage,
-                            getExternalFilesDir(null), RecipesActivity.getImageNameFromId(mRecipeId));
-                finish();
-            }
-        });
-        // Set recipe types
+        mAddRecipeButton.setOnClickListener(mOnAddEditRecipeClickListener);
+        // Set recipe_activity types
         mRecipeTypeSpinner.setAdapter(mRecipeTypes);
         // Changes on seek bars
         mDifficultySeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -196,33 +173,34 @@ public class AddEditRecipeActivity extends RootActivity {
         // Get all ingredients stored on database
         mIngredientsNames.addAll(mDao.getIngredients());
 
-        // Put previous values if we are modifying a recipe
+        // Put previous values if we are modifying a recipe_activity
         if (mRecipeId != -1) {
             fillActivityWithRecipe();
         }
-        // Add or delete the image
-        mAddImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setType("image/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
-            }
-        });
+        // Add, rotate or delete the image
+        mAddImageButton.setOnClickListener(mAddImageListener);
         mDeleteImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mRecipeImageView.setImageBitmap(null);
-                mRecipeImage = null;
-                mDeleteImageButton.setVisibility(View.GONE);
-                mAddImageButton.setVisibility(View.VISIBLE);
+                setRecipeImage(null);
+            }
+        });
+        mRotateLeftButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setRecipeImage(Utils.rotateBitmapImage(mRecipeImage, -90));
+            }
+        });
+        mRotateRightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setRecipeImage(Utils.rotateBitmapImage(mRecipeImage, 90));
             }
         });
     }
 
     /**
-     * Fill the activity with the given recipe id.
+     * Fill the activity with the given recipe_activity id.
      */
     private void fillActivityWithRecipe() {
         RecipesDAO.Recipe recipe = mDao.getRecipe(mRecipeId);
@@ -239,12 +217,28 @@ public class AddEditRecipeActivity extends RootActivity {
             addEditStep(recipe.steps.get(i), -1);
         }
         // Load the image
-        mRecipeImage = Utils.loadLocalImage(this, getExternalFilesDir(null),
-                RecipesActivity.getImageNameFromId(mRecipeId));
-        if (mRecipeImage != null) {
-            mRecipeImageView.setImageBitmap(mRecipeImage);
+        setRecipeImage(Utils.loadLocalImage(this, getExternalFilesDir(null),
+                RecipesActivity.getImageNameFromId(mRecipeId)));
+    }
+
+    /**
+     * Set the recipe image and update image buttons.
+     * @param bitmap The image bitmap.
+     */
+    private void setRecipeImage(Bitmap bitmap) {
+        mRecipeImage = bitmap;
+        mRecipeImageView.setImageBitmap(bitmap);
+        if (bitmap != null) {
             mAddImageButton.setVisibility(View.GONE);
             mDeleteImageButton.setVisibility(View.VISIBLE);
+            mRotateLeftButton.setVisibility(View.VISIBLE);
+            mRotateRightButton.setVisibility(View.VISIBLE);
+        }
+        else {
+            mAddImageButton.setVisibility(View.VISIBLE);
+            mDeleteImageButton.setVisibility(View.GONE);
+            mRotateLeftButton.setVisibility(View.GONE);
+            mRotateRightButton.setVisibility(View.GONE);
         }
     }
 
@@ -255,6 +249,51 @@ public class AddEditRecipeActivity extends RootActivity {
         for (int i = 0; i < mSteps.size(); ++i)
             mSteps.get(i).number = i + 1;
     }
+
+    private View.OnClickListener mOnAddEditRecipeClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            // Add the recipe_activity and exit the activity
+            RecipesDAO.Recipe recipe = new RecipesDAO.Recipe();
+            recipe.id = mRecipeId;
+            recipe.name = mRecipeName.getText().toString();
+            recipe.type = mRecipeTypeSpinner.getSelectedItemPosition();
+            recipe.difficulty = Utils.parseIntWithDefault(mDifficultyView.getText().toString(), 0);
+            recipe.grade = Utils.parseIntWithDefault(mGradeView.getText().toString(), 0);
+            recipe.time = Utils.parseIntWithDefault(mTimeEdit.getText().toString(), -1);
+            recipe.people = Utils.parseIntWithDefault(mPeopleEdit.getText().toString(), -1);
+            recipe.ingredients = mIngredients;
+            // Check if data are correct
+            String errorMessage = "";
+            Resources res = getResources();
+            if (recipe.name == null || recipe.name.isEmpty())
+                errorMessage = res.getString(R.string.recipe_name_error);
+            else if (recipe.time < 0)
+                errorMessage = res.getString(R.string.recipe_time_error);
+            else if (recipe.people < 0)
+                errorMessage = res.getString(R.string.recipe_people_error);
+            if (!errorMessage.isEmpty()) {
+                // An error occurred
+                mErrorView.setVisibility(View.VISIBLE);
+                mErrorView.setText(errorMessage);
+                return;
+            }
+            // Otherwise, add/edit the recipe
+            updateStepsNumber();
+            recipe.steps = mSteps;
+            mRecipeId = mDao.addEditRecipe(recipe);
+            mDao.deleteQuantities(mIngredientsToDelete);
+            mDao.deleteSteps(mStepsToDelete);
+            // Save the image to external storage
+            if (mRecipeImage == null)
+                Utils.deleteLocalFile(AddEditRecipeActivity.this, getExternalFilesDir(null),
+                        RecipesActivity.getImageNameFromId(mRecipeId));
+            else
+                Utils.saveLocalImage(AddEditRecipeActivity.this, mRecipeImage,
+                        getExternalFilesDir(null), RecipesActivity.getImageNameFromId(mRecipeId));
+            finish();
+        }
+    };
 
     //region ADD_EDIT_INGREDIENT
 
@@ -276,6 +315,7 @@ public class AddEditRecipeActivity extends RootActivity {
         final Spinner unitSpinner = (Spinner) alertView.findViewById(R.id.unit);
         unitSpinner.setAdapter(mUnits);
         final AutoCompleteTextView ingredientView = (AutoCompleteTextView) alertView.findViewById(R.id.ingredient);
+        final TextView errorView = (TextView) alertView.findViewById(R.id.error_message);
         ingredientView.setAdapter(mIngredientsNames);
         // Set default values if ingredient is not null
         if (ingredientIndex != -1) {
@@ -285,7 +325,7 @@ public class AddEditRecipeActivity extends RootActivity {
             ingredientView.setText(ingredient.name);
         }
         // Set up dialog buttons
-        Resources res = getResources();
+        final Resources res = getResources();
         if (ingredientIndex != -1)
             builder.setNeutralButton(res.getString(R.string.delete),
                     new DialogInterface.OnClickListener() {
@@ -316,16 +356,25 @@ public class AddEditRecipeActivity extends RootActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        // Add or modify the ingredient
+                        // Get data from views
                         RecipesDAO.Ingredient ingredient =
                                 (ingredientIndex == -1 ? new RecipesDAO.Ingredient() : mIngredients.get(ingredientIndex));
                         ingredient.idUnit = unitSpinner.getSelectedItemPosition();
                         ingredient.name = ingredientView.getText().toString();
-                        try {
-                            ingredient.quantity = Float.parseFloat(quantity.getText().toString());
-                        } catch (NumberFormatException e) {
-                            ingredient.quantity = 0;
+                        ingredient.quantity = Utils.parseFloatWithDefault(quantity.getText().toString(), -1);
+                        // Check ingredient data
+                        String errorMessage = "";
+                        if (ingredient.quantity < 0)
+                            errorMessage = res.getString(R.string.ingredient_quantity_error);
+                        else if (ingredient.name == null || ingredient.name.isEmpty())
+                            errorMessage = res.getString(R.string.ingredient_name_error);
+                        if (!errorMessage.isEmpty()) {
+                            // Ingredient data are not valid
+                            errorView.setText(errorMessage);
+                            errorView.setVisibility(View.VISIBLE);
+                            return;
                         }
+                        // Add or modify the ingredient
                         addEditIngredient(ingredient, ingredientIndex);
                         alertDialog.dismiss();
                     }
@@ -346,12 +395,12 @@ public class AddEditRecipeActivity extends RootActivity {
         // First check if the ingredient name is already in database, otherwise need to add it.
         ingredient.idIngredient = mDao.getIngredientId(ingredient.name);
         // Add or modify the view
-        TextView ingredientView;
+        View ingredientView;
         if (index == -1) {
-            // Add the ingredient in the list of ingredients for when the user really add the recipe.
+            // Add the ingredient in the list of ingredients for when the user really add the recipe_activity.
             mIngredients.add(ingredient);
             // Then add it to the view.
-            ingredientView = new TextView(this);
+            ingredientView = getLayoutInflater().inflate(R.layout.ingredient_view, null);
             ingredientView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -363,12 +412,12 @@ public class AddEditRecipeActivity extends RootActivity {
         }
         else {
             // Get the existing view
-            ingredientView = (TextView) mIngredientsLayout.getChildAt(index);
+            ingredientView = mIngredientsLayout.getChildAt(index);
         }
         // Update text view information
-        ingredientView.setText(String.format(Locale.getDefault(), "%s %s   %s (%d)",
-                Utils.floatToString(ingredient.quantity), mUnits.getItem(ingredient.idUnit), ingredient.name,
-                ingredient.idIngredient));
+        ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(String.valueOf(ingredient.quantity));
+        ((TextView) ingredientView.findViewById(R.id.unit_view)).setText(mUnits.getItem(ingredient.idUnit));
+        ((TextView) ingredientView.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
         ingredientView.invalidate();
     }
 
@@ -391,12 +440,13 @@ public class AddEditRecipeActivity extends RootActivity {
         builder.setView(alertView);
         // Get useful views
         final EditText descriptionView = (EditText) alertView.findViewById(R.id.description);
+        final TextView errorView = (TextView) alertView.findViewById(R.id.error_message);
         // Set default values
         if (stepIndex != -1) {
             descriptionView.setText(mSteps.get(stepIndex).description);
         }
         // Set up dialog buttons
-        Resources res = getResources();
+        final Resources res = getResources();
         if (stepIndex != -1)
             builder.setNeutralButton(res.getString(R.string.delete),
                     new DialogInterface.OnClickListener() {
@@ -427,10 +477,20 @@ public class AddEditRecipeActivity extends RootActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        // Add or modify the step
+                        // Recover data from views
                         RecipesDAO.Step step =
                                 (stepIndex == -1 ? new RecipesDAO.Step() : mSteps.get(stepIndex));
                         step.description = descriptionView.getText().toString();
+                        // Check if data are correct
+                        String errorMessage = "";
+                        if (step.description.isEmpty())
+                            errorMessage = res.getString(R.string.step_description_error);
+                        if (!errorMessage.isEmpty()) {
+                            errorView.setVisibility(View.VISIBLE);
+                            errorView.setText(errorMessage);
+                            return;
+                        }
+                        // Add or modify the step
                         addEditStep(step, stepIndex);
                         alertDialog.dismiss();
                     }
@@ -449,12 +509,12 @@ public class AddEditRecipeActivity extends RootActivity {
      */
     private void addEditStep(final RecipesDAO.Step step, int index) {
         // Add or modify the view
-        final TextView stepView;
+        final View stepView;
         if (index == -1) {
-            // Add the ingredient in the list of ingredients for when the user really add the recipe.
+            // Add the ingredient in the list of ingredients for when the user really add the recipe_activity.
             mSteps.add(step);
             // Then add it to the view.
-            stepView = new TextView(this);
+            stepView = getLayoutInflater().inflate(R.layout.step_view, null);
             stepView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -462,29 +522,32 @@ public class AddEditRecipeActivity extends RootActivity {
                     showAddEditStepDialog(stepPosition);
                 }
             });
-            stepView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    mDragAndDrop.StartDragging(mStepsLayout, stepView, new DragAndDropLinearLayout.OnDragAndDropListener() {
-                        @Override
-                        public void onDrop(int dragIndex, int dropIndex) {
-                            RecipesDAO.Step dragStep = mSteps.remove(dragIndex);
-                            mSteps.add(dropIndex, dragStep);
-                        }
-                    });
-                    return true;
-                }
-            });
+            stepView.setOnLongClickListener(mStepOnLongClickListener);
             mStepsLayout.addView(stepView, mStepsLayout.getChildCount());
         }
         else {
             // Get the existing view
-            stepView = (TextView) mStepsLayout.getChildAt(index);
+            stepView = mStepsLayout.getChildAt(index);
         }
         // Update text view information
-        stepView.setText(step.description);
+        ((TextView) stepView.findViewById(R.id.description_view)).setText(step.description);
         stepView.invalidate();
     }
+
+    private View.OnLongClickListener mStepOnLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View view) {
+            mDragAndDrop.StartDragging(mStepsLayout, view,
+                    new DragAndDropLinearLayout.OnDragAndDropListener() {
+                @Override
+                public void onDrop(int dragIndex, int dropIndex) {
+                    RecipesDAO.Step dragStep = mSteps.remove(dragIndex);
+                    mSteps.add(dropIndex, dragStep);
+                }
+            });
+            return true;
+        }
+    };
 
     //endregion
 
@@ -492,28 +555,33 @@ public class AddEditRecipeActivity extends RootActivity {
 
     public static int PICK_IMAGE = 1;
 
+    private View.OnClickListener mAddImageListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Intent intent = new Intent();
+            intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
+        }
+    };
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == Activity.RESULT_OK) {
+        if (requestCode == PICK_IMAGE && resultCode == Activity.RESULT_OK) {
             if (data.getData() != null) {
                 Uri uri = data.getData();
                 try {
                     mRecipeImage = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
-                    mRecipeImage = Utils.getSquareBitmap(mRecipeImage, 512);
-                    mRecipeImageView.setImageBitmap(mRecipeImage);
-                    mAddImageButton.setVisibility(View.GONE);
-                    mDeleteImageButton.setVisibility(View.VISIBLE);
+                    setRecipeImage(Utils.getSquareBitmap(mRecipeImage, 512));
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             else {
-                mRecipeImage = (Bitmap) data.getExtras().get("data");
-                mRecipeImageView.setImageBitmap(mRecipeImage);
-                mAddImageButton.setVisibility(View.GONE);
-                mDeleteImageButton.setVisibility(View.VISIBLE);
+                setRecipeImage((Bitmap) data.getExtras().get("data"));
             }
         }
     }

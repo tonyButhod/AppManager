@@ -7,7 +7,7 @@
     <string name="stop">Arrêter</string>
     <string name="stop_toast">Détection arrêtée !</string>
     <string name="save">Sauvegarder</string>
-    <string name="steps_label">Nombre de pas effectués : </string>
+    <string name="foot_steps_label">Nombre de pas effectués : </string>
     <string name="on">On</string>
     <string name="off">Off</string>
     <string name="pedometer_section_label">Pedometer</string>
@@ -107,8 +107,16 @@
     <string name="quantity">Quantité</string>
     <string name="unit">Unité</string>
     <string name="ingredient">Ingrédiant</string>
+    <string name="ingredients">Ingrédiants</string>
     <string name="step_description">Description de l\'étape</string>
+    <string name="steps">Etapes</string>
     <string name="add_image">Ajouter une image</string>
+    <string name="recipe_name_error">Ajouter un nom de recette</string>
+    <string name="recipe_time_error">Temps de préparation incorrect</string>
+    <string name="recipe_people_error">Nombre de personnes incorrect</string>
+    <string name="ingredient_name_error">Ajouter le nom de l\'ingrédiant</string>
+    <string name="ingredient_quantity_error">Quantité incorrecte</string>
+    <string name="step_description_error">Ajouter une description de l\'étape</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
@@ -135,5 +143,6 @@
     <string name="data_saved_error">Erreur lors de la sauvegarde des données sur stockage externe</string>
     <string name="data_loaded_success">Données chargées depuis stockage externe</string>
     <string name="data_loaded_error">Erreur lors du chargement des données depuis stockage externe</string>
+    <string name="delete_confirmation">Confirmer la suppression ?</string>
 
 </resources>

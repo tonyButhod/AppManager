@@ -34,6 +34,16 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/ingredient"
-        android:layout_below="@id/unit_layout"/>
+        android:layout_below="@id/unit_layout"
+        android:maxLength="32"/>
+
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ingredient"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:textColor="@color/red"/>
 
 </RelativeLayout>

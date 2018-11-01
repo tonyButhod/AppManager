@@ -51,7 +51,7 @@ public class DragAndDropLinearLayout implements View.OnDragListener {
     public DragAndDropLinearLayout(Context context) {
         this(context, null, 10, 4);
         mPaintFeedback = new Paint();
-        mPaintFeedback.setColor(Color.BLUE);
+        mPaintFeedback.setColor(context.getResources().getColor(R.color.colorAccent));
         mPaintFeedback.setStyle(Paint.Style.FILL);
     }
 

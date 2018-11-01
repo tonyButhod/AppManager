@@ -73,9 +73,11 @@ public class AccountHistoryActivity {
     /**
      * Instantiate all elements needed and update the account view with transactions' history.
      * @param rootActivity The activity containing the page viewer.
+     * @param dao The account DAO. DAO need to be opened by AccountActivity.
      */
-    public void onCreate(Activity rootActivity) {
+    public void onCreate(Activity rootActivity, AccountDAO dao) {
         mRootActivity = rootActivity;
+        mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_history, null);
 
         mTypeSelectionButton = (Button) mRootActivity.findViewById(R.id.type_selection);
@@ -83,7 +85,6 @@ public class AccountHistoryActivity {
         mAddTransaction = (ImageButton) mAccountView.findViewById(R.id.add_transaction);
         mTransactionsLayout = (LinearLayout) mAccountView.findViewById(R.id.transactions_layout);
         mAppendTransactions = (Button) mAccountView.findViewById(R.id.append_transactions_button);
-        mDao = new AccountDAO(mRootActivity);
         mDateFormatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
 
         // Add type of expenses and credits
@@ -121,9 +122,6 @@ public class AccountHistoryActivity {
                 showAddTransactionDialog();
             }
         });
-        // Populate the linear layout of transactions
-        mTransactionsLayout.removeAllViews();
-        appendNewTransactions();
         // Add listener to display more transactions
         mAppendTransactions.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,12 +129,14 @@ public class AccountHistoryActivity {
                 appendNewTransactions( buildInClauseFromSelectedTypes(), mSearchField.getText().toString() );
             }
         });
-
         // Initialize selected types
         mExpenseTypesSelected = new boolean[mExpenseTypes.getCount()];
         mCreditTypesSelected = new boolean[mCreditTypes.getCount()];
         for (int i = 0; i < mExpenseTypesSelected.length; ++i) mExpenseTypesSelected[i] = true;
         for (int i = 0; i < mCreditTypesSelected.length; ++i) mCreditTypesSelected[i] = true;
+        // Populate the linear layout of transactions
+        mTransactionsLayout.removeAllViews();
+        appendNewTransactions();
     }
 
     /**
@@ -151,11 +151,9 @@ public class AccountHistoryActivity {
      * @param numberOfTransactions The number of transactions to append.
      */
     private void appendNewTransactions(int numberOfTransactions, String inClause, String likeClause) {
-        mDao.open();
         ArrayList<AccountDAO.TransactionInfo> transactions =
                 mDao.getTransactions(numberOfTransactions, mLastTransactionDate, mLastTransactionId,
                         inClause, likeClause);
-        mDao.close();
         for (int i = 0; i < transactions.size(); ++i) {
             addTransactionToLayout(transactions.get(i));
         }
@@ -356,9 +354,7 @@ public class AccountHistoryActivity {
                             c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
                             Date date = c.getTime();
                             String comment = commentEdit.getText().toString();
-                            mDao.open();
                             mDao.addTransaction(type, price, date, comment);
-                            mDao.close();
 
                             resetTransactionLayout();
                             alertDialog.dismiss();
@@ -386,9 +382,7 @@ public class AccountHistoryActivity {
         final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
         final EditText commentEdit = (EditText) alertView.findViewById(R.id.comment);
         // Get transaction information
-        mDao.open();
         final AccountDAO.TransactionInfo transaction = mDao.getTransaction(transactionID);
-        mDao.close();
         // Set default date of the date picker
         final Calendar c = Calendar.getInstance();
         c.setTime(transaction.date);
@@ -460,10 +454,8 @@ public class AccountHistoryActivity {
                             c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
                             Date date = c.getTime();
                             String comment = commentEdit.getText().toString();
-                            mDao.open();
                             mDao.modifyTransaction(transaction.id, type, price, date, comment);
                             AccountDAO.TransactionInfo updatedTransaction = mDao.getTransaction(transactionID);
-                            mDao.close();
                             // Update the view in the linear layout
                             updateTransactionView(transactionView, updatedTransaction);
                             alertDialog.dismiss();
@@ -497,9 +489,7 @@ public class AccountHistoryActivity {
                 b.setOnClickListener(new View.OnClickListener(){
                     @Override
                     public void onClick(View view) {
-                        mDao.open();
                         mDao.deleteTransaction(transactionID);
-                        mDao.close();
                         mTransactionsLayout.removeView(v);
                         alertDialog.dismiss();
                     }

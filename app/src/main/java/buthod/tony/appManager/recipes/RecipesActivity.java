@@ -1,22 +1,23 @@
 package buthod.tony.appManager.recipes;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.LongSparseArray;
-import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 import java.util.ArrayList;
-import java.util.Locale;
 
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
@@ -32,22 +33,26 @@ public class RecipesActivity extends RootActivity {
 
     private RecipesDAO mDao = null;
 
-    private LinearLayout mRecipesList = null;
+    private LinearLayout mRecipesLayout = null;
     private ImageButton mBackButton = null;
     private ImageButton mAddRecipeButton = null;
+    private EditText mSearchField = null;
 
+    private ArrayList<RecipesDAO.Recipe> mRecipes = null;
     private LongSparseArray<ImageView> mRecipeImages = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.recipes);
+        setContentView(R.layout.recipes_activity);
 
         mDao = new RecipesDAO(getBaseContext());
         mDao.open();
         mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mRecipesList = (LinearLayout) findViewById(R.id.recipes_list);
+        mRecipesLayout = (LinearLayout) findViewById(R.id.recipes_list);
         mAddRecipeButton = (ImageButton) findViewById(R.id.add_recipe_button);
+        mSearchField = (EditText) findViewById(R.id.search_field);
+
         mRecipeImages = new LongSparseArray<>();
 
         // Finish the activity if back button is pressed
@@ -57,7 +62,7 @@ public class RecipesActivity extends RootActivity {
                 finish();
             }
         });
-        // Add recipe
+        // Add recipe_activity
         mAddRecipeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -65,51 +70,64 @@ public class RecipesActivity extends RootActivity {
                 startActivity(intent);
             }
         });
+        // Update search elements
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                onSearchFieldChanged(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        mSearchField.setText("");
         populateListWithRecipes();
     }
 
     private void populateListWithRecipes() {
-        mRecipesList.removeAllViews();
+        mRecipesLayout.removeAllViews();
         mRecipeImages.clear();
-        // Params used for each recipe.
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        LinearLayout.LayoutParams imageParams = new LinearLayout.LayoutParams(
-                200, 200
-        );
+        // Params used for each recipe_activity.
         Resources res = getResources();
+        LayoutInflater inflater = getLayoutInflater();
 
-        ArrayList<RecipesDAO.Recipe> recipes = mDao.getRecipes();
-        for (int i = 0; i < recipes.size(); ++i) {
-            final RecipesDAO.Recipe recipe = recipes.get(i);
+        mRecipes = mDao.getRecipes();
+        for (int i = 0; i < mRecipes.size(); ++i) {
+            final RecipesDAO.Recipe recipe = mRecipes.get(i);
 
-            LinearLayout recipeLayout = new LinearLayout(this);
-            recipeLayout.setOrientation(LinearLayout.HORIZONTAL);
-            recipeLayout.setLayoutParams(layoutParams);
-            // Initialize the image view
-            ImageView imageView = new ImageView(this);
-            imageView.setLayoutParams(imageParams);
-            imageView.setBackground(res.getDrawable(R.drawable.no_image));
+            View recipeView = inflater.inflate(R.layout.recipe_view, null);
+            // Add image view in images to load
+            ImageView imageView = (ImageView) recipeView.findViewById(R.id.image_view);
             mRecipeImages.append(recipe.id, imageView);
-            recipeLayout.addView(imageView);
-            // Initialize the text view
-            TextView textView = new TextView(this);
-            textView.setText(String.format(Locale.getDefault(),
-                    "%d : %s (%d)\nNote : %d   Difficulté : %d\nTemps de préparation : %d   Personnes : %d",
-                    recipe.id, recipe.name, recipe.type, recipe.grade, recipe.difficulty, recipe.time, recipe.people));
-            recipeLayout.setTag(recipe.id);
-            recipeLayout.addView(textView);
-            recipeLayout.setOnClickListener(mRecipeOnClick);
-            recipeLayout.setOnLongClickListener(mRecipeOnLongClick);
-            mRecipesList.addView(recipeLayout);
+            // Set the title of recipe
+            TextView titleView = (TextView) recipeView.findViewById(R.id.title_view);
+            titleView.setText(recipe.name);
+            // Update stars for grade and difficulty
+            LinearLayout firstLineLayout = (LinearLayout) recipeView.findViewById(R.id.first_line);
+            for (int j = 0; j < recipe.grade; ++j)
+                firstLineLayout.getChildAt(1 + j)
+                        .setBackground(res.getDrawable(R.drawable.star_filled));
+            for (int j = 0; j < recipe.difficulty; ++j)
+                firstLineLayout.getChildAt(8 + j)
+                        .setBackground(res.getDrawable(R.drawable.star_filled));
+            // Set preparation time
+            TextView timeView = (TextView) recipeView.findViewById(R.id.recipe_time);
+            timeView.setText(String.valueOf(recipe.time));
+
+            recipeView.setTag(recipe.id);
+            recipeView.setOnClickListener(mRecipeOnClick);
+            recipeView.setOnLongClickListener(mRecipeOnLongClick);
+            mRecipesLayout.addView(recipeView);
         }
-        mRecipesList.invalidate();
+        mRecipesLayout.invalidate();
 
         new Thread(new Runnable() {
             @Override
@@ -120,7 +138,7 @@ public class RecipesActivity extends RootActivity {
     }
 
     /**
-     * On click listener on recipes layouts.
+     * On click listener on recipes_activity layouts.
      */
     private View.OnClickListener mRecipeOnClick = new View.OnClickListener() {
         @Override
@@ -133,7 +151,7 @@ public class RecipesActivity extends RootActivity {
     };
 
     /**
-     * On long click listener on recipes layouts.
+     * On long click listener on recipes_activity layouts.
      */
     private View.OnLongClickListener mRecipeOnLongClick = new View.OnLongClickListener() {
         @Override
@@ -156,12 +174,12 @@ public class RecipesActivity extends RootActivity {
                             startActivity(intent);
                             break;
                         case R.id.delete:
-                            // Delete the recipe image if exists
+                            // Delete the recipe_activity image if exists
                             Utils.deleteLocalFile(RecipesActivity.this,
                                     getExternalFilesDir(null), getImageNameFromId(recipeId));
-                            // Delete the recipe in database
+                            // Delete the recipe_activity in database
                             mDao.deleteRecipe(recipeId);
-                            mRecipesList.removeView(v);
+                            mRecipesLayout.removeView(v);
                             break;
                     }
                     return true;
@@ -179,7 +197,10 @@ public class RecipesActivity extends RootActivity {
         }
     };
 
-    public void startImportingImages() {
+    /**
+     * Loads images of recipes and updates image views.
+     */
+    private void startImportingImages() {
         for (int i = 0; i < mRecipeImages.size(); ++i) {
             long recipeId = mRecipeImages.keyAt(i);
             final Bitmap bitmap = Utils.loadLocalImage(this, getExternalFilesDir(null),
@@ -196,6 +217,34 @@ public class RecipesActivity extends RootActivity {
         }
     }
 
+    //region SEARCH
+
+    private Handler handler = new Handler();
+
+    /**
+     * Called when the user changes the string to search.
+     * @param searchString The new string to search.
+     */
+    private void onSearchFieldChanged(final String searchString) {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (searchString.compareTo(mSearchField.getText().toString()) == 0) {
+                    for (int i = 0; i < mRecipes.size(); ++i) {
+                        if (Utils.searchInString(searchString, mRecipes.get(i).name)) {
+                            mRecipesLayout.getChildAt(i).setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            mRecipesLayout.getChildAt(i).setVisibility(View.GONE);
+                        }
+                    }
+                }
+            }
+        }, 400);
+    }
+
+    //endregion
+
     @Override
     protected void onDestroy() {
         mDao.close();
@@ -205,7 +254,7 @@ public class RecipesActivity extends RootActivity {
     //region STATIC_FUNCTIONS
 
     /**
-     * Get the image name from the id of the recipe.
+     * Get the image name from the id of the recipe_activity.
      */
     public static String getImageNameFromId(long recipeId) {
         return "Recipe_" + String.valueOf(recipeId) + ".jpg";

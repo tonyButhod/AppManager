@@ -1,12 +1,10 @@
 package buthod.tony.appManager.account;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,14 +12,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Locale;
 
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
@@ -39,8 +29,10 @@ public class AccountActivity extends RootActivity {
     private AccountPagerAdapter mAccountPagerAdapter = null;
     private Button mHistoryButton = null, mStatementButton = null, mPieChartButton = null;
     // Custom element in toolbar for account history page
-    private EditText mSearchEdit = null;
+    private EditText mSearchField = null;
     private Button mTypeSelectionButton = null;
+    // Database part
+    private AccountDAO mDao = null;
     // Classes used in the view pager
     private AccountHistoryActivity mAccountHistory = null;
     private AccountPieChartActivity mAccountPieChart = null;
@@ -53,11 +45,13 @@ public class AccountActivity extends RootActivity {
 
         mBackButton = (ImageButton) findViewById(R.id.back_button);
         mViewPager = (ViewPager) findViewById(R.id.view_pager);
-        mSearchEdit = (EditText) findViewById(R.id.search_field);
+        mSearchField = (EditText) findViewById(R.id.search_field);
         mTypeSelectionButton = (Button) findViewById(R.id.type_selection);
         mHistoryButton = (Button) findViewById(R.id.account_history_button);
         mStatementButton = (Button) findViewById(R.id.account_statement_button);
         mPieChartButton = (Button) findViewById(R.id.account_piechart_button);
+        mDao = new AccountDAO(this);
+        mDao.open();
 
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -112,7 +106,7 @@ public class AccountActivity extends RootActivity {
      */
     private void onPageSelected(int position) {
         mTypeSelectionButton.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
-        mSearchEdit.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
+        mSearchField.setVisibility(position == 0 ? View.VISIBLE : View.GONE);
         mHistoryButton.setSelected(position == 0);
         mStatementButton.setSelected(position == 1);
         mPieChartButton.setSelected(position == 2);
@@ -148,6 +142,12 @@ public class AccountActivity extends RootActivity {
         return super.dispatchTouchEvent(event);
     }
 
+    @Override
+    public void onDestroy() {
+        mDao.close();
+        super.onDestroy();
+    }
+
     /**
      * Custom pager adapter for account page.
      * Allow to switch easily between pages.
@@ -164,21 +164,21 @@ public class AccountActivity extends RootActivity {
                 case 0:
                     view = mAccountHistory.getView();
                     if (view == null)
-                        mAccountHistory.onCreate(AccountActivity.this);
+                        mAccountHistory.onCreate(AccountActivity.this, mDao);
                     view = mAccountHistory.getView();
                     collection.addView(view);
                     return view;
                 case 1:
                     view = mAccountStatement.getView();
                     if (view == null)
-                        mAccountStatement.onCreate(AccountActivity.this);
+                        mAccountStatement.onCreate(AccountActivity.this, mDao);
                     view = mAccountStatement.getView();
                     collection.addView(view);
                     return view;
                 case 2:
                     view = mAccountPieChart.getView();
                     if (view == null)
-                        mAccountPieChart.onCreate(AccountActivity.this);
+                        mAccountPieChart.onCreate(AccountActivity.this, mDao);
                     view = mAccountPieChart.getView();
                     collection.addView(view);
                     return view;

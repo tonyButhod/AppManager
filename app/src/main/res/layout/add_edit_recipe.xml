@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:id="@+id/root_layout">
+    android:id="@+id/root_layout"
+    android:focusable="true" android:focusableInTouchMode="true">
 
     <LinearLayout
         android:id="@+id/toolbar"
@@ -30,20 +31,21 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-
-            <TextView
-                android:id="@+id/name_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/recipe_name"/>
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp">
 
             <EditText
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/name_label"/>
+                android:inputType="text"
+                android:hint="@string/recipe_name"
+                android:maxLength="64"
+                android:nextFocusUp="@id/name"
+                android:nextFocusLeft="@id/name"/>
 
             <LinearLayout
                 android:id="@+id/type_layout"
@@ -54,8 +56,10 @@
 
                 <TextView
                     android:id="@+id/type_label"
-                    android:layout_width="wrap_content"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="18sp"
                     android:text="@string/recipe_type"/>
 
                 <Spinner
@@ -69,15 +73,19 @@
 
             <TextView
                 android:id="@+id/difficulty_label"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
                 android:text="@string/recipe_difficulty"
                 android:layout_below="@id/type_layout"/>
 
             <TextView
                 android:id="@+id/difficulty"
-                android:layout_width="wrap_content"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorAccent"
+                android:textSize="18sp"
                 android:text="1"
                 android:layout_below="@id/type_layout"
                 android:layout_toEndOf="@id/difficulty_label"
@@ -97,15 +105,19 @@
 
             <TextView
                 android:id="@+id/grade_label"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
                 android:text="@string/recipe_grade"
                 android:layout_below="@id/difficulty_label"/>
 
             <TextView
                 android:id="@+id/grade"
-                android:layout_width="wrap_content"
+                android:layout_width="50dp"
                 android:layout_height="wrap_content"
+                android:textColor="@color/colorAccent"
+                android:textSize="18sp"
                 android:text="1"
                 android:layout_below="@id/difficulty_label"
                 android:layout_toEndOf="@id/grade_label"
@@ -133,13 +145,15 @@
 
                 <TextView
                     android:id="@+id/time_label"
-                    android:layout_width="wrap_content"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="18sp"
                     android:text="@string/recipe_time"/>
 
                 <EditText
                     android:id="@+id/time"
-                    android:layout_width="match_parent"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:inputType="number"/>
 
@@ -155,23 +169,34 @@
 
                 <TextView
                     android:id="@+id/people_label"
-                    android:layout_width="wrap_content"
+                    android:layout_width="150dp"
                     android:layout_height="wrap_content"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="18sp"
                     android:text="@string/recipe_people"/>
 
                 <EditText
                     android:id="@+id/people"
-                    android:layout_width="match_parent"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
                     android:inputType="number"/>
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/ingredients_label"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/people_section"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:text="@string/ingredients"/>
+
             <LinearLayout
                 android:id="@+id/ingredients_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/people_section"
+                android:layout_below="@id/ingredients_label"
                 android:orientation="vertical">
 
             </LinearLayout>
@@ -183,11 +208,20 @@
                 android:layout_below="@id/ingredients_list"
                 android:text="@string/add_ingredient"/>
 
+            <TextView
+                android:id="@+id/steps_label"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/add_ingredient_button"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp"
+                android:text="@string/steps"/>
+
             <LinearLayout
                 android:id="@+id/steps_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/add_ingredient_button"
+                android:layout_below="@id/steps_label"
                 android:orientation="vertical">
 
             </LinearLayout>
@@ -230,13 +264,53 @@
                     android:layout_alignRight="@id/image_view"
                     android:layout_alignTop="@id/image_view"/>
 
+                <ImageButton
+                    android:id="@+id/rotate_left"
+                    android:background="@drawable/round_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/rotate_icon_left"
+                    android:scaleType="fitXY"
+                    android:padding="5dp"
+                    android:visibility="gone"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_toLeftOf="@id/image_view"
+                    android:layout_toStartOf="@id/image_view"/>
+
+                <ImageButton
+                    android:id="@+id/rotate_right"
+                    android:background="@drawable/round_button"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/rotate_icon_right"
+                    android:scaleType="fitXY"
+                    android:padding="5dp"
+                    android:visibility="gone"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_toRightOf="@id/image_view"
+                    android:layout_toEndOf="@id/image_view"/>
+
             </RelativeLayout>
+
+            <TextView
+                android:id="@+id/error_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/image_view_layout"
+                android:textSize="16sp"
+                android:visibility="gone"
+                android:textColor="@color/red"
+                android:gravity="center"/>
 
             <Button
                 android:id="@+id/add_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/image_view_layout"
+                android:layout_below="@id/error_message"
                 android:text="@string/add"/>
 
         </RelativeLayout>

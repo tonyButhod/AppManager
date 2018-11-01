@@ -24,7 +24,7 @@ import buthod.tony.appManager.Utils;
 public class RecipesDAO extends DAOBase {
 
     /**
-     * Class containing the ingredient and the quantity to use for a recipe.
+     * Class containing the ingredient and the quantity to use for a recipe_activity.
      */
     public static class Ingredient {
         public long idQuantity = -1; // The id of the quantity in database QUANTITIES
@@ -113,7 +113,7 @@ public class RecipesDAO extends DAOBase {
     //region RECIPES
 
     /**
-     * Add / edit a recipe.
+     * Add / edit a recipe_activity.
      * @param recipe
      * @return
      */
@@ -140,7 +140,7 @@ public class RecipesDAO extends DAOBase {
     }
 
     /**
-     * Get a recipe with ingredients and steps.
+     * Get a recipe_activity with ingredients and steps.
      * @param id
      * @return
      */
@@ -161,7 +161,7 @@ public class RecipesDAO extends DAOBase {
             recipe.people = c.getInt(6);
         }
         c.close();
-        // Then also get ingredients and steps for each recipe.
+        // Then also get ingredients and steps for each recipe_activity.
         c = mDb.rawQuery("Select q.*, i." + DatabaseHandler.INGREDIENTS_NAME +
                         " From " + DatabaseHandler.QUANTITIES_TABLE_NAME + " as q, " +
                         DatabaseHandler.INGREDIENTS_TABLE_NAME + " as i" +
@@ -197,9 +197,9 @@ public class RecipesDAO extends DAOBase {
     }
 
     /**
-     * Get list of recipes without ingredients and steps.
-     * @param limit The limit of the number of recipes to get.
-     * @param lastId The last recipe id from which we start the get.
+     * Get list of recipes_activity without ingredients and steps.
+     * @param limit The limit of the number of recipes_activity to get.
+     * @param lastId The last recipe_activity id from which we start the get.
      */
     public ArrayList<Recipe> getRecipes(int limit, long lastId) {
         // Construct the where clause depending on the given parameters
@@ -236,7 +236,7 @@ public class RecipesDAO extends DAOBase {
     }
 
     public void deleteRecipe(long recipeId) {
-        // Delete the recipe itself
+        // Delete the recipe_activity itself
         mDb.delete(DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY + " = ?",
                 new String[] {String.valueOf(recipeId)});
         // Delete all ingredients and steps.
@@ -382,7 +382,7 @@ public class RecipesDAO extends DAOBase {
     public static String EXTERNAL_RECIPES_FILENAME = "Recipes.json";
 
     /**
-     * Save recipes data to external storage in fil EXTERNAL_RECIPES_FILENAME.
+     * Save recipes_activity data to external storage in fil EXTERNAL_RECIPES_FILENAME.
      * @param activity The current activity.
      * @param db The database.
      * @return True in case of success, false otherwise.
@@ -450,7 +450,7 @@ public class RecipesDAO extends DAOBase {
     }
 
     /**
-     * Load recipes data from external storage in file EXTERNAL_RECIPES_FILENAME.
+     * Load recipes_activity data from external storage in file EXTERNAL_RECIPES_FILENAME.
      * @param activity The current activity.
      * @param db The database.
      * @return True in case of success, false otherwise.

@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
@@ -15,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.Normalizer;
 
 public class Utils {
 
@@ -26,6 +30,44 @@ public class Utils {
             return String.valueOf((long) f);
         else
             return String.valueOf(f);
+    }
+
+    /**
+     * Parse a string to int with a default value in case of error.
+     */
+    public static int parseIntWithDefault(String s, int defaultValue) {
+        int result;
+        try {
+            result = Integer.parseInt(s);
+        }
+        catch (NumberFormatException e) {
+            result = defaultValue;
+        }
+        return result;
+    }
+
+    /**
+     * Parse a string to float with a default value in case of error.
+     */
+    public static float parseFloatWithDefault(String s, float defaultValue) {
+        float result;
+        try {
+            result = Float.parseFloat(s);
+        }
+        catch (NumberFormatException e) {
+            result = defaultValue;
+        }
+        return result;
+    }
+
+    /**
+     * Search a pattern in a content with case insensitive.
+     * @param pattern The pattern to search in content.
+     * @param content The content string to search in.
+     * @return True if a pattern is found, false otherwise.
+     */
+    public static boolean searchInString(String pattern, String content) {
+        return content.toLowerCase().contains(pattern.toLowerCase());
     }
 
     /**
@@ -146,6 +188,20 @@ public class Utils {
         if (!file.exists())
             return false;
         return file.delete();
+    }
+
+    /**
+     * Rotate the bitmap and return the new bitmap
+     * @param bitmap The source bitmap.
+     * @param angle The angle to rotate the image.
+     * @return The new bitmap image rotated.
+     */
+    public static Bitmap rotateBitmapImage(Bitmap bitmap, int angle) {
+        if (bitmap == null)
+            return null;
+        Matrix matrix = new Matrix();
+        matrix.setRotate(angle, (float) bitmap.getWidth() / 2, (float) bitmap.getHeight() / 2);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     /**

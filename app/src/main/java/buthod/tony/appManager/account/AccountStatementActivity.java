@@ -68,8 +68,9 @@ public class AccountStatementActivity {
      * Instantiate all elements needed and update the account view with transactions' history.
      * @param rootActivity The activity containing the page viewer.
      */
-    public void onCreate(Activity rootActivity) {
+    public void onCreate(Activity rootActivity, AccountDAO dao) {
         mRootActivity = rootActivity;
+        mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_statement, null);
 
         mPeriodNumberButton = (Button) mAccountView.findViewById(R.id.period_number_button);
@@ -81,7 +82,6 @@ public class AccountStatementActivity {
         mLastExpenseView = (TextView) mAccountView.findViewById(R.id.last_expense);
         mLastCreditView = (TextView) mAccountView.findViewById(R.id.last_credit);
         mCumulativeCheckbox = (CheckBox) mAccountView.findViewById(R.id.cumulative_checkbox);
-        mDao = new AccountDAO(mRootActivity);
 
         // Add listener in the activity
         mPeriodNumberButton.setText("31");
@@ -187,7 +187,6 @@ public class AccountStatementActivity {
         boolean isCumulative = mCumulativeCheckbox.isChecked();
         String selectedPeriodType = mPeriodTypeSpinner.getSelectedItem().toString();
         String[] periodTypes = resources.getStringArray(R.array.dayMonthYear);
-        mDao.open();
         final Date now = new Date();
         // If DAY is selected
         if (selectedPeriodType.equals( periodTypes[0] )) {
@@ -237,7 +236,6 @@ public class AccountStatementActivity {
                 }
             };
         }
-        mDao.close();
 
         // Creates entries dataset and compute the final statement over the period
         List<Entry> creditEntries = new ArrayList<>();

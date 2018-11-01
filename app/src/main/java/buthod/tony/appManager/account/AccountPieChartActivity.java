@@ -1,6 +1,7 @@
 package buthod.tony.appManager.account;
 
 
+import android.accounts.Account;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -70,16 +71,17 @@ public class AccountPieChartActivity {
     /**
      * Instantiate all elements needed and update the account view with transactions' history.
      * @param rootActivity The activity containing the page viewer.
+     * @param dao The account DAO. DAO need to be opened by AccountActivity.
      */
-    public void onCreate(Activity rootActivity) {
+    public void onCreate(Activity rootActivity, AccountDAO dao) {
         mRootActivity = rootActivity;
+        mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_pie_chart, null);
 
         mStartDateButton = (Button) mAccountView.findViewById(R.id.start_date);
         mEndDateButton = (Button) mAccountView.findViewById(R.id.end_date);
         mExpensesPieChart = (PieChart) mAccountView.findViewById(R.id.expenses_pie_chart);
         mCreditsPieChart = (PieChart) mAccountView.findViewById(R.id.credits_pie_chart);
-        mDao = new AccountDAO(mRootActivity);
 
         View.OnClickListener selectDateListener = new View.OnClickListener() {
             @Override
@@ -185,9 +187,7 @@ public class AccountPieChartActivity {
             // Do nothing
         }
 
-        mDao.open();
         SparseIntArray statementByCategory = mDao.getStatementByCategory(startDate, endDate);
-        mDao.close();
 
         String[] expenseLabels = mRootActivity.getResources().getStringArray(R.array.expense_types);
         String[] creditLabels = mRootActivity.getResources().getStringArray(R.array.credit_types);
