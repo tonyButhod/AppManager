@@ -6,16 +6,21 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+import android.util.LongSparseArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
 import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.recipes.UnitsConversion;
 
 /**
  * Created by Tony on 09/10/2017.
@@ -32,6 +37,18 @@ public class RecipesDAO extends DAOBase {
         public int idUnit = -1; // The id of the unit to use.
         public String name; // The ingredient name.
         public float quantity; // The quantity to use
+
+        public Ingredient() {
+
+        }
+
+        public Ingredient(long idQuantity, long idIngredient, int idUnit, String name, float quantity) {
+            this.idQuantity = idQuantity;
+            this.idIngredient = idIngredient;
+            this.idUnit = idUnit;
+            this.name = name;
+            this.quantity = quantity;
+        }
     }
 
     public static class Step {
@@ -83,6 +100,22 @@ public class RecipesDAO extends DAOBase {
         for (int i = 0; i < c.getCount(); ++i) {
             ingredients[i] = c.getString(1);
             c.moveToNext();
+        }
+        c.close();
+        return ingredients;
+    }
+
+    public LongSparseArray<String> getIngredientsFromId(long[] ids) {
+        Cursor c = mDb.rawQuery(
+                "Select * From " + DatabaseHandler.INGREDIENTS_TABLE_NAME +
+                " Where " + DatabaseHandler.INGREDIENTS_KEY + " In " + DAOBase.formatLongArrayForInQuery(ids) + ";",
+                new String[0]);
+        LongSparseArray<String> ingredients = new LongSparseArray<>();
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            ingredients.append(
+                    c.getLong(c.getColumnIndex(DatabaseHandler.INGREDIENTS_KEY)),
+                    c.getString(c.getColumnIndex(DatabaseHandler.INGREDIENTS_NAME))
+            );
         }
         c.close();
         return ingredients;
@@ -235,6 +268,31 @@ public class RecipesDAO extends DAOBase {
         return getRecipes(-1);
     }
 
+    public ArrayList<Recipe> getRecipes(long[] recipesId) {
+        String recipesIdString = "";
+        for (int i = 0; i < recipesId.length; ++i) {
+            recipesIdString += (i != 0 ? "," : "") + String.valueOf(recipesId[i]);
+        }
+        String query = String.format(Locale.getDefault(),
+                "Select * From %1$s " +
+                        "Where %2$s In (%3$s);",
+                DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY, recipesIdString);
+        Cursor c = mDb.rawQuery(query, new String[0]);
+        ArrayList<Recipe> recipes = new ArrayList<>();
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            Recipe recipe = new Recipe();
+            recipe.id = c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_KEY));
+            recipe.name = c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_NAME));
+            recipe.type = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TYPE));
+            recipe.people = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_PEOPLE));
+            recipe.grade = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_GRADE));
+            recipe.difficulty = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_DIFFICULTY));
+            recipe.time = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TIME));
+            recipes.add(recipe);
+        }
+        return recipes;
+    }
+
     public void deleteRecipe(long recipeId) {
         // Delete the recipe_activity itself
         mDb.delete(DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY + " = ?",
@@ -373,6 +431,59 @@ public class RecipesDAO extends DAOBase {
             whereClause += (i != 0 ? "," : "") + String.valueOf(stepsId.get(i));
         whereClause += ")";
         mDb.delete(DatabaseHandler.STEPS_TABLE_NAME, whereClause, new String[0]);
+    }
+
+    //endregion
+
+    //region ADVANCED
+
+    public ArrayList<Ingredient> getQuantitiesFromRecipes(long[] recipesId, LongSparseArray<Float> peopleRatio) {
+        String query = String.format(Locale.getDefault(),
+                "Select q.%8$s, q.%1$s, q.%2$s, q.%3$s, i.%4$s From %5$s as q, %6$s as i " +
+                "Where q.%3$s = i.%7$s And q.%8$s In %9$s " +
+                "Order By q.%3$s ASC, q.%2$s DESC;", /* Order first by ingredient id, then by unit id */
+                DatabaseHandler.QUANTITIES_QUANTITY, DatabaseHandler.QUANTITIES_UNIT, DatabaseHandler.QUANTITIES_INGREDIENT,
+                DatabaseHandler.INGREDIENTS_NAME, DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.INGREDIENTS_TABLE_NAME,
+                DatabaseHandler.INGREDIENTS_KEY, DatabaseHandler.QUANTITIES_RECIPE,
+                DAOBase.formatLongArrayForInQuery(recipesId));
+        Cursor c = mDb.rawQuery(query, new String[0]);
+        ArrayList<Ingredient> quantities = new ArrayList<>();
+        Ingredient ingredient = null;
+        long previousIngredientId = -1;
+        int previousUnitId = -1;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            long recipeId = c.getLong(0);
+            float quantity = c.getFloat(1);
+            int unitId = c.getInt(2);
+            long ingredientId = c.getLong(3);
+            String ingredientName = c.getString(4);
+            if (ingredient != null && previousIngredientId == ingredientId) {
+                // Try to convert first unit into the second one
+                float factor = UnitsConversion.convert(this, unitId, previousUnitId, ingredientId);
+                if (factor != 0) {
+                    // Conversion with success
+                    ingredient.quantity += factor * quantity * peopleRatio.get(recipeId);
+                }
+                else {
+                    // No conversion possible
+                    quantities.add(ingredient);
+                    ingredient = new Ingredient(-1, ingredientId, unitId, ingredientName,
+                            quantity * peopleRatio.get(recipeId));
+                    previousUnitId = unitId;
+                }
+            }
+            else {
+                if (ingredient != null)
+                    quantities.add(ingredient);
+                ingredient = new Ingredient(-1, ingredientId, unitId, ingredientName,
+                        quantity * peopleRatio.get(recipeId));
+                previousIngredientId = ingredientId;
+                previousUnitId = unitId;
+            }
+        }
+        if (ingredient != null)
+            quantities.add(ingredient);
+        return quantities;
     }
 
     //endregion

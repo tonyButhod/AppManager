@@ -74,7 +74,6 @@ public class DAOBase {
             dao.close();
         }
         catch (JSONException e) {
-            Log.d("Debug", e.getMessage());
             success = false;
         }
         Resources res = activity.getResources();
@@ -82,4 +81,17 @@ public class DAOBase {
                 success ? res.getString(R.string.data_loaded_success) : res.getString(R.string.data_loaded_error),
                 Toast.LENGTH_LONG).show();
     }
+
+    //region UTILS
+
+    public static String formatLongArrayForInQuery(long[] array) {
+        StringBuilder inQuery = new StringBuilder("(");
+        for (int i = 0; i < array.length; ++i) {
+            inQuery.append(i == 0 ? "" : ",").append(String.valueOf(array[i]));
+        }
+        inQuery.append(")");
+        return inQuery.toString();
+    }
+
+    //endregion
 }

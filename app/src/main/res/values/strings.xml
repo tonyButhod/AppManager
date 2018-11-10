@@ -96,7 +96,6 @@
         <item>L</item>
         <item>cL</item>
         <item>Cuillère à café</item>
-        <item>Cuillère à soupe</item>
     </string-array>
     <string name="recipe_difficulty">Difficulté</string>
     <string name="recipe_grade">Note</string>
@@ -117,6 +116,7 @@
     <string name="ingredient_name_error">Ajouter le nom de l\'ingrédiant</string>
     <string name="ingredient_quantity_error">Quantité incorrecte</string>
     <string name="step_description_error">Ajouter une description de l\'étape</string>
+    <string name="for_recipes_list">Pour les recettes :</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>

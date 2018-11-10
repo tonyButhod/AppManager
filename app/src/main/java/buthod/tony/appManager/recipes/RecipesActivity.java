@@ -1,5 +1,6 @@
 package buthod.tony.appManager.recipes;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -37,9 +38,13 @@ public class RecipesActivity extends RootActivity {
     private ImageButton mBackButton = null;
     private ImageButton mAddRecipeButton = null;
     private EditText mSearchField = null;
+    private ImageButton mShoppingButton = null, mValidateShoppingButton = null;
 
     private ArrayList<RecipesDAO.Recipe> mRecipes = null;
     private LongSparseArray<ImageView> mRecipeImages = null;
+    // Shopping part
+    private ArrayList<Integer> mSelectedIndices = null;
+    private boolean mIsShopping = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,8 +57,11 @@ public class RecipesActivity extends RootActivity {
         mRecipesLayout = (LinearLayout) findViewById(R.id.recipes_list);
         mAddRecipeButton = (ImageButton) findViewById(R.id.add_recipe_button);
         mSearchField = (EditText) findViewById(R.id.search_field);
+        mShoppingButton = (ImageButton) findViewById(R.id.shopping_button);
+        mValidateShoppingButton = (ImageButton) findViewById(R.id.validate_shopping_button);
 
         mRecipeImages = new LongSparseArray<>();
+        mSelectedIndices = new ArrayList<>();
 
         // Finish the activity if back button is pressed
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -83,18 +91,18 @@ public class RecipesActivity extends RootActivity {
             @Override
             public void afterTextChanged(Editable s) { }
         });
+        // Shopping part
+        mShoppingButton.setOnClickListener(mOnShoppingClickListener);
+        mValidateShoppingButton.setOnClickListener(mOnValidateShoppingListener);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mSearchField.setText("");
         populateListWithRecipes();
     }
 
     private void populateListWithRecipes() {
-        mRecipesLayout.removeAllViews();
-        mRecipeImages.clear();
         // Params used for each recipe_activity.
         Resources res = getResources();
         LayoutInflater inflater = getLayoutInflater();
@@ -103,13 +111,23 @@ public class RecipesActivity extends RootActivity {
         for (int i = 0; i < mRecipes.size(); ++i) {
             final RecipesDAO.Recipe recipe = mRecipes.get(i);
 
-            View recipeView = inflater.inflate(R.layout.recipe_view, null);
-            // Add image view in images to load
-            ImageView imageView = (ImageView) recipeView.findViewById(R.id.image_view);
-            mRecipeImages.append(recipe.id, imageView);
-            // Set the title of recipe
-            TextView titleView = (TextView) recipeView.findViewById(R.id.title_view);
-            titleView.setText(recipe.name);
+            // Try to recover the view with tag
+            View recipeView = mRecipesLayout.findViewWithTag(recipe.id);
+            if (recipeView == null) {
+                // No view previously created, then inflate a new one
+                recipeView = inflater.inflate(R.layout.recipe_view, null);
+                recipeView.setTag(recipe.id);
+                recipeView.setOnClickListener(mRecipeOnClick);
+                recipeView.setOnLongClickListener(mRecipeOnLongClick);
+                // Add image view in images to load
+                ImageView imageView = (ImageView) recipeView.findViewById(R.id.image_view);
+                mRecipeImages.append(recipe.id, imageView);
+                // Add it to the layout
+                mRecipesLayout.addView(recipeView);
+            }
+            // Update recipe's information
+            ((TextView) recipeView.findViewById(R.id.title_view)).setText(recipe.name);
+            ((TextView) recipeView.findViewById(R.id.recipe_time)).setText(String.valueOf(recipe.time));
             // Update stars for grade and difficulty
             LinearLayout firstLineLayout = (LinearLayout) recipeView.findViewById(R.id.first_line);
             for (int j = 0; j < recipe.grade; ++j)
@@ -118,21 +136,13 @@ public class RecipesActivity extends RootActivity {
             for (int j = 0; j < recipe.difficulty; ++j)
                 firstLineLayout.getChildAt(8 + j)
                         .setBackground(res.getDrawable(R.drawable.star_filled));
-            // Set preparation time
-            TextView timeView = (TextView) recipeView.findViewById(R.id.recipe_time);
-            timeView.setText(String.valueOf(recipe.time));
-
-            recipeView.setTag(recipe.id);
-            recipeView.setOnClickListener(mRecipeOnClick);
-            recipeView.setOnLongClickListener(mRecipeOnLongClick);
-            mRecipesLayout.addView(recipeView);
         }
         mRecipesLayout.invalidate();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
-                startImportingImages();
+                startImportingImages(RecipesActivity.this, mRecipeImages);
             }
         }).start();
     }
@@ -143,10 +153,34 @@ public class RecipesActivity extends RootActivity {
     private View.OnClickListener mRecipeOnClick = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            long recipeId = (long) v.getTag();
-            Intent intent = new Intent(getBaseContext(), RecipeActivity.class);
-            intent.putExtra(DatabaseHandler.RECIPES_KEY, recipeId);
-            startActivity(intent);
+            if (mIsShopping) {
+                int index = mRecipesLayout.indexOfChild(v);
+                // Select/deselect this recipe for shopping
+                int notSelectedVisibility, selectedVisibility;
+                if (mSelectedIndices.contains(index)) {
+                    mSelectedIndices.remove((Integer)index);
+                    notSelectedVisibility = View.VISIBLE;
+                    selectedVisibility = View.GONE;
+
+                }
+                else {
+                    mSelectedIndices.add(index);
+                    notSelectedVisibility = View.GONE;
+                    selectedVisibility = View.VISIBLE;
+                }
+                v.findViewById(R.id.not_checked_image).setVisibility(notSelectedVisibility);
+                v.findViewById(R.id.checked_image).setVisibility(selectedVisibility);
+                v.findViewById(R.id.first_line).setVisibility(notSelectedVisibility);
+                v.findViewById(R.id.second_line).setVisibility(notSelectedVisibility);
+                v.findViewById(R.id.people_shopping_line).setVisibility(selectedVisibility);
+            }
+            else {
+                // Start the recipe activity
+                long recipeId = (long) v.getTag();
+                Intent intent = new Intent(getBaseContext(), RecipeActivity.class);
+                intent.putExtra(DatabaseHandler.RECIPES_KEY, recipeId);
+                startActivity(intent);
+            }
         }
     };
 
@@ -156,6 +190,9 @@ public class RecipesActivity extends RootActivity {
     private View.OnLongClickListener mRecipeOnLongClick = new View.OnLongClickListener() {
         @Override
         public boolean onLongClick(final View v) {
+            if (mIsShopping)
+                return false;
+
             final long recipeId = (long) v.getTag();
             // Set the view as selected
             v.setSelected(true);
@@ -200,13 +237,13 @@ public class RecipesActivity extends RootActivity {
     /**
      * Loads images of recipes and updates image views.
      */
-    private void startImportingImages() {
-        for (int i = 0; i < mRecipeImages.size(); ++i) {
-            long recipeId = mRecipeImages.keyAt(i);
-            final Bitmap bitmap = Utils.loadLocalImage(this, getExternalFilesDir(null),
+    public static void startImportingImages(Context context, LongSparseArray<ImageView> recipeImages) {
+        for (int i = 0; i < recipeImages.size(); ++i) {
+            long recipeId = recipeImages.keyAt(i);
+            final Bitmap bitmap = Utils.loadLocalImage(context, context.getExternalFilesDir(null),
                     getImageNameFromId(recipeId));
             if (bitmap != null) {
-                final ImageView imageView = mRecipeImages.get(recipeId);
+                final ImageView imageView = recipeImages.get(recipeId);
                 imageView.post(new Runnable() {
                     @Override
                     public void run() {
@@ -242,6 +279,64 @@ public class RecipesActivity extends RootActivity {
             }
         }, 400);
     }
+
+    //endregion
+
+    //region SHOPPING
+
+    private View.OnClickListener mOnShoppingClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            mIsShopping = !mIsShopping;
+            mSelectedIndices.clear();
+            // Show specific button to validate or cancel shopping.
+            Resources res = getResources();
+            if (mIsShopping) {
+                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.add_image));
+                mShoppingButton.setRotation(45);
+                mAddRecipeButton.setVisibility(View.GONE);
+                mValidateShoppingButton.setVisibility(View.VISIBLE);
+            }
+            else {
+                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.shopping));
+                mShoppingButton.setRotation(0);
+                mAddRecipeButton.setVisibility(View.VISIBLE);
+                mValidateShoppingButton.setVisibility(View.GONE);
+            }
+            // Change the visual of layout
+            int visibility = (mIsShopping ? View.VISIBLE : View.GONE);
+            for (int i = 0; i < mRecipes.size(); ++i) {
+                View recipeView = mRecipesLayout.getChildAt(i);
+                recipeView.findViewById(R.id.not_checked_image).setVisibility(visibility);
+                recipeView.findViewById(R.id.checked_image).setVisibility(View.GONE);
+                recipeView.findViewById(R.id.people_shopping_line).setVisibility(View.GONE);
+                recipeView.findViewById(R.id.first_line).setVisibility(View.VISIBLE);
+                recipeView.findViewById(R.id.second_line).setVisibility(View.VISIBLE);
+                ((TextView) recipeView.findViewById(R.id.people_edit))
+                        .setText(String.valueOf(mRecipes.get(i).people));
+            }
+        }
+    };
+
+    private View.OnClickListener mOnValidateShoppingListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Intent intent = new Intent(getBaseContext(), ShoppingActivity.class);
+            long[] recipesId = new long[mSelectedIndices.size()];
+            float[] recipesPeopleRatio = new float[mSelectedIndices.size()];
+            for (int i = 0; i < mSelectedIndices.size(); ++i) {
+                View recipeView = mRecipesLayout.getChildAt(mSelectedIndices.get(i));
+                RecipesDAO.Recipe recipe = mRecipes.get(mSelectedIndices.get(i));
+                recipesId[i] = recipe.id;
+                int people = Utils.parseIntWithDefault(
+                        ((EditText) recipeView.findViewById(R.id.people_edit)).getText().toString(), 0);
+                recipesPeopleRatio[i] = people / (float)recipe.people;
+            }
+            intent.putExtra(DatabaseHandler.RECIPES_KEY, recipesId);
+            intent.putExtra(DatabaseHandler.RECIPES_PEOPLE, recipesPeopleRatio);
+            startActivity(intent);
+        }
+    };
 
     //endregion
 

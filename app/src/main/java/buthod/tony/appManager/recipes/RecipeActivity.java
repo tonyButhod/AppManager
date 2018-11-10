@@ -8,18 +8,13 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
-
-import java.text.ParseException;
 
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
@@ -159,7 +154,7 @@ public class RecipeActivity extends RootActivity {
         View ingredientView = getLayoutInflater().inflate(R.layout.ingredient_view, null);
         mIngredientsLayout.addView(ingredientView, mIngredientsLayout.getChildCount());
         // Update text view information
-        ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(String.valueOf(ingredient.quantity));
+        ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(Utils.floatToString(ingredient.quantity));
         ((TextView) ingredientView.findViewById(R.id.unit_view)).setText(mUnits[ingredient.idUnit]);
         ((TextView) ingredientView.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
         ingredientView.invalidate();

@@ -90,7 +90,7 @@ public class AddEditRecipeActivity extends RootActivity {
         mGradeSeekBar = (SeekBar) findViewById(R.id.grade_seek_bar);
         mGradeView = (TextView) findViewById(R.id.grade);
         mTimeEdit = (EditText) findViewById(R.id.time);
-        mPeopleEdit = (EditText) findViewById(R.id.people);
+        mPeopleEdit = (EditText) findViewById(R.id.people_edit);
         mIngredientsLayout = (LinearLayout) findViewById(R.id.ingredients_list);
         mStepsLayout = (LinearLayout) findViewById(R.id.steps_list);
         mAddIngredientButton = (Button) findViewById(R.id.add_ingredient_button);

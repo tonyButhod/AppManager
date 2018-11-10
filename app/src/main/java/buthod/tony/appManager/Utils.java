@@ -18,18 +18,30 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.Normalizer;
 
 public class Utils {
 
     /**
      * Convert a float to string without displaying useless 0.
+     * @param f The float to convert.
+     * @param precision The number of decimal displayed. If negative, then displays all decimals.
      */
-    public static String floatToString(float f) {
+    public static String floatToString(float f, int precision) {
         if ((long) f == f)
             return String.valueOf((long) f);
-        else
+        else if (precision < 0)
             return String.valueOf(f);
+        else {
+            String res = String.format("%." + precision + "f", f);
+            // Remove 0 at the end
+            int firstZeroEnd = res.length();
+            while (res.charAt(firstZeroEnd - 1) == '0')
+                firstZeroEnd--;
+            return res.substring(0, firstZeroEnd);
+        }
+    }
+    public static String floatToString(float f) {
+        return floatToString(f, -1);
     }
 
     /**

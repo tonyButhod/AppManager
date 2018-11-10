@@ -15,32 +15,12 @@
             android:id="@+id/back_button"
             style="@style/BackButton"/>
 
-        <EditText
-            android:id="@+id/search_field"
-            android:hint="@string/search"
+        <View
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-
-        <ImageButton
-            android:id="@+id/shopping_button"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:background="@drawable/blue_flat_button"
-            android:src="@drawable/shopping"
-            android:scaleType="fitXY"/>
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/add_recipe_button"
-        style="@style/AddButton"/>
-
-    <ImageButton
-        android:id="@+id/validate_shopping_button"
-        style="@style/AddButton"
-        android:src="@drawable/validate"
-        android:visibility="gone"/>
 
     <ScrollView
         android:id="@+id/recipes_scroll"
@@ -52,10 +32,37 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <TextView
+                android:id="@+id/quantities_list_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimary"
+                android:text="@string/ingredients"/>
+
+            <LinearLayout
+                android:id="@+id/quantities_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/quantities_list_label"
+                android:orientation="vertical">
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/recipes_list_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/quantities_list"
+                android:textSize="20sp"
+                android:textColor="@color/colorPrimary"
+                android:text="@string/for_recipes_list"/>
+
             <LinearLayout
                 android:id="@+id/recipes_list"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_below="@id/recipes_list_label"
                 android:orientation="vertical">
 
             </LinearLayout>

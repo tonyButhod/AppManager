@@ -12,4 +12,5 @@
     <color name="light_soft_red">#f1e2e2</color>
     <color name="soft_red">#e1b3b3</color>
     <color name="dark_soft_red">#601818</color>
+    <color name="dark_grey">#333333</color>
 </resources>
