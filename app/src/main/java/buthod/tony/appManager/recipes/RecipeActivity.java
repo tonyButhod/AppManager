@@ -194,29 +194,13 @@ public class RecipeActivity extends RootActivity {
     private View.OnClickListener mOnDeleteListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            // Initialize an alert dialog
-            AlertDialog.Builder builder = new AlertDialog.Builder(RecipeActivity.this);
-            builder.setTitle(R.string.delete_confirmation);
-            // Set up dialog buttons
-            Resources res = getResources();
-            builder.setNegativeButton(res.getString(R.string.no),
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    });
-            builder.setPositiveButton(res.getString(R.string.yes),
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                            mDao.deleteRecipe(mRecipeId);
-                            RecipeActivity.this.finish();
-                        }
-                    });
-            AlertDialog alertDialog = builder.create();
-            alertDialog.show();
+            RecipesActivity.showConfirmDeleteDialog(RecipeActivity.this, new Runnable() {
+                @Override
+                public void run() {
+                    mDao.deleteRecipe(mRecipeId);
+                    RecipeActivity.this.finish();
+                }
+            });
         }
     };
 

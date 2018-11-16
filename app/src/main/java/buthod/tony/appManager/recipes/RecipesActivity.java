@@ -1,6 +1,9 @@
 package buthod.tony.appManager.recipes;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -12,11 +15,14 @@ import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.Spinner;
 import android.widget.TextView;
 import java.util.ArrayList;
 
@@ -106,8 +112,9 @@ public class RecipesActivity extends RootActivity {
         // Params used for each recipe_activity.
         Resources res = getResources();
         LayoutInflater inflater = getLayoutInflater();
-
         mRecipes = mDao.getRecipes();
+        // First remove deleted recipes
+        boolean[] recipeStillExists = new boolean[mRecipesLayout.getChildCount()];
         for (int i = 0; i < mRecipes.size(); ++i) {
             final RecipesDAO.Recipe recipe = mRecipes.get(i);
 
@@ -125,6 +132,9 @@ public class RecipesActivity extends RootActivity {
                 // Add it to the layout
                 mRecipesLayout.addView(recipeView);
             }
+            else {
+                recipeStillExists[mRecipesLayout.indexOfChild(recipeView)] = true;
+            }
             // Update recipe's information
             ((TextView) recipeView.findViewById(R.id.title_view)).setText(recipe.name);
             ((TextView) recipeView.findViewById(R.id.recipe_time)).setText(String.valueOf(recipe.time));
@@ -137,8 +147,12 @@ public class RecipesActivity extends RootActivity {
                 firstLineLayout.getChildAt(8 + j)
                         .setBackground(res.getDrawable(R.drawable.star_filled));
         }
+        // Delete recipes that are not existing anymore
+        for (int i = 0; i < recipeStillExists.length; ++i)
+            if (!recipeStillExists[i])
+                mRecipesLayout.removeViewAt(i);
+        // Finally invalidate the view and load back images for update
         mRecipesLayout.invalidate();
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -161,7 +175,6 @@ public class RecipesActivity extends RootActivity {
                     mSelectedIndices.remove((Integer)index);
                     notSelectedVisibility = View.VISIBLE;
                     selectedVisibility = View.GONE;
-
                 }
                 else {
                     mSelectedIndices.add(index);
@@ -211,12 +224,17 @@ public class RecipesActivity extends RootActivity {
                             startActivity(intent);
                             break;
                         case R.id.delete:
-                            // Delete the recipe_activity image if exists
-                            Utils.deleteLocalFile(RecipesActivity.this,
-                                    getExternalFilesDir(null), getImageNameFromId(recipeId));
-                            // Delete the recipe_activity in database
-                            mDao.deleteRecipe(recipeId);
-                            mRecipesLayout.removeView(v);
+                            showConfirmDeleteDialog(RecipesActivity.this, new Runnable() {
+                                @Override
+                                public void run() {
+                                    // Delete the recipe_activity image if exists
+                                    Utils.deleteLocalFile(RecipesActivity.this,
+                                            getExternalFilesDir(null), getImageNameFromId(recipeId));
+                                    // Delete the recipe_activity in database
+                                    mDao.deleteRecipe(recipeId);
+                                    mRecipesLayout.removeView(v);
+                                }
+                            });
                             break;
                     }
                     return true;
@@ -252,6 +270,33 @@ public class RecipesActivity extends RootActivity {
                 });
             }
         }
+    }
+
+    /**
+     * Show a popup to confirm recipe suppression, and then execute onConfirm runnable.
+     */
+    public static void showConfirmDeleteDialog(Activity activity, final Runnable onConfirm) {
+        // Initialize an alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle(R.string.delete_confirmation);
+        // Set up dialog buttons
+        final Resources res = activity.getResources();
+        builder.setNegativeButton(res.getString(R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.setPositiveButton(res.getString(R.string.yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        onConfirm.run();
+                        dialog.cancel();
+                    }
+                });
+        builder.create().show();
     }
 
     //region SEARCH

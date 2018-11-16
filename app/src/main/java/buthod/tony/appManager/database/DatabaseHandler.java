@@ -114,6 +114,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_TABLE_DROP =
                     "Drop Table If Exists "+ RECIPES_TABLE_NAME +";";
 
+    public static final String
+            RECIPES_SEPARATION_TABLE_NAME = "RecipesSeparations",
+            RECIPES_SEPARATION_ID = "id",
+            RECIPES_SEPARATION_RECIPE = "recipe",
+            RECIPES_SEPARATION_TYPE = "type", // The separation is for ingredients or recipes
+            RECIPES_SEPARATION_NUMBER = "number",
+            RECIPES_SEPARATION_DESCRIPTION = "description",
+            STEPS_TABLE_CREATE =
+                    "Create Table " + STEPS_TABLE_NAME + " (" +
+                            STEPS_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            STEPS_RECIPE + " INTEGER, " +
+                            STEPS_NUMBER + " INTEGER, " +
+                            STEPS_DESCRIPTION + " VARCHAR(128));",
+            STEPS_TABLE_DROP =
+                    "Drop Table If Exists " + STEPS_TABLE_NAME + ";";
+
     //endregion
 
     public DatabaseHandler(Context context, String name, SQLiteDatabase.CursorFactory factory,
