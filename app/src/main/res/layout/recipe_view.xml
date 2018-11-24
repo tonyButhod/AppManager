@@ -233,6 +233,7 @@
             android:id="@+id/people_edit"
             android:layout_width="40dp"
             android:layout_height="match_parent"
+            android:inputType="number"
             android:textColor="@color/colorAccent"/>
 
     </LinearLayout>

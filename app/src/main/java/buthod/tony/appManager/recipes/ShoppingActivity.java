@@ -73,6 +73,8 @@ public class ShoppingActivity extends RootActivity {
             ((TextView) v.findViewById(R.id.quantity_view)).setText(Utils.floatToString(quantities.get(i).quantity, 3));
             ((TextView) v.findViewById(R.id.unit_view)).setText(units[quantities.get(i).idUnit]);
             ((TextView) v.findViewById(R.id.ingredient_name_view)).setText(quantities.get(i).name);
+            v.findViewById(R.id.optional_view).setVisibility(
+                    quantities.get(i).type == RecipesDAO.Ingredient.OPTIONAL_TYPE ? View.VISIBLE : View.GONE);
             mQuantitiesLayout.addView(v);
         }
     }

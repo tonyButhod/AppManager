@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
+import android.util.Log;
 import android.view.DragEvent;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -68,16 +69,10 @@ public class DragAndDropLinearLayout implements View.OnDragListener {
         mListener = listener;
         if (mDragViewIndex == -1)
             return;
-        /** Initialize the drag and drop **/
-        mDropped = false;
-        computeChildrenYPosition();
-        layout.setOnDragListener(this);
-        StepDragShadowBuilder dragShadowBuilder = new StepDragShadowBuilder(mDragView);
-        mDragView.startDrag(ClipData.newPlainText("", ""), dragShadowBuilder, mDragView, 0);
-        mLayout.removeView(mDragView);
         /** Update feedback view with layout width **/
         mRectFeedback = new RectF(mOffsetFeedback, 0,
                 mLayout.getWidth() - 2 * mOffsetFeedback, mLayout.getHeight());
+        Log.d("Debug", "New feedback view");
         mFeedbackView = new View(mContext) {
             @Override
             public void onDraw(Canvas canvas) {
@@ -87,6 +82,13 @@ public class DragAndDropLinearLayout implements View.OnDragListener {
         mFeedbackView.setLayoutParams(new RelativeLayout.LayoutParams(
                 mLayout.getWidth(), mWidthFeedback
         ));
+        /** Initialize the drag and drop **/
+        mDropped = false;
+        computeChildrenYPosition();
+        layout.setOnDragListener(this);
+        StepDragShadowBuilder dragShadowBuilder = new StepDragShadowBuilder(mDragView);
+        mDragView.startDrag(ClipData.newPlainText("", ""), dragShadowBuilder, mDragView, 0);
+        mLayout.removeView(mDragView);
     }
 
     /**
@@ -120,6 +122,8 @@ public class DragAndDropLinearLayout implements View.OnDragListener {
         int action = event.getAction();
         switch (action) {
             case DragEvent.ACTION_DRAG_STARTED:
+                if (mFeedbackView.getParent() != null)
+                    ((LinearLayout)mFeedbackView.getParent()).removeView(mFeedbackView);
                 mLayout.addView(mFeedbackView, mDragViewIndex);
                 mFeedbackIndex = mDragViewIndex;
                 break;
@@ -147,6 +151,7 @@ public class DragAndDropLinearLayout implements View.OnDragListener {
                 break;
             case DragEvent.ACTION_DRAG_ENDED:
                 // Remove the feedback view.
+                Log.d("Debug", "Action drag ended");
                 mLayout.removeView(mFeedbackView);
                 mFeedbackView = null;
                 if (!mDropped) {

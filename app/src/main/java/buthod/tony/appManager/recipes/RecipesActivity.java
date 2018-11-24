@@ -114,7 +114,6 @@ public class RecipesActivity extends RootActivity {
         LayoutInflater inflater = getLayoutInflater();
         mRecipes = mDao.getRecipes();
         // First remove deleted recipes
-        boolean[] recipeStillExists = new boolean[mRecipesLayout.getChildCount()];
         for (int i = 0; i < mRecipes.size(); ++i) {
             final RecipesDAO.Recipe recipe = mRecipes.get(i);
 
@@ -129,12 +128,12 @@ public class RecipesActivity extends RootActivity {
                 // Add image view in images to load
                 ImageView imageView = (ImageView) recipeView.findViewById(R.id.image_view);
                 mRecipeImages.append(recipe.id, imageView);
-                // Add it to the layout
-                mRecipesLayout.addView(recipeView);
             }
             else {
-                recipeStillExists[mRecipesLayout.indexOfChild(recipeView)] = true;
+                mRecipesLayout.removeView(recipeView);
             }
+            // Add it to the layout
+            mRecipesLayout.addView(recipeView, i);
             // Update recipe's information
             ((TextView) recipeView.findViewById(R.id.title_view)).setText(recipe.name);
             ((TextView) recipeView.findViewById(R.id.recipe_time)).setText(String.valueOf(recipe.time));
@@ -148,9 +147,8 @@ public class RecipesActivity extends RootActivity {
                         .setBackground(res.getDrawable(R.drawable.star_filled));
         }
         // Delete recipes that are not existing anymore
-        for (int i = 0; i < recipeStillExists.length; ++i)
-            if (!recipeStillExists[i])
-                mRecipesLayout.removeViewAt(i);
+        for (int i = mRecipes.size(); i < mRecipesLayout.getChildCount(); ++i)
+            mRecipesLayout.removeViewAt(i);
         // Finally invalidate the view and load back images for update
         mRecipesLayout.invalidate();
         new Thread(new Runnable() {
@@ -188,8 +186,10 @@ public class RecipesActivity extends RootActivity {
                 v.findViewById(R.id.people_shopping_line).setVisibility(selectedVisibility);
             }
             else {
-                // Start the recipe activity
                 long recipeId = (long) v.getTag();
+                // Increment the number of the recipe clicked to change the order
+                mDao.incrementRecipeNumber(recipeId);
+                // Start the recipe activity
                 Intent intent = new Intent(getBaseContext(), RecipeActivity.class);
                 intent.putExtra(DatabaseHandler.RECIPES_KEY, recipeId);
                 startActivity(intent);
@@ -224,7 +224,8 @@ public class RecipesActivity extends RootActivity {
                             startActivity(intent);
                             break;
                         case R.id.delete:
-                            showConfirmDeleteDialog(RecipesActivity.this, new Runnable() {
+                            Utils.showConfirmDeleteDialog(RecipesActivity.this,
+                                    R.string.delete_confirmation, new Runnable() {
                                 @Override
                                 public void run() {
                                     // Delete the recipe_activity image if exists
@@ -270,33 +271,6 @@ public class RecipesActivity extends RootActivity {
                 });
             }
         }
-    }
-
-    /**
-     * Show a popup to confirm recipe suppression, and then execute onConfirm runnable.
-     */
-    public static void showConfirmDeleteDialog(Activity activity, final Runnable onConfirm) {
-        // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-        builder.setTitle(R.string.delete_confirmation);
-        // Set up dialog buttons
-        final Resources res = activity.getResources();
-        builder.setNegativeButton(res.getString(R.string.no),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-        builder.setPositiveButton(res.getString(R.string.yes),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int i) {
-                        onConfirm.run();
-                        dialog.cancel();
-                    }
-                });
-        builder.create().show();
     }
 
     //region SEARCH

@@ -30,18 +30,29 @@
     </LinearLayout>
 
     <AutoCompleteTextView
-        android:id="@+id/ingredient"
+        android:id="@+id/ingredient_auto_complete"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/ingredient"
         android:layout_below="@id/unit_layout"
         android:maxLength="32"/>
 
+    <CheckBox
+        android:id="@+id/optional_check_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ingredient_auto_complete"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/optional_label" />
+
     <TextView
         android:id="@+id/error_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/ingredient"
+        android:layout_below="@id/ingredient_auto_complete"
         android:textSize="16sp"
         android:visibility="gone"
         android:textColor="@color/red"/>

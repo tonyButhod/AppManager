@@ -32,11 +32,15 @@ public class RecipesDAO extends DAOBase {
      * Class containing the ingredient and the quantity to use for a recipe_activity.
      */
     public static class Ingredient {
+        public static int NORMAL_TYPE = 0, OPTIONAL_TYPE = 1;
+
         public long idQuantity = -1; // The id of the quantity in database QUANTITIES
         public long idIngredient = -1; // The id of the ingredient to use
         public int idUnit = -1; // The id of the unit to use.
         public String name; // The ingredient name.
         public float quantity; // The quantity to use
+        public int number; // The number of the quantity used to order it in the list.
+        public int type; // The type of ingredient (for now, used to differentiate optional ingredients).
 
         public Ingredient() {
 
@@ -48,6 +52,12 @@ public class RecipesDAO extends DAOBase {
             this.idUnit = idUnit;
             this.name = name;
             this.quantity = quantity;
+            this.number = 0;
+            this.type = NORMAL_TYPE;
+        }
+
+        public String toString() {
+            return String.format("%d : (%d) %f %d %s (%d) - %d", number, idQuantity, quantity, idUnit, name, idIngredient, type);
         }
     }
 
@@ -55,6 +65,22 @@ public class RecipesDAO extends DAOBase {
         public long id = -1;
         public int number;
         public String description;
+
+        public String toString() {
+            return String.format("%d : (%d) %s", number, id, description);
+        }
+    }
+
+    public static class Separation {
+        public static int INGREDIENT_TYPE = 0, STEP_TYPE = 1;
+        public long id = -1;
+        public int number;
+        public int type;
+        public String description;
+
+        public String toString() {
+            return String.format("%d : (%d) %s - %d", number, id, description, type);
+        }
     }
 
     public static class Recipe {
@@ -65,8 +91,10 @@ public class RecipesDAO extends DAOBase {
         public int time; // Preparation time
         public int grade;
         public int people;
+        public int number;
         public ArrayList<Ingredient> ingredients;
         public ArrayList<Step> steps;
+        public ArrayList<Separation> separations;
 
         public Recipe() {
             id = -1;
@@ -75,8 +103,10 @@ public class RecipesDAO extends DAOBase {
             difficulty = -1;
             time = -1;
             grade = -1;
+            number = 0;
             ingredients = new ArrayList<>();
             steps = new ArrayList<>();
+            separations = new ArrayList<>();
         }
     }
 
@@ -160,6 +190,7 @@ public class RecipesDAO extends DAOBase {
         value.put(DatabaseHandler.RECIPES_TIME, recipe.time);
         value.put(DatabaseHandler.RECIPES_GRADE, recipe.grade);
         value.put(DatabaseHandler.RECIPES_PEOPLE, recipe.people);
+        value.put(DatabaseHandler.RECIPES_NUMBER, recipe.number);
         long recipeId = recipe.id;
         if (isNew)
             recipeId = mDb.insert(DatabaseHandler.RECIPES_TABLE_NAME, null, value);
@@ -169,6 +200,7 @@ public class RecipesDAO extends DAOBase {
 
         addEditQuantities(recipeId, recipe.ingredients);
         addEditSteps(recipeId, recipe.steps);
+        addEditSeparations(recipeId, recipe.separations);
         return recipeId;
     }
 
@@ -180,35 +212,41 @@ public class RecipesDAO extends DAOBase {
     public Recipe getRecipe(long id) {
         Recipe recipe = new Recipe();
         // Execute query
-        Cursor c = mDb.rawQuery( String.format(Locale.getDefault(), "Select * From %s Where %s = ?;",
-                DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY),
+        Cursor c = mDb.rawQuery(
+                String.format(Locale.getDefault(), "Select * From %s Where %s = ?;",
+                        DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_KEY),
                 new String[] {String.valueOf(id)});
         if (c.getCount() > 0) {
             c.moveToFirst();
-            recipe.id = c.getLong(0);
-            recipe.name = c.getString(1);
-            recipe.type = c.getInt(2);
-            recipe.difficulty = c.getInt(3);
-            recipe.time = c.getInt(4);
-            recipe.grade = c.getInt(5);
-            recipe.people = c.getInt(6);
+            recipe.id = c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_KEY));
+            recipe.name = c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_NAME));
+            recipe.type = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TYPE));
+            recipe.difficulty = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_DIFFICULTY));
+            recipe.time = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TIME));
+            recipe.grade = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_GRADE));
+            recipe.people = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_PEOPLE));
+            recipe.number = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_NUMBER));
         }
         c.close();
-        // Then also get ingredients and steps for each recipe_activity.
-        c = mDb.rawQuery("Select q.*, i." + DatabaseHandler.INGREDIENTS_NAME +
-                        " From " + DatabaseHandler.QUANTITIES_TABLE_NAME + " as q, " +
-                        DatabaseHandler.INGREDIENTS_TABLE_NAME + " as i" +
-                        " Where q." + DatabaseHandler.QUANTITIES_RECIPE + " = ?" +
-                        " And i." + DatabaseHandler.INGREDIENTS_KEY + " = q." + DatabaseHandler.QUANTITIES_INGREDIENT  +
-                        " Order By q." + DatabaseHandler.QUANTITIES_KEY + " ASC",
+        // Then also get ingredients, steps and separations for each recipe_activity.
+        c = mDb.rawQuery(
+                String.format(Locale.getDefault(),
+                        "Select q.*, i.%s From %s as q, %s as i " +
+                        "Where q.%s = ? And i.%s = q.%s Order By q.%s ASC, q.%s ASC;",
+                        DatabaseHandler.INGREDIENTS_NAME, DatabaseHandler.QUANTITIES_TABLE_NAME,
+                        DatabaseHandler.INGREDIENTS_TABLE_NAME, DatabaseHandler.QUANTITIES_RECIPE,
+                        DatabaseHandler.INGREDIENTS_KEY, DatabaseHandler.QUANTITIES_INGREDIENT,
+                        DatabaseHandler.QUANTITIES_NUMBER, DatabaseHandler.QUANTITIES_KEY),
                 new String[] {String.valueOf(id)});
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             Ingredient ingredient = new Ingredient();
-            ingredient.idQuantity = c.getLong(0);
-            ingredient.quantity = c.getFloat(2);
-            ingredient.idUnit = c.getInt(3);
-            ingredient.idIngredient = c.getLong(4);
-            ingredient.name = c.getString(5);
+            ingredient.idQuantity = c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_KEY));
+            ingredient.quantity = c.getFloat(c.getColumnIndex(DatabaseHandler.QUANTITIES_QUANTITY));
+            ingredient.idUnit = c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_UNIT));
+            ingredient.idIngredient = c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_INGREDIENT));
+            ingredient.number = c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_NUMBER));
+            ingredient.type = c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_TYPE));
+            ingredient.name = c.getString(c.getColumnIndex(DatabaseHandler.INGREDIENTS_NAME));
             recipe.ingredients.add(ingredient);
         }
         c.close();
@@ -220,10 +258,25 @@ public class RecipesDAO extends DAOBase {
                 new String[] {String.valueOf(id)});
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             Step step = new Step();
-            step.id = c.getLong(0);
-            step.number = c.getInt(2);
-            step.description = c.getString(3);
+            step.id = c.getLong(c.getColumnIndex(DatabaseHandler.STEPS_KEY));
+            step.number = c.getInt(c.getColumnIndex(DatabaseHandler.STEPS_NUMBER));
+            step.description = c.getString(c.getColumnIndex(DatabaseHandler.STEPS_DESCRIPTION));
             recipe.steps.add(step);
+        }
+        c.close();
+        c = mDb.rawQuery(
+                String.format(Locale.getDefault(),
+                        "Select * From %s Where %s = ? Order By %s ASC, %s ASC",
+                        DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, DatabaseHandler.RECIPES_SEPARATION_RECIPE,
+                        DatabaseHandler.RECIPES_SEPARATION_NUMBER, DatabaseHandler.RECIPES_SEPARATION_KEY),
+                new String[] {String.valueOf(id)});
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            Separation separation = new Separation();
+            separation.id = c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_KEY));
+            separation.number = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_NUMBER));
+            separation.description = c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION));
+            separation.type = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_TYPE));
+            recipe.separations.add(separation);
         }
         c.close();
         return recipe;
@@ -238,24 +291,28 @@ public class RecipesDAO extends DAOBase {
         // Construct the where clause depending on the given parameters
         String whereClause = "";
         if (lastId != -1)
-            whereClause += DatabaseHandler.RECIPES_KEY + "<" + String.valueOf(lastId);
+            whereClause += "Where " + DatabaseHandler.RECIPES_KEY + "<" + String.valueOf(lastId);
+        String limitClause = "";
+        if (limit != -1)
+            limitClause = "Limit " + String.valueOf(limit);
         // Execute query
         Cursor c = mDb.rawQuery(
-                "Select * From " + DatabaseHandler.RECIPES_TABLE_NAME +
-                        (whereClause.isEmpty() ? "" : " Where " + whereClause) +
-                        " Order By " + DatabaseHandler.RECIPES_KEY + " DESC" +
-                        (limit != -1 ? " Limit " + String.valueOf(limit) : "") +
-                        ";", new String[0]);
+                String.format(Locale.getDefault(),
+                        "Select * From %s " + whereClause + " Order By %s DESC, %s DESC " + limitClause + ";",
+                        DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_NUMBER,
+                        DatabaseHandler.RECIPES_KEY),
+                        new String[0]);
         ArrayList<Recipe> recipes = new ArrayList<Recipe>();
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             Recipe newRecipe = new Recipe();
-            newRecipe.id = c.getInt(0);
-            newRecipe.name = c.getString(1);
-            newRecipe.type = c.getInt(2);
-            newRecipe.difficulty = c.getInt(3);
-            newRecipe.time = c.getInt(4);
-            newRecipe.grade = c.getInt(5);
-            newRecipe.people = c.getInt(6);
+            newRecipe.id = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_KEY));
+            newRecipe.name = c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_NAME));
+            newRecipe.type = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TYPE));
+            newRecipe.difficulty = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_DIFFICULTY));
+            newRecipe.time = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TIME));
+            newRecipe.grade = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_GRADE));
+            newRecipe.people = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_PEOPLE));
+            newRecipe.number = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_NUMBER));
             recipes.add(newRecipe);
         }
         c.close();
@@ -288,8 +345,10 @@ public class RecipesDAO extends DAOBase {
             recipe.grade = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_GRADE));
             recipe.difficulty = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_DIFFICULTY));
             recipe.time = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_TIME));
+            recipe.number = c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_NUMBER));
             recipes.add(recipe);
         }
+        c.close();
         return recipes;
     }
 
@@ -301,6 +360,17 @@ public class RecipesDAO extends DAOBase {
         mDb.delete(DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.QUANTITIES_RECIPE + " = ?",
                 new String[] {String.valueOf(recipeId)});
         mDb.delete(DatabaseHandler.STEPS_TABLE_NAME, DatabaseHandler.STEPS_RECIPE + " = ?",
+                new String[] {String.valueOf(recipeId)});
+        mDb.delete(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, DatabaseHandler.RECIPES_SEPARATION_RECIPE + " = ?",
+                new String[] {String.valueOf(recipeId)});
+    }
+
+    public void incrementRecipeNumber(long recipeId) {
+        mDb.execSQL(
+                String.format(Locale.getDefault(),
+                        "Update %1$s Set %2$s = %2$s + 1 Where %3$s = ?;",
+                        DatabaseHandler.RECIPES_TABLE_NAME, DatabaseHandler.RECIPES_NUMBER,
+                        DatabaseHandler.RECIPES_KEY),
                 new String[] {String.valueOf(recipeId)});
     }
 
@@ -319,20 +389,23 @@ public class RecipesDAO extends DAOBase {
         if (indicesToInsert.size() > 0) {
             // Insert new quantities values
             String query = String.format(Locale.getDefault(),
-                    "Insert Into %s (%s, %s, %s, %s) Values ",
+                    "Insert Into %s (%s, %s, %s, %s, %s, %s) Values ",
                     DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.QUANTITIES_RECIPE,
                     DatabaseHandler.QUANTITIES_QUANTITY, DatabaseHandler.QUANTITIES_UNIT,
-                    DatabaseHandler.QUANTITIES_INGREDIENT);
-            String[] values = new String[4 * indicesToInsert.size()];
+                    DatabaseHandler.QUANTITIES_INGREDIENT, DatabaseHandler.QUANTITIES_NUMBER,
+                    DatabaseHandler.QUANTITIES_TYPE);
+            String[] values = new String[6 * indicesToInsert.size()];
             for (int i = 0; i < indicesToInsert.size(); ++i) {
                 Ingredient ingredient = ingredients.get(indicesToInsert.get(i));
                 if (i != 0)
                     query += ", ";
-                query += "(?, ?, ?, ?)";
-                values[4 * i] = String.valueOf(recipeId);
-                values[4 * i + 1] = String.valueOf(ingredient.quantity);
-                values[4 * i + 2] = String.valueOf(ingredient.idUnit);
-                values[4 * i + 3] = String.valueOf(ingredient.idIngredient);
+                query += "(?, ?, ?, ?, ?, ?)";
+                values[6 * i] = String.valueOf(recipeId);
+                values[6 * i + 1] = String.valueOf(ingredient.quantity);
+                values[6 * i + 2] = String.valueOf(ingredient.idUnit);
+                values[6 * i + 3] = String.valueOf(ingredient.idIngredient);
+                values[6 * i + 4] = String.valueOf(ingredient.number);
+                values[6 * i + 5] = String.valueOf(ingredient.type);
             }
             query += ";";
             mDb.execSQL(query, values);
@@ -340,21 +413,24 @@ public class RecipesDAO extends DAOBase {
         if (indicesToUpdate.size() > 0) {
             // Update new quantities values
             String query = String.format(Locale.getDefault(),
-                    "Insert Or Replace Into %s (%s, %s, %s, %s, %s) Values ",
+                    "Insert Or Replace Into %s (%s, %s, %s, %s, %s, %s, %s) Values ",
                     DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.QUANTITIES_KEY,
                     DatabaseHandler.QUANTITIES_RECIPE, DatabaseHandler.QUANTITIES_QUANTITY,
-                    DatabaseHandler.QUANTITIES_UNIT, DatabaseHandler.QUANTITIES_INGREDIENT);
-            String[] values = new String[5 * indicesToUpdate.size()];
+                    DatabaseHandler.QUANTITIES_UNIT, DatabaseHandler.QUANTITIES_INGREDIENT,
+                    DatabaseHandler.QUANTITIES_NUMBER, DatabaseHandler.QUANTITIES_TYPE);
+            String[] values = new String[7 * indicesToUpdate.size()];
             for (int i = 0; i < indicesToUpdate.size(); ++i) {
                 Ingredient ingredient = ingredients.get(indicesToUpdate.get(i));
                 if (i != 0)
                     query += ", ";
-                query += "(?, ?, ?, ?, ?)";
-                values[5 * i] = String.valueOf(ingredient.idQuantity);
-                values[5 * i + 1] = String.valueOf(recipeId);
-                values[5 * i + 2] = String.valueOf(ingredient.quantity);
-                values[5 * i + 3] = String.valueOf(ingredient.idUnit);
-                values[5 * i + 4] = String.valueOf(ingredient.idIngredient);
+                query += "(?, ?, ?, ?, ?, ?, ?)";
+                values[7 * i] = String.valueOf(ingredient.idQuantity);
+                values[7 * i + 1] = String.valueOf(recipeId);
+                values[7 * i + 2] = String.valueOf(ingredient.quantity);
+                values[7 * i + 3] = String.valueOf(ingredient.idUnit);
+                values[7 * i + 4] = String.valueOf(ingredient.idIngredient);
+                values[7 * i + 5] = String.valueOf(ingredient.number);
+                values[7 * i + 6] = String.valueOf(ingredient.type);
             }
             mDb.execSQL(query, values);
         }
@@ -435,54 +511,145 @@ public class RecipesDAO extends DAOBase {
 
     //endregion
 
+    //region SEPARATIONS
+
+    public void addEditSeparations(long recipeId, ArrayList<Separation> separations) {
+        ArrayList<Integer> indicesToInsert = new ArrayList<>(), indicesToUpdate = new ArrayList<>();
+        for (int i = 0; i < separations.size(); ++i) {
+            if (separations.get(i).id == -1)
+                indicesToInsert.add(i);
+            else
+                indicesToUpdate.add(i);
+        }
+        if (indicesToInsert.size() > 0) {
+            // Insert new quantities values
+            String query = String.format(Locale.getDefault(),
+                    "Insert Into %s (%s, %s, %s, %s) Values ",
+                    DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, DatabaseHandler.RECIPES_SEPARATION_RECIPE,
+                    DatabaseHandler.RECIPES_SEPARATION_TYPE, DatabaseHandler.RECIPES_SEPARATION_NUMBER,
+                    DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION);
+            String[] values = new String[4 * indicesToInsert.size()];
+            for (int i = 0; i < indicesToInsert.size(); ++i) {
+                Separation separation = separations.get(indicesToInsert.get(i));
+                if (i != 0)
+                    query += ", ";
+                query += "(?, ?, ?, ?)";
+                values[4 * i] = String.valueOf(recipeId);
+                values[4 * i + 1] = String.valueOf(separation.type);
+                values[4 * i + 2] = String.valueOf(separation.number);
+                values[4 * i + 3] = separation.description;
+            }
+            query += ";";
+            mDb.execSQL(query, values);
+        }
+        if (indicesToUpdate.size() > 0) {
+            // Update new quantities values
+            String query = String.format(Locale.getDefault(),
+                    "Insert Or Replace Into %s (%s, %s, %s, %s, %s) Values ",
+                    DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, DatabaseHandler.RECIPES_SEPARATION_KEY,
+                    DatabaseHandler.RECIPES_SEPARATION_RECIPE, DatabaseHandler.RECIPES_SEPARATION_TYPE,
+                    DatabaseHandler.RECIPES_SEPARATION_NUMBER, DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION);
+            String[] values = new String[5 * indicesToUpdate.size()];
+            for (int i = 0; i < indicesToUpdate.size(); ++i) {
+                Separation separation = separations.get(indicesToUpdate.get(i));
+                if (i != 0)
+                    query += ", ";
+                query += "(?, ?, ?, ?, ?)";
+                values[5 * i] = String.valueOf(separation.id);
+                values[5 * i + 1] = String.valueOf(recipeId);
+                values[5 * i + 2] = String.valueOf(separation.type);
+                values[5 * i + 3] = String.valueOf(separation.number);
+                values[5 * i + 4] = separation.description;
+            }
+            mDb.execSQL(query, values);
+        }
+    }
+
+    public void deleteSeparations(List<Long> separationsId) {
+        if (separationsId.size() == 0)
+            return;
+        String whereClause = DatabaseHandler.RECIPES_SEPARATION_KEY + " IN (";
+        for (int i = 0; i < separationsId.size(); ++i)
+            whereClause += (i != 0 ? "," : "") + String.valueOf(separationsId.get(i));
+        whereClause += ")";
+        mDb.delete(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, whereClause, new String[0]);
+    }
+
+    //endregion
+
     //region ADVANCED
 
     public ArrayList<Ingredient> getQuantitiesFromRecipes(long[] recipesId, LongSparseArray<Float> peopleRatio) {
         String query = String.format(Locale.getDefault(),
-                "Select q.%8$s, q.%1$s, q.%2$s, q.%3$s, i.%4$s From %5$s as q, %6$s as i " +
+                "Select q.%8$s, q.%1$s, q.%2$s, q.%3$s, i.%4$s, q.%10$s From %5$s as q, %6$s as i " +
                 "Where q.%3$s = i.%7$s And q.%8$s In %9$s " +
                 "Order By q.%3$s ASC, q.%2$s DESC;", /* Order first by ingredient id, then by unit id */
                 DatabaseHandler.QUANTITIES_QUANTITY, DatabaseHandler.QUANTITIES_UNIT, DatabaseHandler.QUANTITIES_INGREDIENT,
                 DatabaseHandler.INGREDIENTS_NAME, DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.INGREDIENTS_TABLE_NAME,
-                DatabaseHandler.INGREDIENTS_KEY, DatabaseHandler.QUANTITIES_RECIPE,
-                DAOBase.formatLongArrayForInQuery(recipesId));
+                DatabaseHandler.INGREDIENTS_KEY, DatabaseHandler.QUANTITIES_RECIPE, DAOBase.formatLongArrayForInQuery(recipesId),
+                DatabaseHandler.QUANTITIES_TYPE);
         Cursor c = mDb.rawQuery(query, new String[0]);
         ArrayList<Ingredient> quantities = new ArrayList<>();
         Ingredient ingredient = null;
+        float optionalQuantity = 0f;
         long previousIngredientId = -1;
         int previousUnitId = -1;
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-            long recipeId = c.getLong(0);
-            float quantity = c.getFloat(1);
-            int unitId = c.getInt(2);
-            long ingredientId = c.getLong(3);
-            String ingredientName = c.getString(4);
+            long recipeId = c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_RECIPE));
+            float quantity = c.getFloat(c.getColumnIndex(DatabaseHandler.QUANTITIES_QUANTITY));
+            int unitId = c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_UNIT));
+            long ingredientId = c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_INGREDIENT));
+            int quantityType = c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_TYPE));
+            String ingredientName = c.getString(c.getColumnIndex(DatabaseHandler.INGREDIENTS_NAME));
+            boolean addNewIngredient = false;
+            float quantityFactor;
             if (ingredient != null && previousIngredientId == ingredientId) {
                 // Try to convert first unit into the second one
-                float factor = UnitsConversion.convert(this, unitId, previousUnitId, ingredientId);
-                if (factor != 0) {
-                    // Conversion with success
-                    ingredient.quantity += factor * quantity * peopleRatio.get(recipeId);
-                }
-                else {
-                    // No conversion possible
-                    quantities.add(ingredient);
-                    ingredient = new Ingredient(-1, ingredientId, unitId, ingredientName,
-                            quantity * peopleRatio.get(recipeId));
-                    previousUnitId = unitId;
+                quantityFactor = UnitsConversion.convert(this, unitId, previousUnitId, ingredientId);
+                if (quantityFactor == 0) {
+                    addNewIngredient = true;
+                    quantityFactor = 1;
                 }
             }
             else {
-                if (ingredient != null)
+                addNewIngredient = true;
+                quantityFactor = 1f;
+            }
+            if (addNewIngredient) {
+                // Ingredients or units does not correspond, thus need to add a new ingredient
+                if (ingredient != null) {
+                    // Add the previous ingredient to quantities.
                     quantities.add(ingredient);
-                ingredient = new Ingredient(-1, ingredientId, unitId, ingredientName,
-                        quantity * peopleRatio.get(recipeId));
+                    // Add the previous optional ingredient to quantities if not zero.
+                    if (optionalQuantity != 0) {
+                        Ingredient optionalIngredient = new Ingredient(ingredient.idQuantity,
+                                ingredient.idIngredient, ingredient.idUnit, ingredient.name, optionalQuantity);
+                        optionalIngredient.type = Ingredient.OPTIONAL_TYPE;
+                        quantities.add(optionalIngredient);
+                    }
+                }
+                // Initialize the new ingredient found.
+                ingredient = new Ingredient(-1, ingredientId, unitId, ingredientName, 0);
+                optionalQuantity = 0;
                 previousIngredientId = ingredientId;
                 previousUnitId = unitId;
+                quantityFactor = 1;
+            }
+            // Finally add quantities, depending on if the ingredient is optional or not.
+            if (quantityType == Ingredient.NORMAL_TYPE)
+                ingredient.quantity += quantityFactor * quantity * peopleRatio.get(recipeId);
+            else
+                optionalQuantity += quantityFactor * quantity * peopleRatio.get(recipeId);
+        }
+        if (ingredient != null) {
+            quantities.add(ingredient);
+            if (optionalQuantity != 0) {
+                Ingredient optionalIngredient = new Ingredient(ingredient.idQuantity,
+                        ingredient.idIngredient, ingredient.idUnit, ingredient.name, optionalQuantity);
+                optionalIngredient.type = Ingredient.OPTIONAL_TYPE;
+                quantities.add(optionalIngredient);
             }
         }
-        if (ingredient != null)
-            quantities.add(ingredient);
         return quantities;
     }
 
@@ -539,6 +706,8 @@ public class RecipesDAO extends DAOBase {
             quantityObj.put(DatabaseHandler.QUANTITIES_QUANTITY, c.getDouble(c.getColumnIndex(DatabaseHandler.QUANTITIES_QUANTITY)));
             quantityObj.put(DatabaseHandler.QUANTITIES_UNIT, c.getInt(c.getColumnIndex(DatabaseHandler.QUANTITIES_UNIT)));
             quantityObj.put(DatabaseHandler.QUANTITIES_INGREDIENT, c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_INGREDIENT)));
+            quantityObj.put(DatabaseHandler.QUANTITIES_NUMBER, c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_NUMBER)));
+            quantityObj.put(DatabaseHandler.QUANTITIES_TYPE, c.getLong(c.getColumnIndex(DatabaseHandler.QUANTITIES_TYPE)));
             quantitiesObj.put(quantityObj);
         }
         obj.put(DatabaseHandler.QUANTITIES_TABLE_NAME, quantitiesObj);
@@ -555,6 +724,20 @@ public class RecipesDAO extends DAOBase {
             stepsObj.put(stepObj);
         }
         obj.put(DatabaseHandler.STEPS_TABLE_NAME, stepsObj);
+        c.close();
+        // Separations
+        JSONArray separationsObj = new JSONArray();
+        c = db.rawQuery("Select * From " + DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            JSONObject separationObj = new JSONObject();
+            separationObj.put(DatabaseHandler.RECIPES_SEPARATION_KEY, c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_KEY)));
+            separationObj.put(DatabaseHandler.RECIPES_SEPARATION_RECIPE, c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_RECIPE)));
+            separationObj.put(DatabaseHandler.RECIPES_SEPARATION_NUMBER, c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_NUMBER)));
+            separationObj.put(DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION, c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION)));
+            separationObj.put(DatabaseHandler.RECIPES_SEPARATION_TYPE, c.getString(c.getColumnIndex(DatabaseHandler.RECIPES_SEPARATION_TYPE)));
+            separationsObj.put(separationObj);
+        }
+        obj.put(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, separationsObj);
         c.close();
 
         return Utils.writeToExternalStorage(activity, EXTERNAL_RECIPES_FILENAME, obj.toString());
@@ -618,6 +801,8 @@ public class RecipesDAO extends DAOBase {
                 values.put(DatabaseHandler.QUANTITIES_QUANTITY, quantityObj.getDouble(DatabaseHandler.QUANTITIES_QUANTITY));
                 values.put(DatabaseHandler.QUANTITIES_UNIT, quantityObj.getInt(DatabaseHandler.QUANTITIES_UNIT));
                 values.put(DatabaseHandler.QUANTITIES_INGREDIENT, quantityObj.getLong(DatabaseHandler.QUANTITIES_INGREDIENT));
+                values.put(DatabaseHandler.QUANTITIES_NUMBER, quantityObj.getLong(DatabaseHandler.QUANTITIES_NUMBER));
+                values.put(DatabaseHandler.QUANTITIES_TYPE, quantityObj.getLong(DatabaseHandler.QUANTITIES_TYPE));
                 try {
                     db.insertOrThrow(DatabaseHandler.QUANTITIES_TABLE_NAME, null, values);
                 }
@@ -636,6 +821,23 @@ public class RecipesDAO extends DAOBase {
                 values.put(DatabaseHandler.STEPS_DESCRIPTION, stepObj.getString(DatabaseHandler.STEPS_DESCRIPTION));
                 try {
                     db.insertOrThrow(DatabaseHandler.STEPS_TABLE_NAME, null, values);
+                }
+                catch (SQLException e) { }
+            }
+        }
+        // Separations
+        JSONArray separationsObj = obj.getJSONArray(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME);
+        if (stepsObj.length() > 0) {
+            for (int i = 0; i < separationsObj.length(); ++i) {
+                JSONObject separationObj = separationsObj.getJSONObject(i);
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHandler.RECIPES_SEPARATION_KEY, separationObj.getLong(DatabaseHandler.RECIPES_SEPARATION_KEY));
+                values.put(DatabaseHandler.RECIPES_SEPARATION_NUMBER, separationObj.getInt(DatabaseHandler.RECIPES_SEPARATION_NUMBER));
+                values.put(DatabaseHandler.RECIPES_SEPARATION_RECIPE, separationObj.getLong(DatabaseHandler.RECIPES_SEPARATION_RECIPE));
+                values.put(DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION, separationObj.getString(DatabaseHandler.RECIPES_SEPARATION_DESCRIPTION));
+                values.put(DatabaseHandler.RECIPES_SEPARATION_TYPE, separationObj.getString(DatabaseHandler.RECIPES_SEPARATION_TYPE));
+                try {
+                    db.insertOrThrow(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, null, values);
                 }
                 catch (SQLException e) { }
             }

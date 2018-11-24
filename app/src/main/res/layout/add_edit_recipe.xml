@@ -201,18 +201,34 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/add_ingredient_button"
+            <LinearLayout
+                android:id="@+id/ingredients_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/ingredients_list"
-                android:text="@string/add_ingredient"/>
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/add_ingredient_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/add_ingredient"/>
+
+                <Button
+                    android:id="@+id/add_ingredient_separation_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/add_separation"/>
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/steps_label"
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/add_ingredient_button"
+                android:layout_below="@id/ingredients_buttons"
                 android:textColor="@color/colorPrimary"
                 android:textSize="18sp"
                 android:text="@string/steps"/>
@@ -226,18 +242,34 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/add_step_button"
+            <LinearLayout
+                android:id="@+id/steps_buttons"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/steps_list"
-                android:text="@string/add_step"/>
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/add_step_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/add_step"/>
+
+                <Button
+                    android:id="@+id/add_step_separation_button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/add_separation"/>
+
+            </LinearLayout>
 
             <RelativeLayout
                 android:id="@+id/image_view_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/add_step_button">
+                android:layout_below="@id/steps_buttons">
 
                 <ImageView
                     android:id="@+id/image_view"

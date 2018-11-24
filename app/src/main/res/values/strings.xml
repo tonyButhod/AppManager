@@ -6,7 +6,6 @@
     <string name="launch_toast">Détection lancée !</string>
     <string name="stop">Arrêter</string>
     <string name="stop_toast">Détection arrêtée !</string>
-    <string name="save">Sauvegarder</string>
     <string name="foot_steps_label">Nombre de pas effectués : </string>
     <string name="on">On</string>
     <string name="off">Off</string>
@@ -101,22 +100,26 @@
     <string name="recipe_grade">Note</string>
     <string name="recipe_time">Temps (minutes)</string>
     <string name="recipe_people">Personnes</string>
-    <string name="add_ingredient">Ajouter un ingrédiant</string>
+    <string name="add_ingredient">Ajouter un ingrédient</string>
     <string name="add_step">Ajouter une étape</string>
     <string name="quantity">Quantité</string>
     <string name="unit">Unité</string>
-    <string name="ingredient">Ingrédiant</string>
-    <string name="ingredients">Ingrédiants</string>
+    <string name="ingredient">Ingrédient</string>
+    <string name="ingredients">Ingrédients</string>
     <string name="step_description">Description de l\'étape</string>
     <string name="steps">Etapes</string>
     <string name="add_image">Ajouter une image</string>
     <string name="recipe_name_error">Ajouter un nom de recette</string>
     <string name="recipe_time_error">Temps de préparation incorrect</string>
     <string name="recipe_people_error">Nombre de personnes incorrect</string>
-    <string name="ingredient_name_error">Ajouter le nom de l\'ingrédiant</string>
+    <string name="ingredient_name_error">Ajouter le nom de l\'ingrédient</string>
     <string name="ingredient_quantity_error">Quantité incorrecte</string>
     <string name="step_description_error">Ajouter une description de l\'étape</string>
     <string name="for_recipes_list">Pour les recettes :</string>
+    <string name="add_separation">Ajouter une section</string>
+    <string name="separation_name">Nom de la séparation</string>
+    <string name="optional_label">Facultatif</string>
+    <string name="optional_label_parenthesis">(facultatif)</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
@@ -139,10 +142,12 @@
     <string name="reset">Reset</string>
     <string name="apply">Appliquer</string>
     <string name="search">Rechercher</string>
+    <string name="save">Sauvegarder</string>
     <string name="data_saved_success">Données sauvegardées sur stockage externe</string>
     <string name="data_saved_error">Erreur lors de la sauvegarde des données sur stockage externe</string>
     <string name="data_loaded_success">Données chargées depuis stockage externe</string>
     <string name="data_loaded_error">Erreur lors du chargement des données depuis stockage externe</string>
     <string name="delete_confirmation">Confirmer la suppression ?</string>
+    <string name="changes_might_be_loosed_confirm">Changements non enregistrés, voulez vous continuer ?</string>
 
 </resources>

@@ -2,8 +2,11 @@ package buthod.tony.appManager;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -21,6 +24,7 @@ import java.io.IOException;
 
 public class Utils {
 
+    //region PARSE
     /**
      * Convert a float to string without displaying useless 0.
      * @param f The float to convert.
@@ -72,6 +76,8 @@ public class Utils {
         return result;
     }
 
+    //endregion
+
     /**
      * Search a pattern in a content with case insensitive.
      * @param pattern The pattern to search in content.
@@ -94,6 +100,8 @@ public class Utils {
                             Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
     }
+
+    //region IMAGES
 
     /**
      * Write a content to a file in external storage.
@@ -243,4 +251,65 @@ public class Utils {
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(image, width, height, true);
         return Bitmap.createBitmap(resizedBitmap, offsetX, offsetY, size, size);
     }
+
+    //endregion
+
+    //region UI
+
+    /**
+     * Show a confirmation popup, and then execute onConfirm runnable it confirmed.
+     */
+    public static void showConfirmDeleteDialog(Activity activity, int titleResource, final Runnable onConfirm) {
+        // Initialize an alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle(titleResource);
+        // Set up dialog buttons
+        final Resources res = activity.getResources();
+        builder.setNegativeButton(res.getString(R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.setPositiveButton(res.getString(R.string.yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        onConfirm.run();
+                        dialog.cancel();
+                    }
+                });
+        builder.create().show();
+    }
+
+    /**
+     * Show a confirmation popup, and then execute onConfirm runnable it confirmed.
+     */
+    public static void showOneTextFieldPopup(Activity activity, int titleResource, String placeholder,
+                                             final Runnable onConfirm) {
+        // Initialize an alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle(titleResource);
+        // Set up dialog buttons
+        final Resources res = activity.getResources();
+        builder.setNegativeButton(res.getString(R.string.no),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.setPositiveButton(res.getString(R.string.yes),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        onConfirm.run();
+                        dialog.cancel();
+                    }
+                });
+        builder.create().show();
+    }
+
+    //endregion
 }

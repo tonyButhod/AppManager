@@ -68,13 +68,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             QUANTITIES_QUANTITY = "quantity",
             QUANTITIES_UNIT = "unit",
             QUANTITIES_INGREDIENT = "ingredient",
+            QUANTITIES_NUMBER = "number", // The number used for quantities order in the list.
+            QUANTITIES_TYPE = "type", // Type of quantity, for example optional quantity.
             QUANTITIES_TABLE_CREATE =
                     "Create Table " + QUANTITIES_TABLE_NAME + " (" +
                             QUANTITIES_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                             QUANTITIES_RECIPE + " INTEGER, " +
                             QUANTITIES_QUANTITY + " REAL, " +
                             QUANTITIES_UNIT + " INTEGER, " +
-                            QUANTITIES_INGREDIENT + " INTEGER);",
+                            QUANTITIES_INGREDIENT + " INTEGER, " +
+                            QUANTITIES_NUMBER + " INTEGER, " +
+                            QUANTITIES_TYPE + " INTEGER);",
             QUANTITIES_TABLE_DROP =
                     "Drop Table If Exists " + QUANTITIES_TABLE_NAME + ";";
 
@@ -102,6 +106,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_TIME = "time",
             RECIPES_GRADE = "grade",
             RECIPES_PEOPLE = "people",
+            RECIPES_NUMBER = "number", // Number used to sort recipes from most relevant to less.
             RECIPES_TABLE_CREATE =
                     "Create Table "+ RECIPES_TABLE_NAME +" ("+
                             RECIPES_KEY +" INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -110,25 +115,27 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                             RECIPES_DIFFICULTY + " INTEGER, " +
                             RECIPES_TIME + " INTEGER, " +
                             RECIPES_GRADE + " INTEGER, " +
-                            RECIPES_PEOPLE + " INTEGER);",
+                            RECIPES_PEOPLE + " INTEGER, " +
+                            RECIPES_NUMBER + " INTEGER NOT NULL);",
             RECIPES_TABLE_DROP =
                     "Drop Table If Exists "+ RECIPES_TABLE_NAME +";";
 
     public static final String
             RECIPES_SEPARATION_TABLE_NAME = "RecipesSeparations",
-            RECIPES_SEPARATION_ID = "id",
+            RECIPES_SEPARATION_KEY = "id",
             RECIPES_SEPARATION_RECIPE = "recipe",
             RECIPES_SEPARATION_TYPE = "type", // The separation is for ingredients or recipes
             RECIPES_SEPARATION_NUMBER = "number",
             RECIPES_SEPARATION_DESCRIPTION = "description",
-            STEPS_TABLE_CREATE =
-                    "Create Table " + STEPS_TABLE_NAME + " (" +
-                            STEPS_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            STEPS_RECIPE + " INTEGER, " +
-                            STEPS_NUMBER + " INTEGER, " +
-                            STEPS_DESCRIPTION + " VARCHAR(128));",
-            STEPS_TABLE_DROP =
-                    "Drop Table If Exists " + STEPS_TABLE_NAME + ";";
+            RECIPES_SEPARATION_TABLE_CREATE =
+                    "Create Table " + RECIPES_SEPARATION_TABLE_NAME + " (" +
+                            RECIPES_SEPARATION_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            RECIPES_SEPARATION_RECIPE + " INTEGER, " +
+                            RECIPES_SEPARATION_TYPE + " INTEGER, " +
+                            RECIPES_SEPARATION_NUMBER + " INTEGER, " +
+                            RECIPES_SEPARATION_DESCRIPTION + " VARCHAR(64));",
+            RECIPES_SEPARATION_TABLE_DROP =
+                    "Drop Table If Exists " + RECIPES_SEPARATION_TABLE_NAME + ";";
 
     //endregion
 
@@ -145,6 +152,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(QUANTITIES_TABLE_CREATE);
         db.execSQL(STEPS_TABLE_CREATE);
         db.execSQL(RECIPES_TABLE_CREATE);
+        db.execSQL(RECIPES_SEPARATION_TABLE_CREATE);
     }
 
     @Override
@@ -154,6 +162,14 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             db.execSQL(QUANTITIES_TABLE_CREATE);
             db.execSQL(STEPS_TABLE_CREATE);
             db.execSQL(RECIPES_TABLE_CREATE);
+        }
+        if (oldVersion < 3) {
+            db.execSQL(RECIPES_SEPARATION_TABLE_CREATE);
+            if (oldVersion == 2) {
+                db.execSQL("Alter Table " + RECIPES_TABLE_NAME + " Add " + RECIPES_NUMBER + " INTEGER;");
+                db.execSQL("Alter Table " + QUANTITIES_TABLE_NAME + " Add " + QUANTITIES_NUMBER + " INTEGER;");
+                db.execSQL("Alter Table " + QUANTITIES_TABLE_NAME + " Add " + QUANTITIES_TYPE + " INTEGER;");
+            }
         }
     }
 }

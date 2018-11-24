@@ -20,7 +20,7 @@ import buthod.tony.appManager.R;
  */
 
 public class DAOBase {
-    protected final static int DATABASE_VERSION = 2;
+    protected final static int DATABASE_VERSION = 3;
     protected final static String NAME = "database.db";
 
     protected SQLiteDatabase mDb = null;

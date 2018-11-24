@@ -1,13 +1,12 @@
 package buthod.tony.appManager.recipes;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -138,6 +137,9 @@ public class RecipeActivity extends RootActivity {
         for (int i = 0; i < mRecipe.steps.size(); ++i) {
             addStepView(mRecipe.steps.get(i));
         }
+        for (int i = 0; i < mRecipe.separations.size(); ++i) {
+            addSeparationView(mRecipe.separations.get(i));
+        }
         mPeople.setText(String.valueOf(mRecipe.people));
         // Load the image
         Bitmap bitmap = Utils.loadLocalImage(this, getExternalFilesDir(null),
@@ -157,6 +159,8 @@ public class RecipeActivity extends RootActivity {
         ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(Utils.floatToString(ingredient.quantity));
         ((TextView) ingredientView.findViewById(R.id.unit_view)).setText(mUnits[ingredient.idUnit]);
         ((TextView) ingredientView.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
+        ingredientView.findViewById(R.id.optional_view).setVisibility(
+                ingredient.type == RecipesDAO.Ingredient.OPTIONAL_TYPE ? View.VISIBLE : View.GONE);
         ingredientView.invalidate();
     }
 
@@ -165,13 +169,30 @@ public class RecipeActivity extends RootActivity {
      * @param step The step to add or modify.
      */
     private void addStepView(final RecipesDAO.Step step) {
+        int index = mStepsLayout.getChildCount();
         // Add the view
         final View stepView = getLayoutInflater().inflate(R.layout.step_view, null);
-        mStepsLayout.addView(stepView, mStepsLayout.getChildCount());
+        mStepsLayout.addView(stepView, index);
         // Update text view information
-        ((TextView) stepView.findViewById(R.id.number_view)).setText(String.valueOf(step.number));
+        ((TextView) stepView.findViewById(R.id.number_view)).setText(String.valueOf(index + 1));
         ((TextView) stepView.findViewById(R.id.description_view)).setText(step.description);
         stepView.invalidate();
+    }
+
+    /**
+     * Add or modify a separation.
+     * @param separation The separation to add or modify.
+     */
+    private void addSeparationView(final RecipesDAO.Separation separation) {
+        // Add the view
+        final View separationView = getLayoutInflater().inflate(R.layout.separation_view, null);
+        if (separation.type == RecipesDAO.Separation.INGREDIENT_TYPE)
+            mIngredientsLayout.addView(separationView, separation.number);
+        else
+            mStepsLayout.addView(separationView, separation.number);
+        // Update text view information
+        ((TextView) separationView.findViewById(R.id.description_view)).setText(separation.description);
+        separationView.invalidate();
     }
 
     /**
@@ -180,7 +201,7 @@ public class RecipeActivity extends RootActivity {
     private void updateIngredientQuantities(float people) {
         for (int i = 0; i < mRecipe.ingredients.size(); ++i) {
             RecipesDAO.Ingredient ingredient = mRecipe.ingredients.get(i);
-            View ingredientView = mIngredientsLayout.getChildAt(i);
+            View ingredientView = mIngredientsLayout.getChildAt(ingredient.number);
             ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(
                     String.valueOf(ingredient.quantity * people / mRecipe.people)
             );
@@ -194,7 +215,8 @@ public class RecipeActivity extends RootActivity {
     private View.OnClickListener mOnDeleteListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            RecipesActivity.showConfirmDeleteDialog(RecipeActivity.this, new Runnable() {
+            Utils.showConfirmDeleteDialog(RecipeActivity.this, R.string.delete_confirmation,
+                    new Runnable() {
                 @Override
                 public void run() {
                     mDao.deleteRecipe(mRecipeId);
