@@ -6,9 +6,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -23,8 +26,22 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import buthod.tony.appManager.DragAndDropLinearLayout;
 import buthod.tony.appManager.R;
@@ -56,6 +73,7 @@ public class AddEditRecipeActivity extends RootActivity {
     private ImageButton mAddImageButton = null, mDeleteImageButton = null,
             mRotateLeftButton = null, mRotateRightButton = null;
     private TextView mErrorView = null;
+    private Button mGetWebRecipeButton = null;
 
     private ArrayAdapter<CharSequence>
             mRecipeTypes = null,
@@ -103,6 +121,7 @@ public class AddEditRecipeActivity extends RootActivity {
         mRotateLeftButton = (ImageButton) findViewById(R.id.rotate_left);
         mRotateRightButton = (ImageButton) findViewById(R.id.rotate_right);
         mErrorView = (TextView) findViewById(R.id.error_message);
+        mGetWebRecipeButton = (Button) findViewById(R.id.get_web_recipe_button);
         // Private lists
         mIngredientsToDelete = new ArrayList<>();
         mStepsToDelete = new ArrayList<>();
@@ -193,7 +212,7 @@ public class AddEditRecipeActivity extends RootActivity {
 
         // Put previous values if we are modifying a recipe_activity
         if (mRecipeId != -1) {
-            fillActivityWithRecipe();
+            fillActivityWithRecipe(mDao.getRecipe(mRecipeId));
         }
         // Add, rotate or delete the image
         mAddImageButton.setOnClickListener(mAddImageListener);
@@ -215,13 +234,21 @@ public class AddEditRecipeActivity extends RootActivity {
                 setRecipeImage(Utils.rotateBitmapImage(mRecipeImage, 90));
             }
         });
+        // Get web recipe
+        mGetWebRecipeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //importWebRecipeFromUrl("https://www.marmiton.org/recettes/recette_tartiflette-facile_15733.aspx");
+                Intent intent = new Intent(AddEditRecipeActivity.this, WebRecipeActivity.class);
+                startActivityForResult(intent, IMPORT_FROM_INTERNET);
+            }
+        });
     }
 
     /**
      * Fill the activity with the given recipe_activity id.
      */
-    private void fillActivityWithRecipe() {
-        RecipesDAO.Recipe recipe = mDao.getRecipe(mRecipeId);
+    private void fillActivityWithRecipe(RecipesDAO.Recipe recipe) {
         mRecipeName.setText(recipe.name);
         mRecipeTypeSpinner.setSelection(recipe.type);
         mDifficultySeekBar.setProgress(recipe.difficulty - 1);
@@ -471,7 +498,8 @@ public class AddEditRecipeActivity extends RootActivity {
      */
     private void addEditIngredient(final RecipesDAO.Ingredient ingredient, View v) {
         // First check if the ingredient name is already in database, otherwise need to add it.
-        ingredient.idIngredient = mDao.getIngredientId(ingredient.name);
+        if (ingredient.name != null)
+            ingredient.idIngredient = mDao.getIngredientId(ingredient.name);
         // Add or modify the view
         if (v == null) {
             // Then add it to the view.
@@ -734,7 +762,7 @@ public class AddEditRecipeActivity extends RootActivity {
 
     //region ASSIGN_PICTURE
 
-    public static int PICK_IMAGE = 1;
+    public static final int PICK_IMAGE = 1;
 
     private View.OnClickListener mAddImageListener = new View.OnClickListener() {
         @Override
@@ -762,8 +790,113 @@ public class AddEditRecipeActivity extends RootActivity {
                 }
             }
             else {
-                setRecipeImage((Bitmap) data.getExtras().get("data"));
+                if (data.getExtras() != null && data.getExtras().containsKey("data")) {
+                    mRecipeImage = (Bitmap) data.getExtras().get("data");
+                    if (mRecipeImage != null)
+                        setRecipeImage(Utils.getSquareBitmap(mRecipeImage, 512));
+                }
             }
+        }
+        else if (requestCode == IMPORT_FROM_INTERNET && resultCode == Activity.RESULT_OK) {
+            Bundle bundle = data.getExtras();
+            String url = bundle.getString(WebRecipeActivity.URL_EXTRA);
+            importWebRecipeFromUrl(url);
+        }
+    }
+
+    //endregion
+
+    //region WEB_PAGE
+
+    public static final int IMPORT_FROM_INTERNET = 2;
+
+    /**
+     * Import web recipe from an url.
+     * For now, only urls from Marmiton are supported.
+     * @param url The url were to find recipe's data.
+     */
+    public void importWebRecipeFromUrl(String url) {
+        GetWebPageContentTask task = new GetWebPageContentTask();
+        task.execute(url);
+    }
+
+    /**
+     * Task getting the page content from an URL.
+     */
+    private class GetWebPageContentTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String ... urls) {
+            String content = null;
+            try {
+                URL urlNet = new URL(urls[0]);
+                URLConnection urlConnection = urlNet.openConnection();
+                InputStream inputStream = urlConnection.getInputStream();
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader br = new BufferedReader(inputStreamReader);
+                StringBuilder contentBuilder = new StringBuilder();
+                String inputLine;
+                while ((inputLine = br.readLine()) != null)
+                    contentBuilder.append(inputLine);
+                br.close();
+                content = contentBuilder.toString();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return content;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            getRecipeFromContent(result);
+        }
+    }
+
+    private class GetWebBitmapImageTask extends AsyncTask<String, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(String ... urls) {
+            try {
+                URL url = new URL(urls[0]);
+                URLConnection connection = url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                return BitmapFactory.decodeStream(input);
+            } catch (IOException e) {
+                // Log exception
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            if (result != null) {
+                setRecipeImage(Utils.getSquareBitmap(result, 512));
+            }
+        }
+    }
+
+    /**
+     * Get the recipe from content and fill the activity with this recipe in case of success.
+     * @param content The web page content.
+     */
+    private void getRecipeFromContent(String content) {
+        if (content == null || content.isEmpty())
+            return;
+        MarmitonManager.parseWebPageContent(content);
+        // Recipe data
+        RecipesDAO.Recipe recipe = MarmitonManager.getParsedRecipe();
+        if (recipe != null)
+            fillActivityWithRecipe(recipe);
+        else
+            Toast.makeText(this, getResources().getString(R.string.error_parsing_web_recipe),
+                    Toast.LENGTH_LONG).show();
+        // Download recipe's image
+        String imageUrl = MarmitonManager.getParsedImageUrl();
+        if (imageUrl != null) {
+            GetWebBitmapImageTask task = new GetWebBitmapImageTask();
+            task.execute(imageUrl);
         }
     }
 

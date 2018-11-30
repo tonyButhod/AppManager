@@ -36,7 +36,7 @@ public class RecipesDAO extends DAOBase {
 
         public long idQuantity = -1; // The id of the quantity in database QUANTITIES
         public long idIngredient = -1; // The id of the ingredient to use
-        public int idUnit = -1; // The id of the unit to use.
+        public int idUnit = 0; // The id of the unit to use.
         public String name; // The ingredient name.
         public float quantity; // The quantity to use
         public int number; // The number of the quantity used to order it in the list.
@@ -619,7 +619,8 @@ public class RecipesDAO extends DAOBase {
                 // Ingredients or units does not correspond, thus need to add a new ingredient
                 if (ingredient != null) {
                     // Add the previous ingredient to quantities.
-                    quantities.add(ingredient);
+                    if (ingredient.quantity != 0)
+                        quantities.add(ingredient);
                     // Add the previous optional ingredient to quantities if not zero.
                     if (optionalQuantity != 0) {
                         Ingredient optionalIngredient = new Ingredient(ingredient.idQuantity,
@@ -642,7 +643,8 @@ public class RecipesDAO extends DAOBase {
                 optionalQuantity += quantityFactor * quantity * peopleRatio.get(recipeId);
         }
         if (ingredient != null) {
-            quantities.add(ingredient);
+            if (ingredient.quantity != 0)
+                quantities.add(ingredient);
             if (optionalQuantity != 0) {
                 Ingredient optionalIngredient = new Ingredient(ingredient.idQuantity,
                         ingredient.idIngredient, ingredient.idUnit, ingredient.name, optionalQuantity);

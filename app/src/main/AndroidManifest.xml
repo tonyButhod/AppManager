@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -56,6 +57,11 @@
         </activity>
         <activity
             android:name="buthod.tony.appManager.recipes.ShoppingActivity"
+            android:label="@string/recipes_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.recipes.WebRecipeActivity"
             android:label="@string/recipes_section_label"
             android:screenOrientation="portrait">
         </activity>

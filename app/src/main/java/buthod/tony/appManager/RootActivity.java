@@ -68,6 +68,10 @@ public class RootActivity extends Activity {
         finish(returnIntent);
     }
 
+    /**
+     * This function should be called to finish an activity with extra.
+     * @param returnIntent The return intent.
+     */
     public void finish(Intent returnIntent) {
         returnIntent.putExtra(PedometerManager.IS_DETECTING_KEY, mPedometer.isDetecting());
         mPedometer.stopDetection();

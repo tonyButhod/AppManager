@@ -120,6 +120,10 @@
     <string name="separation_name">Nom de la séparation</string>
     <string name="optional_label">Facultatif</string>
     <string name="optional_label_parenthesis">(facultatif)</string>
+    <string name="among_x_optional">(dont %s facultatif)</string>
+    <string name="url">URL</string>
+    <string name="import_web_recipe">Importer depuis Internet</string>
+    <string name="error_parsing_web_recipe">Recette internet non valide</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>

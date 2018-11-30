@@ -16,54 +16,40 @@
             style="@style/BackButton"/>
 
         <EditText
-            android:id="@+id/search_field"
-            android:hint="@string/search"
+            android:id="@+id/url_field"
+            android:hint="@string/url"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:maxLines="1"
+            android:inputType="textUri"
+            android:lines="1"
+            android:scrollHorizontally="true"
             android:textColor="@android:color/white"
-            android:selectAllOnFocus="true"/>
+            android:selectAllOnFocus="true"
+            android:layout_weight="1"/>
 
         <ImageButton
-            android:id="@+id/shopping_button"
+            android:id="@+id/go_to_url_button"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:background="@drawable/blue_flat_button"
-            android:src="@drawable/shopping"
+            android:src="@drawable/search"
             android:scaleType="fitXY"/>
 
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/add_recipe_button"
-        style="@style/AddButton"/>
-
-    <ImageButton
-        android:id="@+id/validate_shopping_button"
-        style="@style/AddButton"
-        android:src="@drawable/validate"
-        android:visibility="gone"/>
-
-    <ScrollView
-        android:id="@+id/recipes_scroll"
+    <WebView
+        android:id="@+id/web_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_below="@id/toolbar">
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
 
-            <LinearLayout
-                android:id="@+id/recipes_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+    </WebView>
 
-            </LinearLayout>
-
-        </RelativeLayout>
-
-    </ScrollView>
+    <ImageButton
+        android:id="@+id/validate_button"
+        style="@style/AddButton"
+        android:src="@drawable/validate"/>
 
 </RelativeLayout>

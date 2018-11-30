@@ -10,8 +10,6 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.media.ExifInterface;
-import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
@@ -60,6 +58,16 @@ public class Utils {
             result = defaultValue;
         }
         return result;
+    }
+
+    /**
+     * Truncate a string if its size exceeds a max length.
+     */
+    public static String truncate(String s, int maxLength) {
+        if (s != null && s.length() > maxLength)
+            return s.substring(0, maxLength);
+        else
+            return s;
     }
 
     /**

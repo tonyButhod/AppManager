@@ -1,9 +1,6 @@
 package buthod.tony.appManager.recipes;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -15,14 +12,11 @@ import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
-import android.widget.Spinner;
 import android.widget.TextView;
 import java.util.ArrayList;
 
@@ -311,7 +305,7 @@ public class RecipesActivity extends RootActivity {
             // Show specific button to validate or cancel shopping.
             Resources res = getResources();
             if (mIsShopping) {
-                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.add_image));
+                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.cross));
                 mShoppingButton.setRotation(45);
                 mAddRecipeButton.setVisibility(View.GONE);
                 mValidateShoppingButton.setVisibility(View.VISIBLE);

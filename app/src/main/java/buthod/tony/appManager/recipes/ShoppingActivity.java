@@ -67,14 +67,30 @@ public class ShoppingActivity extends RootActivity {
     private void populateWithQuantitiesList() {
         ArrayList<RecipesDAO.Ingredient> quantities = mDao.getQuantitiesFromRecipes(mRecipesId, mRecipesPeopleRatio);
         LayoutInflater inflater = getLayoutInflater();
-        String[] units = getResources().getStringArray(R.array.units_array);
+        Resources res = getResources();
+        String[] units = res.getStringArray(R.array.units_array);
         for (int i = 0; i < quantities.size(); ++i) {
             View v = inflater.inflate(R.layout.ingredient_view, null);
-            ((TextView) v.findViewById(R.id.quantity_view)).setText(Utils.floatToString(quantities.get(i).quantity, 3));
             ((TextView) v.findViewById(R.id.unit_view)).setText(units[quantities.get(i).idUnit]);
             ((TextView) v.findViewById(R.id.ingredient_name_view)).setText(quantities.get(i).name);
-            v.findViewById(R.id.optional_view).setVisibility(
+            TextView optionalView = (TextView) v.findViewById(R.id.optional_view);
+            optionalView.setVisibility(
                     quantities.get(i).type == RecipesDAO.Ingredient.OPTIONAL_TYPE ? View.VISIBLE : View.GONE);
+            float quantity = quantities.get(i).quantity;
+            if (i + 1 < quantities.size()
+                    && quantities.get(i).name.equals(quantities.get(i+1).name)
+                    && quantities.get(i).idUnit == quantities.get(i+1).idUnit
+                    && quantities.get(i).type == RecipesDAO.Ingredient.NORMAL_TYPE
+                    && quantities.get(i+1).type == RecipesDAO.Ingredient.OPTIONAL_TYPE) {
+                // Those 2 have the same ingredient and unit, and the second one is optional.
+                // Then melt it in one view.
+                quantity += quantities.get(i+1).quantity;
+                optionalView.setText(String.format(res.getString(R.string.among_x_optional),
+                        Utils.floatToString(quantities.get(i+1).quantity) + units[quantities.get(i).idUnit]));
+                optionalView.setVisibility(View.VISIBLE);
+                i++;
+            }
+            ((TextView) v.findViewById(R.id.quantity_view)).setText(Utils.floatToString(quantity, 3));
             mQuantitiesLayout.addView(v);
         }
     }

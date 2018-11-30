@@ -23,7 +23,7 @@
 
     <style name="AddButton" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/round_button</item>
-        <item name="android:src">@drawable/add_image</item>
+        <item name="android:src">@drawable/cross</item>
         <item name="android:layout_height">50dp</item>
         <item name="android:layout_width">50dp</item>
         <item name="android:scaleType">fitXY</item>
@@ -37,7 +37,7 @@
 
     <style name="DeleteButton" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/round_button_red</item>
-        <item name="android:src">@drawable/add_image</item>
+        <item name="android:src">@drawable/cross</item>
         <item name="android:rotation">45</item>
         <item name="android:layout_height">40dp</item>
         <item name="android:layout_width">40dp</item>

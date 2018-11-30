@@ -50,6 +50,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     //region RECIPES
 
+    public static final int IngredientNameLength = 32;
     public static final String
             INGREDIENTS_TABLE_NAME = "Ingredients",
             INGREDIENTS_KEY = "id",
@@ -57,7 +58,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             INGREDIENTS_TABLE_CREATE =
                     "Create Table " + INGREDIENTS_TABLE_NAME + " (" +
                             INGREDIENTS_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            INGREDIENTS_NAME + " VARCHAR(32));",
+                            INGREDIENTS_NAME + " VARCHAR(" + IngredientNameLength +"));",
             INGREDIENTS_TABLE_DROP =
                     "Drop Table If Exists " + INGREDIENTS_TABLE_NAME + ";";
 
@@ -82,6 +83,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             QUANTITIES_TABLE_DROP =
                     "Drop Table If Exists " + QUANTITIES_TABLE_NAME + ";";
 
+    public static final int StepDescriptionLength = 256;
     public static final String
             STEPS_TABLE_NAME = "Steps",
             STEPS_KEY = "id",
@@ -93,10 +95,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                             STEPS_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                             STEPS_RECIPE + " INTEGER, " +
                             STEPS_NUMBER + " INTEGER, " +
-                            STEPS_DESCRIPTION + " VARCHAR(128));",
+                            STEPS_DESCRIPTION + " VARCHAR(" + StepDescriptionLength + "));",
             STEPS_TABLE_DROP =
                     "Drop Table If Exists " + STEPS_TABLE_NAME + ";";
 
+    public static final int RecipeNameLength = 64;
     public static final String
             RECIPES_TABLE_NAME = "Recipes",
             RECIPES_KEY = "id",
@@ -110,7 +113,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_TABLE_CREATE =
                     "Create Table "+ RECIPES_TABLE_NAME +" ("+
                             RECIPES_KEY +" INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                            RECIPES_NAME + " VARCHAR(64), " +
+                            RECIPES_NAME + " VARCHAR(" + RecipeNameLength + "), " +
                             RECIPES_TYPE + " INTEGER, " +
                             RECIPES_DIFFICULTY + " INTEGER, " +
                             RECIPES_TIME + " INTEGER, " +
@@ -120,6 +123,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_TABLE_DROP =
                     "Drop Table If Exists "+ RECIPES_TABLE_NAME +";";
 
+    public static final int RecipeSeparationDescriptionLength = 64;
     public static final String
             RECIPES_SEPARATION_TABLE_NAME = "RecipesSeparations",
             RECIPES_SEPARATION_KEY = "id",
@@ -133,7 +137,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                             RECIPES_SEPARATION_RECIPE + " INTEGER, " +
                             RECIPES_SEPARATION_TYPE + " INTEGER, " +
                             RECIPES_SEPARATION_NUMBER + " INTEGER, " +
-                            RECIPES_SEPARATION_DESCRIPTION + " VARCHAR(64));",
+                            RECIPES_SEPARATION_DESCRIPTION + " VARCHAR(" + RecipeSeparationDescriptionLength + "));",
             RECIPES_SEPARATION_TABLE_DROP =
                     "Drop Table If Exists " + RECIPES_SEPARATION_TABLE_NAME + ";";
 
@@ -169,6 +173,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 db.execSQL("Alter Table " + RECIPES_TABLE_NAME + " Add " + RECIPES_NUMBER + " INTEGER;");
                 db.execSQL("Alter Table " + QUANTITIES_TABLE_NAME + " Add " + QUANTITIES_NUMBER + " INTEGER;");
                 db.execSQL("Alter Table " + QUANTITIES_TABLE_NAME + " Add " + QUANTITIES_TYPE + " INTEGER;");
+                // The length of step's description has been changed, but it doesn't matter in SQLite,
+                // And since it is not possible to modify directly a column, we do not modify it.
             }
         }
     }

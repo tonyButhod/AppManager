@@ -156,7 +156,10 @@ public class RecipeActivity extends RootActivity {
         View ingredientView = getLayoutInflater().inflate(R.layout.ingredient_view, null);
         mIngredientsLayout.addView(ingredientView, mIngredientsLayout.getChildCount());
         // Update text view information
-        ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(Utils.floatToString(ingredient.quantity));
+        TextView quantityView = (TextView) ingredientView.findViewById(R.id.quantity_view);
+        quantityView.setText(Utils.floatToString(ingredient.quantity));
+        if (ingredient.quantity == 0)
+            quantityView.setVisibility(View.GONE);
         ((TextView) ingredientView.findViewById(R.id.unit_view)).setText(mUnits[ingredient.idUnit]);
         ((TextView) ingredientView.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
         ingredientView.findViewById(R.id.optional_view).setVisibility(

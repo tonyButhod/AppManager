@@ -8,7 +8,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/unit_layout"
         android:hint="@string/step_description"
-        android:maxLength="128"/>
+        android:maxLength="256"/>
 
     <TextView
         android:id="@+id/error_message"
