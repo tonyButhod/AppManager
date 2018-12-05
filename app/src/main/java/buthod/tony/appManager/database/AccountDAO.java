@@ -267,8 +267,8 @@ public class AccountDAO extends DAOBase {
             monthsStatement[index] = c.getInt(2);
             index++;
             currentMonth++;
-            if (currentMonth == 12) {
-                currentMonth = 0;
+            if (currentMonth > 12) {
+                currentMonth = 1;
                 currentYear++;
             }
         }
