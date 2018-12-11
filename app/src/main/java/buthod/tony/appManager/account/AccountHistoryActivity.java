@@ -5,14 +5,18 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Handler;
+import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -32,7 +36,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import buthod.tony.appManager.CustomAlertDialog;
 import buthod.tony.appManager.R;
+import buthod.tony.appManager.Utils;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
@@ -119,7 +125,7 @@ public class AccountHistoryActivity {
         mAddTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAddTransactionDialog();
+                addTransactionDialog();
             }
         });
         // Add listener to display more transactions
@@ -194,46 +200,53 @@ public class AccountHistoryActivity {
             transactionView.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.expense_background));
         }
         // Add a long click event to delete the transaction
-        transactionView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                // Set the view as selected
-                v.setSelected(true);
-
-                // Show a popup menu
-                final PopupMenu popup = new PopupMenu(mRootActivity, v);
-                popup.inflate(R.menu.transaction_menu);
-                // Registering clicks on the popup menu
-                final TextView currentView = (TextView) v;
-                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        popup.dismiss();
-                        switch(item.getItemId()) {
-                            case R.id.modify:
-                                showModifyTransactionDialog(trans.id, currentView);
-                                break;
-                            case R.id.delete:
-                                showDeleteTransactionDialog(trans.id, currentView);
-                                break;
-                        }
-                        return true;
-                    }
-                });
-                popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
-                    @Override
-                    public void onDismiss(PopupMenu menu) {
-                        // Deselect the view
-                        currentView.setSelected(false);
-                    }
-                });
-                popup.show();
-                return false;
-            }
-        });
+        transactionView.setTag(trans.id);
+        transactionView.setOnLongClickListener(mTransactionOnLongClick);
         // Finally add the view in the linear layout
         mTransactionsLayout.addView(transactionView);
     }
+
+    private View.OnLongClickListener mTransactionOnLongClick = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            final long id = (long) v.getTag();
+            // Set the view as selected
+            v.setSelected(true);
+
+            // Show a popup menu
+            final PopupMenu popup = new PopupMenu(mRootActivity, v);
+            popup.inflate(R.menu.transaction_menu);
+            // Registering clicks on the popup menu
+            final TextView currentView = (TextView) v;
+            popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    popup.dismiss();
+                    switch(item.getItemId()) {
+                        case R.id.modify:
+                            modifyTransactionDialog(id, currentView);
+                            break;
+                        case R.id.duplicate:
+                            duplicateTransactionDialog(id);
+                            break;
+                        case R.id.delete:
+                            deleteTransactionDialog(id, currentView);
+                            break;
+                    }
+                    return true;
+                }
+            });
+            popup.setOnDismissListener(new PopupMenu.OnDismissListener() {
+                @Override
+                public void onDismiss(PopupMenu menu) {
+                    // Deselect the view
+                    currentView.setSelected(false);
+                }
+            });
+            popup.show();
+            return false;
+        }
+    };
 
     /**
      * Update a transaction view. It updates its text and color.
@@ -285,94 +298,28 @@ public class AccountHistoryActivity {
 
     //region ADD_MODIFY_REMOVE_DIALOGS
 
-    private void showAddTransactionDialog() {
-        // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
-        builder.setTitle(R.string.add_transaction);
-        // Set the view of the alert dialog
-        LayoutInflater inflater = mRootActivity.getLayoutInflater();
-        View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
-        builder.setView(alertView);
-        // Get useful view
-        final RadioButton expenseRadioButton = (RadioButton) alertView.findViewById(R.id.expense_radio_button);
-        final Spinner typeSpinner = (Spinner) alertView.findViewById(R.id.type);
-        final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
-        final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
-        final EditText commentEdit = (EditText) alertView.findViewById(R.id.comment);
-        // Set default date of the date picker
-        final Calendar c = Calendar.getInstance();
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        datePicker.init(year, month, day, null);
-        // Populate the spinner of alert dialog with types depending on the selected radio button
-        typeSpinner.setAdapter(expenseRadioButton.isChecked() ? mExpenseTypes : mCreditTypes);
-        expenseRadioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                typeSpinner.setAdapter(b ? mExpenseTypes : mCreditTypes);
-            }
-        });
-        // Set up the buttons
-        Resources res = mRootActivity.getResources();
-        builder.setNegativeButton(res.getString(R.string.cancel),
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-        builder.setPositiveButton(res.getString(R.string.add), null);
-        final AlertDialog alertDialog = builder.create();
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                Button b = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                b.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View view) {
-                        int type = typeSpinner.getSelectedItemPosition();
-                        type = (expenseRadioButton.isChecked()) ? type : -type - 1;
-                        String priceString = priceEdit.getText().toString();
-                        if (priceString.isEmpty()) {
-                            Toast.makeText(mRootActivity, R.string.add_price, Toast.LENGTH_SHORT).show();
-                        }
-                        else {
-                            // Check if the price is correct
-                            int price = 0;
-                            try {
-                                price = Math.round(Float.parseFloat(priceString) * 100);
-                            }
-                            catch (NumberFormatException e) {
-                                Toast.makeText(mRootActivity, R.string.price_not_valid,
-                                        Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            // Recover the date from the date picker
-                            c.set(Calendar.YEAR, datePicker.getYear());
-                            c.set(Calendar.MONTH, datePicker.getMonth());
-                            c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
-                            Date date = c.getTime();
-                            String comment = commentEdit.getText().toString();
-                            mDao.addTransaction(type, price, date, comment);
-
-                            resetTransactionLayout();
-                            alertDialog.dismiss();
-                        }
-                    }
-                });
-            }
-        });
-        alertDialog.show();
+    /**
+     * Interface used as a callback on result of a transaction popup.
+     */
+    private interface TransactionCallback {
+        void onPositiveResult(AccountDAO.TransactionInfo editedTransaction);
+        void onNegativeResult(AccountDAO.TransactionInfo initialTransaction);
     }
 
-    private void showModifyTransactionDialog(final long transactionID, final TextView transactionView) {
+    /**
+     * Shw the transaction dialog for edition.
+     * @param titleId The title id of the resource.
+     * @param initialTransaction The initial transaction to modify. If new transaction, set it to null.
+     * @param callback The callback to call on result of the popup.
+     */
+    private void showTransactionDialog(@StringRes int titleId, final AccountDAO.TransactionInfo initialTransaction,
+                                       final TransactionCallback callback) {
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
-        builder.setTitle(R.string.modify_transaction);
+        CustomAlertDialog.Builder builder = new CustomAlertDialog.Builder(mRootActivity);
+        builder.setTitle(titleId);
         // Set the view of the alert dialog
         LayoutInflater inflater = mRootActivity.getLayoutInflater();
-        View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
+        final View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
         builder.setView(alertView);
         // Get useful views
         final RadioButton expenseRadioButton = (RadioButton) alertView.findViewById(R.id.expense_radio_button);
@@ -381,28 +328,29 @@ public class AccountHistoryActivity {
         final EditText priceEdit = (EditText) alertView.findViewById(R.id.price);
         final DatePicker datePicker = (DatePicker) alertView.findViewById(R.id.date);
         final EditText commentEdit = (EditText) alertView.findViewById(R.id.comment);
-        // Get transaction information
-        final AccountDAO.TransactionInfo transaction = mDao.getTransaction(transactionID);
-        // Set default date of the date picker
         final Calendar c = Calendar.getInstance();
-        c.setTime(transaction.date);
-        int year = c.get(Calendar.YEAR);
-        int month = c.get(Calendar.MONTH);
-        int day = c.get(Calendar.DAY_OF_MONTH);
-        datePicker.init(year, month, day, null);
-        // Populate the spinner of alert dialog with types.
-        if (transaction.type < 0) {
-            expenseRadioButton.setChecked(false);
-            creditRadioButton.setChecked(true);
-            typeSpinner.setAdapter(mCreditTypes);
-            typeSpinner.setSelection(-transaction.type - 1);
+        int spinnerSelection = 0;
+        // Get transaction information
+        if (initialTransaction != null) {
+            c.setTime(initialTransaction.date);
+            if (initialTransaction.type < 0) {
+                expenseRadioButton.setChecked(false);
+                creditRadioButton.setChecked(true);
+                spinnerSelection = -initialTransaction.type - 1;
+            }
+            else {
+                expenseRadioButton.setChecked(true);
+                creditRadioButton.setChecked(false);
+                spinnerSelection = initialTransaction.type;
+            }
+            priceEdit.setText(String.valueOf(initialTransaction.price / 100.0f));
+            commentEdit.setText(initialTransaction.comment);
         }
-        else {
-            expenseRadioButton.setChecked(true);
-            creditRadioButton.setChecked(false);
-            typeSpinner.setAdapter(mExpenseTypes);
-            typeSpinner.setSelection(transaction.type);
-        }
+        // Initialize fields
+        typeSpinner.setAdapter(expenseRadioButton.isChecked() ? mExpenseTypes : mCreditTypes);
+        typeSpinner.setSelection(spinnerSelection);
+        datePicker.init(c.get(Calendar.YEAR), c.get(Calendar.MONTH),
+                c.get(Calendar.DAY_OF_MONTH), null);
         // Update spinner if the user choose expense or credit
         expenseRadioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -410,25 +358,24 @@ public class AccountHistoryActivity {
                 typeSpinner.setAdapter(b ? mExpenseTypes : mCreditTypes);
             }
         });
-        // Set the saved price and comment in the edit text
-        priceEdit.setText(String.valueOf(transaction.price / 100.0f));
-        commentEdit.setText(transaction.comment);
         // Set up the buttons
         Resources res = mRootActivity.getResources();
         builder.setNegativeButton(res.getString(R.string.cancel),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        if (callback != null)
+                            callback.onNegativeResult(initialTransaction);
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(res.getString(R.string.modify), null);
-        final AlertDialog alertDialog = builder.create();
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        builder.setPositiveButton(res.getString(R.string.save), null);
+        final CustomAlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
-            public void onShow(DialogInterface dialog) {
-                Button b = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                b.setOnClickListener(new View.OnClickListener(){
+            public void onShow(DialogInterface dialogInterface) {
+                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                positiveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         int type = typeSpinner.getSelectedItemPosition();
@@ -436,38 +383,82 @@ public class AccountHistoryActivity {
                         String priceString = priceEdit.getText().toString();
                         if (priceString.isEmpty()) {
                             Toast.makeText(mRootActivity, "Ajoutez un prix", Toast.LENGTH_SHORT).show();
+                            return;
                         }
-                        else {
-                            // Check if the price is correct
-                            int price = 0;
-                            try {
-                                price = Math.round(Float.parseFloat(priceString) * 100);
-                            }
-                            catch (NumberFormatException e) {
-                                Toast.makeText(mRootActivity, "Le prix n'est pas valide",
-                                        Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            // Recover the date from the date picker
-                            c.set(Calendar.YEAR, datePicker.getYear());
-                            c.set(Calendar.MONTH, datePicker.getMonth());
-                            c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
-                            Date date = c.getTime();
-                            String comment = commentEdit.getText().toString();
-                            mDao.modifyTransaction(transaction.id, type, price, date, comment);
-                            AccountDAO.TransactionInfo updatedTransaction = mDao.getTransaction(transactionID);
-                            // Update the view in the linear layout
-                            updateTransactionView(transactionView, updatedTransaction);
-                            alertDialog.dismiss();
+                        int price;
+                        try {
+                            price = Math.round(Float.parseFloat(priceString) * 100);
                         }
+                        catch (NumberFormatException e) {
+                            Toast.makeText(mRootActivity, "Le prix n'est pas valide",
+                                    Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        // Recover the date from the date picker
+                        c.set(Calendar.YEAR, datePicker.getYear());
+                        c.set(Calendar.MONTH, datePicker.getMonth());
+                        c.set(Calendar.DAY_OF_MONTH, datePicker.getDayOfMonth());
+                        Date date = c.getTime();
+                        String comment = commentEdit.getText().toString();
+                        long id = (initialTransaction != null ? initialTransaction.id : -1);
+                        AccountDAO.TransactionInfo editedTransaction = new AccountDAO.TransactionInfo(
+                                id, type, price, date, comment);
+                        if (callback != null)
+                            callback.onPositiveResult(editedTransaction);
+                        dialog.dismiss();
                     }
                 });
             }
         });
-        alertDialog.show();
+        dialog.show();
     }
 
-    private void showDeleteTransactionDialog(final long transactionID, final View v){
+    /**
+     * Add a transaction with a popup dialog.
+     */
+    private void addTransactionDialog() {
+        showTransactionDialog(R.string.add_transaction, null,
+                new TransactionCallback() {
+                    @Override
+                    public void onPositiveResult(AccountDAO.TransactionInfo editedTransaction) {
+                        mDao.addTransaction(editedTransaction);
+                        resetTransactionLayout();
+                    }
+
+                    @Override
+                    public void onNegativeResult(AccountDAO.TransactionInfo initialTransaction) {
+                        // Do nothing
+                    }
+                });
+    }
+
+    /**
+     * Modify a transaction with a popup dialog.
+     * @param transactionId The transaction id to modify.
+     * @param transactionView The transaction view to modify.
+     */
+    private void modifyTransactionDialog(final long transactionId, final TextView transactionView) {
+        showTransactionDialog(R.string.modify_transaction, mDao.getTransaction(transactionId),
+                new TransactionCallback() {
+                    @Override
+                    public void onPositiveResult(AccountDAO.TransactionInfo editedTransaction) {
+                        mDao.modifyTransaction(editedTransaction);
+                        updateTransactionView(transactionView, editedTransaction);
+                    }
+
+                    @Override
+                    public void onNegativeResult(AccountDAO.TransactionInfo initialTransaction) {
+                        // Do nothing
+                    }
+                });
+    }
+
+    /**
+     * Delete a transaction with a popup confirmation dialog.
+     * @param transactionId The transaction id to delete.
+     * @param v The corresponding view in linear layout.
+     */
+    private void deleteTransactionDialog(final long transactionId, final View v){
         // Initialize an alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(mRootActivity);
         builder.setTitle(R.string.delete_transaction);
@@ -480,24 +471,38 @@ public class AccountHistoryActivity {
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(res.getString(R.string.yes), null);
-        final AlertDialog alertDialog = builder.create();
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+        builder.setPositiveButton(res.getString(R.string.yes), new DialogInterface.OnClickListener(){
             @Override
-            public void onShow(DialogInterface dialog) {
-                Button b = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                b.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View view) {
-                        mDao.deleteTransaction(transactionID);
-                        mTransactionsLayout.removeView(v);
-                        alertDialog.dismiss();
-                    }
-                });
+            public void onClick(DialogInterface dialog, int which) {
+                mDao.deleteTransaction(transactionId);
+                mTransactionsLayout.removeView(v);
+                dialog.dismiss();
             }
         });
         // Show alert dialog
-        alertDialog.show();
+        builder.create().show();
+    }
+
+    /**
+     * Duplicate a transaction to create a new one.
+     * @param transactionId The transaction id to duplicate.
+     */
+    private void duplicateTransactionDialog(final long transactionId) {
+        AccountDAO.TransactionInfo transaction = mDao.getTransaction(transactionId);
+        transaction.date = Calendar.getInstance().getTime(); // Set transaction to current date
+        showTransactionDialog(R.string.add_transaction, transaction,
+                new TransactionCallback() {
+                    @Override
+                    public void onPositiveResult(AccountDAO.TransactionInfo editedTransaction) {
+                        mDao.addTransaction(editedTransaction);
+                        resetTransactionLayout();
+                    }
+
+                    @Override
+                    public void onNegativeResult(AccountDAO.TransactionInfo initialTransaction) {
+                        // Do nothing
+                    }
+                });
     }
 
     //endregion
@@ -543,7 +548,7 @@ public class AccountHistoryActivity {
             creditTypesGrid.addView(checkBox);
         }
         // Add listeners to buttons present in the view
-        Button selectAllButton = (Button) alertView.findViewById(R.id.select_all);
+        final Button selectAllButton = (Button) alertView.findViewById(R.id.select_all);
         Button selectNothingButton = (Button) alertView.findViewById(R.id.select_nothing);
         Button selectExpensesButton = (Button) alertView.findViewById(R.id.select_expenses);
         Button selectCreditsButton = (Button) alertView.findViewById(R.id.select_credits);
@@ -578,31 +583,34 @@ public class AccountHistoryActivity {
         builder.setView(alertView);
         // Set up the buttons
         Resources res = mRootActivity.getResources();
-        builder.setNegativeButton(res.getString(R.string.no),
+        builder.setNegativeButton(res.getString(R.string.cancel),
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(res.getString(R.string.yes), null);
-        final AlertDialog alertDialog = builder.create();
-        alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-            @Override
-            public void onShow(DialogInterface dialog) {
-                Button b = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-                b.setOnClickListener(new View.OnClickListener(){
+        builder.setPositiveButton(res.getString(R.string.apply),
+                new DialogInterface.OnClickListener(){
                     @Override
-                    public void onClick(View view) {
+                    public void onClick(DialogInterface dialog, int which) {
                         updateSelectedTypes(expenseTypesGrid, creditTypesGrid);
                         resetTransactionLayout();
-                        alertDialog.dismiss();
+                        dialog.dismiss();
+                    }
+        });
+        builder.setNeutralButton(res.getString(R.string.reset),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        selectAllButton.performClick();
+                        updateSelectedTypes(expenseTypesGrid, creditTypesGrid);
+                        resetTransactionLayout();
+                        dialogInterface.dismiss();
                     }
                 });
-            }
-        });
         // Show alert dialog
-        alertDialog.show();
+        builder.create().show();
     }
 
     private void setCheckBoxesState(LinearLayout layout, boolean state) {

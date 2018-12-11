@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import buthod.tony.appManager.CustomAlertDialog;
 import buthod.tony.appManager.DragAndDropLinearLayout;
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
@@ -416,7 +417,7 @@ public class AddEditRecipeActivity extends RootActivity {
         final long id = (v == null ? -1 :
                 Long.parseLong(((TextView)v.findViewById(R.id.id_view)).getText().toString()));
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        CustomAlertDialog.Builder builder = new CustomAlertDialog.Builder(this);
         builder.setTitle(R.string.add_ingredient);
         // Set the view of the alert dialog
         LayoutInflater inflater = getLayoutInflater();
@@ -458,10 +459,15 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify),
-                new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify), null);
+        final CustomAlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                positiveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int i) {
+                    public void onClick(View view) {
                         // Get data from views
                         RecipesDAO.Ingredient ingredient = new RecipesDAO.Ingredient();
                         ingredient.idQuantity = id;
@@ -487,7 +493,9 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.dismiss();
                     }
                 });
-        builder.create().show();
+            }
+        });
+        dialog.show();
     }
     private void showAddEditIngredientDialog() { showAddEditIngredientDialog(null);}
 
@@ -548,7 +556,7 @@ public class AddEditRecipeActivity extends RootActivity {
         final long id = (v == null ? -1 :
                 Long.parseLong(((TextView)v.findViewById(R.id.id_view)).getText().toString()));
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        CustomAlertDialog.Builder builder = new CustomAlertDialog.Builder(this);
         builder.setTitle(R.string.add_step);
         // Set the view of the alert dialog
         LayoutInflater inflater = getLayoutInflater();
@@ -581,10 +589,15 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify),
-                new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify), null);
+        final CustomAlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                positiveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int i) {
+                    public void onClick(View view) {
                         // Recover data from views
                         RecipesDAO.Step step = new RecipesDAO.Step();
                         step.id = id;
@@ -603,7 +616,9 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.dismiss();
                     }
                 });
-        builder.create().show();
+            }
+        });
+        dialog.show();
     }
     private void showAddEditStepDialog() { showAddEditStepDialog(null);}
 
@@ -657,7 +672,7 @@ public class AddEditRecipeActivity extends RootActivity {
         final long id = (v == null ? -1 :
                 Long.parseLong(((TextView)v.findViewById(R.id.id_view)).getText().toString()));
         // Initialize an alert dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        CustomAlertDialog.Builder builder = new CustomAlertDialog.Builder(this);
         builder.setTitle(R.string.add_separation);
         // Set the view of the alert dialog
         LayoutInflater inflater = getLayoutInflater();
@@ -693,10 +708,15 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.cancel();
                     }
                 });
-        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify),
-                new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(v == null ? res.getString(R.string.add) : res.getString(R.string.modify),null);
+        final CustomAlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                positiveButton.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int i) {
+                    public void onClick(View view) {
                         // Recover data from views
                         RecipesDAO.Separation separation = new RecipesDAO.Separation();
                         separation.id = id;
@@ -707,7 +727,7 @@ public class AddEditRecipeActivity extends RootActivity {
                         // Check if data are correct
                         String errorMessage = "";
                         if (separation.description.isEmpty())
-                            errorMessage = res.getString(R.string.step_description_error);
+                            errorMessage = res.getString(R.string.separation_error);
                         if (!errorMessage.isEmpty()) {
                             errorView.setVisibility(View.VISIBLE);
                             errorView.setText(errorMessage);
@@ -718,7 +738,9 @@ public class AddEditRecipeActivity extends RootActivity {
                         dialog.dismiss();
                     }
                 });
-        builder.create().show();
+            }
+        });
+        dialog.show();
     }
     private void showAddEditSeparationDialog(int type) { showAddEditSeparationDialog(type, null);}
 

@@ -72,6 +72,9 @@ public class AccountDAO extends DAOBase {
         value.put(COMMENT, comment);
         return mDb.insert(TABLE_NAME, null, value);
     }
+    public long addTransaction(TransactionInfo t) {
+        return addTransaction(t.type, t.price, t.date, t.comment);
+    }
 
     public int deleteTransaction(long id) {
         return mDb.delete(TABLE_NAME, KEY + " = ?",  new String[] {String.valueOf(id)});
@@ -173,6 +176,9 @@ public class AccountDAO extends DAOBase {
         value.put(DATE, mDateFormatter.format(date));
         value.put(COMMENT, comment);
         mDb.update(TABLE_NAME, value, KEY + " = ?", new String[] {String.valueOf(id)});
+    }
+    public void modifyTransaction(TransactionInfo t) {
+        modifyTransaction(t.id, t.type, t.price, t.date, t.comment);
     }
 
     //endregion

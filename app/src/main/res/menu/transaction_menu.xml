@@ -5,6 +5,10 @@
         android:title="@string/modify"
         android:visible="true"/>
 
+    <item android:id="@+id/duplicate"
+        android:title="@string/duplicate"
+        android:visible="true"/>
+
     <item android:id="@+id/delete"
         android:title="@string/delete"
         android:visible="true"/>

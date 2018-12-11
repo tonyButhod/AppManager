@@ -21,11 +21,7 @@
     <string name="credits">Crédits</string>
     <!-- Account History -->
     <string name="account_history_section_label">Historique</string>
-    <string name="add_expense">Nouvelle dépense</string>
-    <string name="add_credit">Nouveau crédit</string>
     <string name="add_transaction">Nouvelle transaction</string>
-    <string name="modify_expense">Modifier la dépense</string>
-    <string name="modify_credit">Modifier le crédit</string>
     <string name="modify_transaction">Modifier la transaction</string>
     <string name="price">Prix</string>
     <string name="comment">Commentaire</string>
@@ -117,7 +113,8 @@
     <string name="step_description_error">Ajouter une description de l\'étape</string>
     <string name="for_recipes_list">Pour les recettes :</string>
     <string name="add_separation">Ajouter une section</string>
-    <string name="separation_name">Nom de la séparation</string>
+    <string name="separation_name">Nom de la section</string>
+    <string name="separation_error">Ajouter un nom à la section</string>
     <string name="optional_label">Facultatif</string>
     <string name="optional_label_parenthesis">(facultatif)</string>
     <string name="among_x_optional">(dont %s facultatif)</string>
@@ -140,6 +137,7 @@
     <string name="add">Ajouter</string>
     <string name="modify">Modifier</string>
     <string name="delete">Supprimer</string>
+    <string name="duplicate">Dupliquer</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
     <string name="ok">Ok</string>
