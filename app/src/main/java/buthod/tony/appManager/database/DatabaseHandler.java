@@ -141,6 +141,23 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             RECIPES_SEPARATION_TABLE_DROP =
                     "Drop Table If Exists " + RECIPES_SEPARATION_TABLE_NAME + ";";
 
+    public static final String
+            RECIPES_CONVERSIONS_TABLE_NAME = "RecipesConversions",
+            RECIPES_CONVERSIONS_KEY = "id",
+            RECIPES_CONVERSIONS_INGREDIENT = "ingredient",
+            RECIPES_CONVERSIONS_UNIT_FROM = "unit_from",
+            RECIPES_CONVERSIONS_UNIT_TO = "unit_to",
+            RECIPES_CONVERSIONS_FACTOR = "factor",
+            RECIPES_CONVERSIONS_TABLE_CREATE =
+                    "Create Table " + RECIPES_CONVERSIONS_TABLE_NAME + " (" +
+                            RECIPES_CONVERSIONS_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            RECIPES_CONVERSIONS_INGREDIENT + " INTEGER, " +
+                            RECIPES_CONVERSIONS_UNIT_FROM + " INTEGER, " +
+                            RECIPES_CONVERSIONS_UNIT_TO + " INTEGER, " +
+                            RECIPES_CONVERSIONS_FACTOR + " REAL);",
+            RECIPES_CONVERSIONS_TABLE_DROP =
+                    "Drop Table If Exists " + RECIPES_CONVERSIONS_TABLE_NAME + ";";
+
     //endregion
 
     public DatabaseHandler(Context context, String name, SQLiteDatabase.CursorFactory factory,
@@ -176,6 +193,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 // The length of step's description has been changed, but it doesn't matter in SQLite,
                 // And since it is not possible to modify directly a column, we do not modify it.
             }
+        }
+        if (oldVersion < 4) {
+            db.execSQL(RECIPES_CONVERSIONS_TABLE_CREATE);
         }
     }
 }

@@ -65,6 +65,11 @@
             android:label="@string/recipes_section_label"
             android:screenOrientation="portrait">
         </activity>
+        <activity
+            android:name="buthod.tony.appManager.recipes.IngredientsManagementActivity"
+            android:label="@string/recipes_section_label"
+            android:screenOrientation="portrait">
+        </activity>
     </application>
 
 </manifest>

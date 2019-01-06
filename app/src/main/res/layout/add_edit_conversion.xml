@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:focusable="true" android:focusableInTouchMode="true">
+
+    <TextView
+        android:id="@+id/factor_one_view"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"
+        android:gravity="center_vertical"
+        android:text="1"/>
+
+    <Spinner
+        android:id="@+id/unit_from_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:layout_toEndOf="@id/factor_one_view"
+        android:layout_toRightOf="@id/factor_one_view"/>
+
+    <TextView
+        android:id="@+id/equal_view"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:layout_toEndOf="@id/unit_from_spinner"
+        android:layout_toRightOf="@id/unit_from_spinner"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"
+        android:text="="/>
+
+    <EditText
+        android:id="@+id/factor_view"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:layout_toEndOf="@id/equal_view"
+        android:layout_toRightOf="@id/equal_view"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="18sp"/>
+
+    <Spinner
+        android:id="@+id/unit_to_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:layout_toEndOf="@id/factor_view"
+        android:layout_toRightOf="@id/factor_view"/>
+
+    <TextView
+        android:id="@+id/error_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/factor_one_view"
+        android:textSize="16sp"
+        android:visibility="gone"
+        android:textColor="@color/red"/>
+
+</RelativeLayout>

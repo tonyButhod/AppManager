@@ -8,6 +8,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.util.SparseLongArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -110,6 +111,42 @@ public class RecipesDAO extends DAOBase {
         }
     }
 
+    public static class IngredientConversions {
+        public long ingredientId;
+        public String ingredientName;
+        public List<Conversion> conversions;
+
+        public IngredientConversions() {
+            ingredientId = -1;
+            ingredientName = null;
+            conversions = new ArrayList<>();
+        }
+
+        public IngredientConversions(long id, String name) {
+            ingredientId = id;
+            ingredientName = name;
+            conversions = new ArrayList<>();
+        }
+    }
+
+    public static class Conversion {
+        public long id;
+        public int unitFrom;
+        public int unitTo;
+        public float factor;
+
+        public Conversion() {
+            id = -1;
+        }
+
+        public Conversion(long id, int unitFrom, int unitTo, float factor) {
+            this.id = id;
+            this.unitFrom = unitFrom;
+            this.unitTo = unitTo;
+            this.factor = factor;
+        }
+    }
+
     public RecipesDAO(Context context) {
         super(context);
     }
@@ -123,7 +160,8 @@ public class RecipesDAO extends DAOBase {
     }
 
     public CharSequence[] getIngredients() {
-        Cursor c = mDb.rawQuery("Select * From " + DatabaseHandler.INGREDIENTS_TABLE_NAME + ";",
+        Cursor c = mDb.rawQuery("Select * From " + DatabaseHandler.INGREDIENTS_TABLE_NAME +
+                        " Order By " + DatabaseHandler.INGREDIENTS_NAME + " ASC;",
                 new String[0]);
         CharSequence[] ingredients = new CharSequence[c.getCount()];
         c.moveToFirst();
@@ -169,6 +207,42 @@ public class RecipesDAO extends DAOBase {
             id = addIngredient(name);
         }
         return id;
+    }
+
+    /**
+     * Delete an ingredient and its registered conversions.
+     * @param id The ingredient id.
+     */
+    public void deleteIngredient(long id) {
+        // Delete the ingredient itself.
+        mDb.execSQL(String.format(Locale.getDefault(),
+                "Delete From %s Where %s = %s;",
+                DatabaseHandler.INGREDIENTS_TABLE_NAME, DatabaseHandler.INGREDIENTS_KEY,
+                String.valueOf(id)));
+        // Delete all registered conversions for this ingredient.
+        mDb.execSQL(String.format(Locale.getDefault(),
+                "Delete From %s Where %s = %s;",
+                DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT,
+                String.valueOf(id)));
+    }
+
+    /**
+     * Delete unused ingredients from database.
+     * It deletes all ingredients that are not used in any one recipe.
+     */
+    public void deleteUnusedIngredients() {
+        Cursor c = mDb.rawQuery(
+                String.format(Locale.getDefault(),
+                    "Select %2$s From %1$s Where %2$s IN " +
+                    "(Select %1$s.%2$s From %1$s Left Join %3$s On %1$s.%2$s = %3$s.%4$s Where %3$s.%4$s Is Null);",
+                    DatabaseHandler.INGREDIENTS_TABLE_NAME, DatabaseHandler.INGREDIENTS_KEY,
+                    DatabaseHandler.QUANTITIES_TABLE_NAME, DatabaseHandler.QUANTITIES_INGREDIENT),
+                new String[0]
+                );
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            long unusedIngredientId = c.getLong(0);
+            deleteIngredient(unusedIngredientId);
+        }
     }
 
     //endregion
@@ -577,7 +651,7 @@ public class RecipesDAO extends DAOBase {
 
     //endregion
 
-    //region ADVANCED
+    //region SHOPPING
 
     public ArrayList<Ingredient> getQuantitiesFromRecipes(long[] recipesId, LongSparseArray<Float> peopleRatio) {
         String query = String.format(Locale.getDefault(),
@@ -653,6 +727,66 @@ public class RecipesDAO extends DAOBase {
             }
         }
         return quantities;
+    }
+
+    //endregion
+
+    //region CONVERSION
+
+    public List<IngredientConversions> getIngredientsWithConversions() {
+        List<IngredientConversions> ingredients = new ArrayList<>();
+        LongSparseArray<Integer> idToIndex = new LongSparseArray<Integer>();
+        // First get all ingredients
+        Cursor c = mDb.rawQuery("Select * From " + DatabaseHandler.INGREDIENTS_TABLE_NAME +
+                        " Order By " + DatabaseHandler.INGREDIENTS_NAME + " ASC;",
+                new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            long id = c.getLong(c.getColumnIndex(DatabaseHandler.INGREDIENTS_KEY));
+            ingredients.add(new IngredientConversions(
+                    id, c.getString(c.getColumnIndex(DatabaseHandler.INGREDIENTS_NAME))));
+            idToIndex.put(id, ingredients.size() - 1);
+        }
+        c.close();
+        // Then get all conversions linked with ingredients
+        c = mDb.rawQuery("Select * From " + DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME +
+                        " Order By " + DatabaseHandler.RECIPES_CONVERSIONS_KEY + " ASC;",
+                new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            Conversion conversion = new Conversion(
+                    c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_KEY)),
+                    c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM)),
+                    c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO)),
+                    c.getFloat(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR))
+            );
+            long ingredientId = c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT));
+            if (idToIndex.indexOfKey(ingredientId) >= 0) {
+                ingredients.get(idToIndex.get(ingredientId)).conversions.add(conversion);
+            }
+        }
+        c.close();
+        return ingredients;
+    }
+
+    public long addEditConversion(long ingredientId, Conversion conversion) {
+        ContentValues value = new ContentValues();
+        value.put(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT, ingredientId);
+        value.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM, conversion.unitFrom);
+        value.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO, conversion.unitTo);
+        value.put(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR, conversion.factor);
+        long conversionId = conversion.id;
+        if (conversionId < 0)
+            conversionId = mDb.insert(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, null, value);
+        else
+            mDb.update(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, value,
+                    DatabaseHandler.RECIPES_CONVERSIONS_KEY + " = ?",
+                    new String[]{String.valueOf(ingredientId)});
+        return conversionId;
+    }
+
+    public int deleteConversion(long conversionId) {
+        return mDb.delete(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME,
+                DatabaseHandler.RECIPES_CONVERSIONS_KEY + " = ?",
+                new String[]{String.valueOf(conversionId)});
     }
 
     //endregion
@@ -740,6 +874,20 @@ public class RecipesDAO extends DAOBase {
             separationsObj.put(separationObj);
         }
         obj.put(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, separationsObj);
+        c.close();
+        // Conversions
+        JSONArray conversionsObj = new JSONArray();
+        c = db.rawQuery("Select * From " + DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, new String[0]);
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            JSONObject conversionObj = new JSONObject();
+            conversionObj.put(DatabaseHandler.RECIPES_CONVERSIONS_KEY, c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_KEY)));
+            conversionObj.put(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT, c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT)));
+            conversionObj.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM, c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM)));
+            conversionObj.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO, c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO)));
+            conversionObj.put(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR, c.getDouble(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR)));
+            conversionsObj.put(conversionObj);
+        }
+        obj.put(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, conversionsObj);
         c.close();
 
         return Utils.writeToExternalStorage(activity, EXTERNAL_RECIPES_FILENAME, obj.toString());
@@ -829,7 +977,7 @@ public class RecipesDAO extends DAOBase {
         }
         // Separations
         JSONArray separationsObj = obj.getJSONArray(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME);
-        if (stepsObj.length() > 0) {
+        if (separationsObj.length() > 0) {
             for (int i = 0; i < separationsObj.length(); ++i) {
                 JSONObject separationObj = separationsObj.getJSONObject(i);
                 ContentValues values = new ContentValues();
@@ -840,6 +988,23 @@ public class RecipesDAO extends DAOBase {
                 values.put(DatabaseHandler.RECIPES_SEPARATION_TYPE, separationObj.getString(DatabaseHandler.RECIPES_SEPARATION_TYPE));
                 try {
                     db.insertOrThrow(DatabaseHandler.RECIPES_SEPARATION_TABLE_NAME, null, values);
+                }
+                catch (SQLException e) { }
+            }
+        }
+        // Conversions
+        JSONArray conversionsObj = obj.getJSONArray(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME);
+        if (conversionsObj.length() > 0) {
+            for (int i = 0; i < conversionsObj.length(); ++i) {
+                JSONObject conversionObj = conversionsObj.getJSONObject(i);
+                ContentValues values = new ContentValues();
+                values.put(DatabaseHandler.RECIPES_CONVERSIONS_KEY, conversionObj.getLong(DatabaseHandler.RECIPES_CONVERSIONS_KEY));
+                values.put(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT, conversionObj.getLong(DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT));
+                values.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM, conversionObj.getInt(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM));
+                values.put(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO, conversionObj.getInt(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO));
+                values.put(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR, conversionObj.getDouble(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR));
+                try {
+                    db.insertOrThrow(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, null, values);
                 }
                 catch (SQLException e) { }
             }

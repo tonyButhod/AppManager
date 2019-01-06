@@ -77,14 +77,9 @@ public class RecipeActivity extends RootActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                try {
-                    float numberPeople = Float.parseFloat(charSequence.toString());
-                    if (numberPeople > 0) {
-                        updateIngredientQuantities(numberPeople);
-                    }
-                }
-                catch (NumberFormatException e) {
-                    // Do nothing
+                float numberPeople = Utils.parseFloatWithDefault(charSequence.toString(), 0);
+                if (numberPeople > 0) {
+                    updateIngredientQuantities(numberPeople);
                 }
             }
 
@@ -140,7 +135,10 @@ public class RecipeActivity extends RootActivity {
         for (int i = 0; i < mRecipe.separations.size(); ++i) {
             addSeparationView(mRecipe.separations.get(i));
         }
-        mPeople.setText(String.valueOf(mRecipe.people));
+        if (mPeople.getText().toString().isEmpty()) // Otherwise, the same number of people is kept.
+            mPeople.setText(String.valueOf(mRecipe.people));
+        // Update quantities with the number of people
+        updateIngredientQuantities(Utils.parseFloatWithDefault(mPeople.getText().toString(), 0));
         // Load the image
         Bitmap bitmap = Utils.loadLocalImage(this, getExternalFilesDir(null),
                 RecipesActivity.getImageNameFromId(mRecipe.id));
@@ -223,6 +221,7 @@ public class RecipeActivity extends RootActivity {
                 @Override
                 public void run() {
                     mDao.deleteRecipe(mRecipeId);
+                    mDao.deleteUnusedIngredients();
                     RecipeActivity.this.finish();
                 }
             });

@@ -121,6 +121,10 @@
     <string name="url">URL</string>
     <string name="import_web_recipe">Importer depuis Internet</string>
     <string name="error_parsing_web_recipe">Recette internet non valide</string>
+    <string name="shopping_label">Courses</string>
+    <string name="ingredients_management">Gestion des ingrédients</string>
+    <string name="add_conversion">Ajouter une conversion</string>
+    <string name="conversion_factor_error">Facteur de conversion incorrect</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>

@@ -25,24 +25,14 @@
             android:selectAllOnFocus="true"/>
 
         <ImageButton
-            android:id="@+id/shopping_button"
+            android:id="@+id/drop_down_button"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:background="@drawable/blue_flat_button"
-            android:src="@drawable/shopping"
+            android:src="@drawable/three_dots"
             android:scaleType="fitXY"/>
 
     </LinearLayout>
-
-    <ImageButton
-        android:id="@+id/add_recipe_button"
-        style="@style/AddButton"/>
-
-    <ImageButton
-        android:id="@+id/validate_shopping_button"
-        style="@style/AddButton"
-        android:src="@drawable/validate"
-        android:visibility="gone"/>
 
     <ScrollView
         android:id="@+id/recipes_scroll"
@@ -65,5 +55,80 @@
         </RelativeLayout>
 
     </ScrollView>
+
+    <ImageButton
+        android:id="@+id/add_recipe_button"
+        style="@style/AddButton"/>
+
+    <ImageButton
+        android:id="@+id/validate_shopping_button"
+        style="@style/AddButton"
+        android:src="@drawable/validate"
+        android:visibility="gone"/>
+
+    <RelativeLayout
+        android:id="@+id/drop_down_menu"
+        android:layout_width="300dp"
+        android:layout_height="0px"
+        android:layout_below="@id/toolbar"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:background="@color/colorPrimaryDark"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:clickable="true">
+
+        <LinearLayout
+            android:id="@+id/shopping_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimaryDark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:background="@drawable/shopping"
+                android:layout_margin="3dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:text="@string/shopping_label"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:layout_margin="3dp"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ingredients_management_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/shopping_button"
+            android:background="@color/colorPrimaryDark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_margin="5dp">
+
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:background="@drawable/ingredients"
+                android:layout_margin="3dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:text="@string/ingredients_management"
+                android:textColor="@android:color/white"
+                android:textSize="18sp"
+                android:layout_margin="3dp"/>
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
 </RelativeLayout>

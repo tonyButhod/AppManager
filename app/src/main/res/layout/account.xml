@@ -21,6 +21,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textColor="@android:color/white"
+            android:selectAllOnFocus="true"
             android:nextFocusLeft="@id/search_field"
             android:nextFocusUp="@id/search_field"/>
 

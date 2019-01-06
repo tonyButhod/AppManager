@@ -1,5 +1,6 @@
 package buthod.tony.appManager.recipes;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
@@ -12,11 +13,13 @@ import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import java.util.ArrayList;
 
@@ -35,10 +38,10 @@ public class RecipesActivity extends RootActivity {
     private RecipesDAO mDao = null;
 
     private LinearLayout mRecipesLayout = null;
-    private ImageButton mBackButton = null;
     private ImageButton mAddRecipeButton = null;
     private EditText mSearchField = null;
-    private ImageButton mShoppingButton = null, mValidateShoppingButton = null;
+    private ImageButton mTopRightButton = null, mValidateShoppingButton = null;
+    private RelativeLayout mDropDownMenu = null;
 
     private ArrayList<RecipesDAO.Recipe> mRecipes = null;
     private LongSparseArray<ImageView> mRecipeImages = null;
@@ -53,18 +56,18 @@ public class RecipesActivity extends RootActivity {
 
         mDao = new RecipesDAO(getBaseContext());
         mDao.open();
-        mBackButton = (ImageButton) findViewById(R.id.back_button);
         mRecipesLayout = (LinearLayout) findViewById(R.id.recipes_list);
         mAddRecipeButton = (ImageButton) findViewById(R.id.add_recipe_button);
         mSearchField = (EditText) findViewById(R.id.search_field);
-        mShoppingButton = (ImageButton) findViewById(R.id.shopping_button);
+        mTopRightButton = (ImageButton) findViewById(R.id.drop_down_button);
+        mDropDownMenu = (RelativeLayout) findViewById(R.id.drop_down_menu);
         mValidateShoppingButton = (ImageButton) findViewById(R.id.validate_shopping_button);
 
         mRecipeImages = new LongSparseArray<>();
         mSelectedIndices = new ArrayList<>();
 
         // Finish the activity if back button is pressed
-        mBackButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -91,9 +94,18 @@ public class RecipesActivity extends RootActivity {
             @Override
             public void afterTextChanged(Editable s) { }
         });
-        // Shopping part
-        mShoppingButton.setOnClickListener(mOnShoppingClickListener);
+        // Drop down menu part part
+        mTopRightButton.setOnClickListener(mOnDropDownClickListener);
+        findViewById(R.id.shopping_button).setOnClickListener(mOnShoppingClickListener);
         mValidateShoppingButton.setOnClickListener(mOnValidateShoppingListener);
+        findViewById(R.id.ingredients_management_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mOnDropDownClickListener.onClick(mTopRightButton);
+                Intent intent = new Intent(getBaseContext(), IngredientsManagementActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -101,6 +113,48 @@ public class RecipesActivity extends RootActivity {
         super.onResume();
         populateListWithRecipes();
     }
+
+    //region DROP_DOWN
+
+    private boolean mIsMenuDown = false;
+    private static int DROP_DOWN_MENU_HEIGHT = 250;
+    private static int DROP_DOWN_DURATION = 200;
+
+    private View.OnClickListener mOnDropDownClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            Resources res = getResources();
+            if (!mIsMenuDown) {
+                mTopRightButton.setRotation(45);
+                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.cross));
+                ValueAnimator anim = ValueAnimator.ofInt(0, DROP_DOWN_MENU_HEIGHT);
+                anim.addUpdateListener(mDropDownMenuAnimatorListener);
+                anim.setDuration(DROP_DOWN_DURATION).start();
+            }
+            else {
+                mTopRightButton.setRotation(0);
+                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.three_dots));
+                ValueAnimator anim = ValueAnimator.ofInt(DROP_DOWN_MENU_HEIGHT, 0);
+                anim.addUpdateListener(mDropDownMenuAnimatorListener);
+                anim.setDuration(DROP_DOWN_DURATION).start();
+            }
+            mIsMenuDown = !mIsMenuDown;
+        }
+    };
+
+    private ValueAnimator.AnimatorUpdateListener mDropDownMenuAnimatorListener = new ValueAnimator.AnimatorUpdateListener() {
+        @Override
+        public void onAnimationUpdate(ValueAnimator valueAnimator) {
+            int val = (int) valueAnimator.getAnimatedValue();
+            ViewGroup.LayoutParams params = mDropDownMenu.getLayoutParams();
+            params.height = val;
+            mDropDownMenu.setLayoutParams(params);
+        }
+    };
+
+    //endregion
+
+    //region RECIPES
 
     private void populateListWithRecipes() {
         // Params used for each recipe_activity.
@@ -205,7 +259,7 @@ public class RecipesActivity extends RootActivity {
             v.setSelected(true);
             // Show a popup menu
             final PopupMenu popup = new PopupMenu(RecipesActivity.this, v);
-            popup.inflate(R.menu.transaction_menu);
+            popup.inflate(R.menu.recipe_menu);
             // Registering clicks on the popup menu
             popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
@@ -227,6 +281,7 @@ public class RecipesActivity extends RootActivity {
                                             getExternalFilesDir(null), getImageNameFromId(recipeId));
                                     // Delete the recipe_activity in database
                                     mDao.deleteRecipe(recipeId);
+                                    mDao.deleteUnusedIngredients();
                                     mRecipesLayout.removeView(v);
                                 }
                             });
@@ -267,6 +322,8 @@ public class RecipesActivity extends RootActivity {
         }
     }
 
+    //endregion
+
     //region SEARCH
 
     private Handler handler = new Handler();
@@ -300,21 +357,27 @@ public class RecipesActivity extends RootActivity {
     private View.OnClickListener mOnShoppingClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
+            // Hide the drop down menu
+            if (mIsMenuDown)
+                mOnDropDownClickListener.onClick(mTopRightButton);
+
             mIsShopping = !mIsShopping;
             mSelectedIndices.clear();
             // Show specific button to validate or cancel shopping.
             Resources res = getResources();
             if (mIsShopping) {
-                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.cross));
-                mShoppingButton.setRotation(45);
                 mAddRecipeButton.setVisibility(View.GONE);
                 mValidateShoppingButton.setVisibility(View.VISIBLE);
+                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.cross));
+                mTopRightButton.setRotation(45);
+                mTopRightButton.setOnClickListener(mOnShoppingClickListener);
             }
             else {
-                mShoppingButton.setImageDrawable(res.getDrawable(R.drawable.shopping));
-                mShoppingButton.setRotation(0);
                 mAddRecipeButton.setVisibility(View.VISIBLE);
                 mValidateShoppingButton.setVisibility(View.GONE);
+                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.three_dots));
+                mTopRightButton.setRotation(0);
+                mTopRightButton.setOnClickListener(mOnDropDownClickListener);
             }
             // Change the visual of layout
             int visibility = (mIsShopping ? View.VISIBLE : View.GONE);

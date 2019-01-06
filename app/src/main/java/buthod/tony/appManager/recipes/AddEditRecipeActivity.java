@@ -294,7 +294,7 @@ public class AddEditRecipeActivity extends RootActivity {
     private View.OnClickListener mOnAddEditRecipeClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            // Add the recipe_activity and exit the activity
+            // Add the recipe and exit the activity
             RecipesDAO.Recipe recipe = new RecipesDAO.Recipe();
             recipe.id = mRecipeId;
             recipe.name = mRecipeName.getText().toString();
@@ -355,6 +355,8 @@ public class AddEditRecipeActivity extends RootActivity {
             mDao.deleteQuantities(mIngredientsToDelete);
             mDao.deleteSteps(mStepsToDelete);
             mDao.deleteSeparations(mSeparationsToDelete);
+            if (mIngredientsToDelete.size() > 0)
+                mDao.deleteUnusedIngredients();
             // Save the image to external storage
             if (mRecipeImage == null)
                 Utils.deleteLocalFile(AddEditRecipeActivity.this, getExternalFilesDir(null),
