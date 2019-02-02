@@ -6,25 +6,20 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.SparseArray;
 import android.util.SparseIntArray;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.Key;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Locale;
 
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 
 /**
  * Created by Tony on 09/10/2017.

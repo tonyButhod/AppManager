@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
@@ -25,7 +27,7 @@ import java.util.ArrayList;
 
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.DatabaseHandler;
 import buthod.tony.appManager.database.RecipesDAO;
 
@@ -42,6 +44,7 @@ public class RecipesActivity extends RootActivity {
     private EditText mSearchField = null;
     private ImageButton mTopRightButton = null, mValidateShoppingButton = null;
     private RelativeLayout mDropDownMenu = null;
+    private Drawable mThreeDotsDrawable, mCrossCloseDrawable;
 
     private ArrayList<RecipesDAO.Recipe> mRecipes = null;
     private LongSparseArray<ImageView> mRecipeImages = null;
@@ -53,6 +56,7 @@ public class RecipesActivity extends RootActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.recipes_activity);
+        Resources res = getResources();
 
         mDao = new RecipesDAO(getBaseContext());
         mDao.open();
@@ -62,6 +66,8 @@ public class RecipesActivity extends RootActivity {
         mTopRightButton = (ImageButton) findViewById(R.id.drop_down_button);
         mDropDownMenu = (RelativeLayout) findViewById(R.id.drop_down_menu);
         mValidateShoppingButton = (ImageButton) findViewById(R.id.validate_shopping_button);
+        mThreeDotsDrawable = res.getDrawable(R.drawable.three_dots);
+        mCrossCloseDrawable = res.getDrawable(R.drawable.cross_close);
 
         mRecipeImages = new LongSparseArray<>();
         mSelectedIndices = new ArrayList<>();
@@ -123,17 +129,14 @@ public class RecipesActivity extends RootActivity {
     private View.OnClickListener mOnDropDownClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            Resources res = getResources();
             if (!mIsMenuDown) {
-                mTopRightButton.setRotation(45);
-                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.cross));
+                mTopRightButton.setImageDrawable(mCrossCloseDrawable);
                 ValueAnimator anim = ValueAnimator.ofInt(0, DROP_DOWN_MENU_HEIGHT);
                 anim.addUpdateListener(mDropDownMenuAnimatorListener);
                 anim.setDuration(DROP_DOWN_DURATION).start();
             }
             else {
-                mTopRightButton.setRotation(0);
-                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.three_dots));
+                mTopRightButton.setImageDrawable(mThreeDotsDrawable);
                 ValueAnimator anim = ValueAnimator.ofInt(DROP_DOWN_MENU_HEIGHT, 0);
                 anim.addUpdateListener(mDropDownMenuAnimatorListener);
                 anim.setDuration(DROP_DOWN_DURATION).start();
@@ -364,19 +367,16 @@ public class RecipesActivity extends RootActivity {
             mIsShopping = !mIsShopping;
             mSelectedIndices.clear();
             // Show specific button to validate or cancel shopping.
-            Resources res = getResources();
             if (mIsShopping) {
                 mAddRecipeButton.setVisibility(View.GONE);
                 mValidateShoppingButton.setVisibility(View.VISIBLE);
-                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.cross));
-                mTopRightButton.setRotation(45);
+                mTopRightButton.setImageDrawable(mCrossCloseDrawable);
                 mTopRightButton.setOnClickListener(mOnShoppingClickListener);
             }
             else {
                 mAddRecipeButton.setVisibility(View.VISIBLE);
                 mValidateShoppingButton.setVisibility(View.GONE);
-                mTopRightButton.setImageDrawable(res.getDrawable(R.drawable.three_dots));
-                mTopRightButton.setRotation(0);
+                mTopRightButton.setImageDrawable(mThreeDotsDrawable);
                 mTopRightButton.setOnClickListener(mOnDropDownClickListener);
             }
             // Change the visual of layout

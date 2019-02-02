@@ -6,7 +6,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,7 +18,7 @@ import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 
 /**
  * Created by Tony on 29/07/2017.

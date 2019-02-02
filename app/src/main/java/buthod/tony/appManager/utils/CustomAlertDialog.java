@@ -1,4 +1,4 @@
-package buthod.tony.appManager;
+package buthod.tony.appManager.utils;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Rect;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -121,9 +122,10 @@ public class CustomAlertDialog extends AlertDialog {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             View v = getCurrentFocus();
             if (v instanceof EditText) {
-                Rect outRect = new Rect();
-                v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                int pos[] = new int[2];
+                v.getLocationOnScreen(pos);
+                float x = event.getRawX(), y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + v.getWidth() || y < pos[1] || y > pos[1] + v.getHeight()) {
                     v.clearFocus();
                     InputMethodManager imm =
                             (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);

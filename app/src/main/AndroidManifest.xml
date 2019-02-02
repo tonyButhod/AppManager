@@ -31,7 +31,7 @@
             android:screenOrientation="portrait">
         </activity>
         <activity
-            android:name="buthod.tony.appManager.PedometerActivity"
+            android:name="buthod.tony.appManager.pedometer.PedometerActivity"
             android:label="@string/pedometer_section_label"
             android:screenOrientation="portrait">
         </activity>

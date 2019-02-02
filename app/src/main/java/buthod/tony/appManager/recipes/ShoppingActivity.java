@@ -11,10 +11,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.DatabaseHandler;
 import buthod.tony.appManager.database.RecipesDAO;
 
@@ -33,6 +34,7 @@ public class ShoppingActivity extends RootActivity {
     private long[] mRecipesId;
     private LongSparseArray<Float> mRecipesPeopleRatio;
     private ArrayList<RecipesDAO.Recipe> mRecipes;
+    private ArrayList<IngredientViewManagement> mIngredients;
     private LongSparseArray<ImageView> mRecipeImages = null;
 
     @Override
@@ -65,33 +67,41 @@ public class ShoppingActivity extends RootActivity {
     }
 
     private void populateWithQuantitiesList() {
+        // First get the list of quantities
         ArrayList<RecipesDAO.Ingredient> quantities = mDao.getQuantitiesFromRecipes(mRecipesId, mRecipesPeopleRatio);
-        LayoutInflater inflater = getLayoutInflater();
-        Resources res = getResources();
-        String[] units = res.getStringArray(R.array.units_array);
+
+        // Then get the list of conversions for each ingredient
+        long[] ingredientsId = new long[quantities.size()];
         for (int i = 0; i < quantities.size(); ++i) {
-            View v = inflater.inflate(R.layout.ingredient_view, null);
-            ((TextView) v.findViewById(R.id.unit_view)).setText(units[quantities.get(i).idUnit]);
-            ((TextView) v.findViewById(R.id.ingredient_name_view)).setText(quantities.get(i).name);
-            TextView optionalView = (TextView) v.findViewById(R.id.optional_view);
-            optionalView.setVisibility(
-                    quantities.get(i).type == RecipesDAO.Ingredient.OPTIONAL_TYPE ? View.VISIBLE : View.GONE);
-            float quantity = quantities.get(i).quantity;
+            ingredientsId[i] = quantities.get(i).idIngredient;
+        }
+        List<RecipesDAO.IngredientConversions> ingredientConversions =
+                mDao.getIngredientsWithConversions(ingredientsId);
+        LongSparseArray<RecipesDAO.IngredientConversions> conversions = new LongSparseArray<>();
+        for (int i = 0; i < ingredientConversions.size(); ++i)
+            conversions.append(ingredientConversions.get(i).ingredientId, ingredientConversions.get(i));
+
+        // Finally build the list of ingredients
+        mIngredients = new ArrayList<>();
+        RecipesDAO.IngredientConversions conversionsFound = null;
+        for (int i = 0; i < quantities.size(); ++i) {
+            RecipesDAO.Ingredient ingredient = quantities.get(i);
+            IngredientViewManagement ingredientView = new IngredientViewManagement(this);
+            ingredientView.setIngredient(ingredient);
+            // If the following ingredient is the same but optional, put them together
             if (i + 1 < quantities.size()
-                    && quantities.get(i).name.equals(quantities.get(i+1).name)
-                    && quantities.get(i).idUnit == quantities.get(i+1).idUnit
-                    && quantities.get(i).type == RecipesDAO.Ingredient.NORMAL_TYPE
-                    && quantities.get(i+1).type == RecipesDAO.Ingredient.OPTIONAL_TYPE) {
-                // Those 2 have the same ingredient and unit, and the second one is optional.
-                // Then melt it in one view.
-                quantity += quantities.get(i+1).quantity;
-                optionalView.setText(String.format(res.getString(R.string.among_x_optional),
-                        Utils.floatToString(quantities.get(i+1).quantity) + units[quantities.get(i).idUnit]));
-                optionalView.setVisibility(View.VISIBLE);
-                i++;
+                    && quantities.get(i + 1).idIngredient == quantities.get(i).idIngredient
+                    && quantities.get(i + 1).idUnit == quantities.get(i).idUnit
+                    && quantities.get(i + 1).type == RecipesDAO.Ingredient.OPTIONAL_TYPE
+                    && quantities.get(i).type == RecipesDAO.Ingredient.NORMAL_TYPE) {
+                ingredientView.addOptionalQuantity(quantities.get(i + 1).quantity);
+                i += 1;
             }
-            ((TextView) v.findViewById(R.id.quantity_view)).setText(Utils.floatToString(quantity, 3));
-            mQuantitiesLayout.addView(v);
+            if ((conversionsFound = conversions.get(ingredient.idIngredient, null)) != null) {
+                ingredientView.setConversion(this, conversionsFound.conversions);
+                mQuantitiesLayout.addView(ingredientView.getView());
+                mIngredients.add(ingredientView);
+            }
         }
     }
 

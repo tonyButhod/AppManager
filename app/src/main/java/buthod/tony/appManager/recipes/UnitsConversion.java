@@ -1,5 +1,9 @@
 package buthod.tony.appManager.recipes;
 
+import android.util.Log;
+
+import java.util.List;
+
 import buthod.tony.appManager.database.RecipesDAO;
 
 /**
@@ -27,6 +31,19 @@ public class UnitsConversion {
         }
     }
 
+    public static float convert(List<RecipesDAO.Conversion> conversions, int unitFrom, int unitTo) {
+        if (isSameMeasurementType(unitFrom, unitTo)) {
+            return convertSameMeasurementType(unitFrom, unitTo);
+        }
+        else {
+            return convertUsingDatabase(conversions, unitFrom, unitTo);
+        }
+    }
+
+    /**
+     * Check if 2 units have the same measurement type.
+     * For example, it returns true between g and kg.
+     */
     public static boolean isSameMeasurementType(int unitFrom, int unitTo) {
         return unitFrom == unitTo || (unitFrom == g && unitTo == kg) || (unitFrom == kg && unitTo == g)
                 || (unitFrom == L && unitTo == cL) || (unitFrom == cL && unitTo == L);
@@ -51,7 +68,21 @@ public class UnitsConversion {
     }
 
     public static float convertUsingDatabase(RecipesDAO dao, int unitFrom, int unitTo, long ingredientId) {
-        // TODO
+        return convertUsingDatabase(dao.getConversions(ingredientId), unitFrom, unitTo);
+    }
+
+    public static float convertUsingDatabase(List<RecipesDAO.Conversion> conversions, int unitFrom, int unitTo) {
+        for (int i = 0; i < conversions.size(); ++i) {
+            RecipesDAO.Conversion c = conversions.get(i);
+            if (isSameMeasurementType(c.unitFrom, unitFrom) && isSameMeasurementType(c.unitTo, unitTo)) {
+                return convertSameMeasurementType(unitFrom, c.unitFrom) * c.factor *
+                        convertSameMeasurementType(c.unitTo, unitTo);
+            }
+            else if (isSameMeasurementType(c.unitTo, unitFrom) && isSameMeasurementType(c.unitFrom, unitTo)) {
+                return convertSameMeasurementType(unitFrom, c.unitTo)  / c.factor *
+                        convertSameMeasurementType(c.unitFrom, unitTo);
+            }
+        }
         return 0;
     }
 }

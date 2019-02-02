@@ -36,17 +36,37 @@
         android:layout_height="wrap_content"
         android:visibility="gone"/>
 
-    <TextView
-        android:id="@+id/unit_view"
+    <RelativeLayout
+        android:id="@+id/unit_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@id/quantity_view"
-        android:layout_toEndOf="@id/quantity_view"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="@color/colorAccent"
-        android:layout_marginRight="10dp"
-        android:layout_marginEnd="10dp"/>
+        android:layout_toEndOf="@id/quantity_view">
+
+
+        <TextView
+            android:id="@+id/unit_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent"
+            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"/>
+
+        <Spinner
+            android:id="@+id/spinner_unit_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorAccent"
+            android:background="@android:color/transparent"
+            android:visibility="gone">
+
+        </Spinner>
+
+    </RelativeLayout>
 
     <TextView
         android:id="@+id/id_ingredient_view"
@@ -58,8 +78,8 @@
         android:id="@+id/ingredient_name_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/unit_view"
-        android:layout_toEndOf="@id/unit_view"
+        android:layout_toRightOf="@id/unit_layout"
+        android:layout_toEndOf="@id/unit_layout"
         android:textSize="16sp"
         android:textStyle="bold"
         android:textColor="@color/colorPrimaryDark"/>

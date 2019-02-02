@@ -3,12 +3,14 @@ package buthod.tony.appManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.view.View;
 import android.widget.Button;
 
 import buthod.tony.appManager.account.AccountActivity;
+import buthod.tony.appManager.pedometer.PedometerActivity;
+import buthod.tony.appManager.pedometer.PedometerManager;
 import buthod.tony.appManager.recipes.RecipesActivity;
 
 /**
@@ -24,12 +26,14 @@ public class MainActivity extends RootActivity {
     private Button mOnOff = null;
     private Button mExpenses = null;
     private Button mRecipes = null;
+    private Resources mRes = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         mPreferences = getSharedPreferences(SettingsActivity.PREFERENCES_NAME, Context.MODE_PRIVATE);
+        mRes = getResources();
 
         ////////////// Settings //////////////
         mSettings = (Button) findViewById(R.id.settings);
@@ -70,12 +74,12 @@ public class MainActivity extends RootActivity {
             public void onClick(View v) {
                 if (mPedometer.isDetecting()) {
                     mPedometer.stopDetection();
-                    mOnOff.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.red));
+                    mOnOff.setTextColor(mRes.getColor(R.color.red));
                     mOnOff.setText(R.string.off);
                 }
                 else {
                     mPedometer.startDetection();
-                    mOnOff.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.green));
+                    mOnOff.setTextColor(mRes.getColor(R.color.green));
                     mOnOff.setText(R.string.on);
                 }
             }
@@ -109,12 +113,12 @@ public class MainActivity extends RootActivity {
         mGraphPedometer.setText(text);
         mGraphPedometer.invalidate();
         if (mPedometer.isDetecting()) {
-            mOnOff.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.green));
+            mOnOff.setTextColor(mRes.getColor(R.color.green));
             mOnOff.setText(R.string.on);
             mOnOff.invalidate();
         }
         else {
-            mOnOff.setTextColor(ContextCompat.getColor(getBaseContext(), R.color.red));
+            mOnOff.setTextColor(mRes.getColor(R.color.red));
             mOnOff.setText(R.string.off);
             mOnOff.invalidate();
         }

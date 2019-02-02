@@ -1,22 +1,17 @@
 package buthod.tony.appManager.account;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.os.Handler;
 import android.support.annotation.StringRes;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.PopupMenu;
+import android.widget.PopupMenu;
+import android.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -36,10 +31,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import buthod.tony.appManager.CustomAlertDialog;
+import buthod.tony.appManager.utils.CustomAlertDialog;
 import buthod.tony.appManager.R;
-import buthod.tony.appManager.Utils;
 import buthod.tony.appManager.database.AccountDAO;
+import buthod.tony.appManager.utils.CustomSpinnerAdapter;
 
 /**
  * Class used in AccountActivity to display the history of all transactions in a page viewer.
@@ -48,6 +43,7 @@ public class AccountHistoryActivity {
     // Fields used for the page viewer
     private Activity mRootActivity = null;
     private View mAccountView = null;
+    private Resources mRes = null;
 
     private Button mTypeSelectionButton = null;
     private EditText mSearchField = null;
@@ -56,8 +52,8 @@ public class AccountHistoryActivity {
     private Button mAppendTransactions = null;
 
     private AccountDAO mDao = null;
-    private ArrayAdapter<CharSequence> mExpenseTypes = null;
-    private ArrayAdapter<CharSequence> mCreditTypes = null;
+    private CustomSpinnerAdapter mExpenseTypes = null;
+    private CustomSpinnerAdapter mCreditTypes = null;
 
     // Fields used to append new transactions if the user goes to the end of the linear layout.
     private Date mLastTransactionDate = null;
@@ -85,6 +81,7 @@ public class AccountHistoryActivity {
         mRootActivity = rootActivity;
         mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_history, null);
+        mRes = mRootActivity.getResources();
 
         mTypeSelectionButton = (Button) mRootActivity.findViewById(R.id.type_selection);
         mSearchField = (EditText) mRootActivity.findViewById(R.id.search_field);
@@ -94,12 +91,12 @@ public class AccountHistoryActivity {
         mDateFormatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
 
         // Add type of expenses and credits
-        mExpenseTypes = new ArrayAdapter<CharSequence>(mRootActivity, android.R.layout.simple_spinner_item);
-        mExpenseTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mExpenseTypes.addAll(mRootActivity.getResources().getStringArray(R.array.expense_types));
-        mCreditTypes = new ArrayAdapter<CharSequence>(mRootActivity, android.R.layout.simple_spinner_item);
-        mCreditTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mCreditTypes.addAll(mRootActivity.getResources().getStringArray(R.array.credit_types));
+        mExpenseTypes = new CustomSpinnerAdapter(mRootActivity,
+                R.layout.simple_spinner_item, R.layout.simple_spinner_dropdown_item,
+                mRes.getStringArray(R.array.expense_types));
+        mCreditTypes = new CustomSpinnerAdapter(mRootActivity,
+                R.layout.simple_spinner_item, R.layout.simple_spinner_dropdown_item,
+                mRes.getStringArray(R.array.credit_types));
 
         // Show the type selection popup
         mTypeSelectionButton.setOnClickListener(new View.OnClickListener() {
@@ -192,12 +189,12 @@ public class AccountHistoryActivity {
         transactionView.setText( formatTransactionText(trans) );
         transactionView.setTextSize(12f);
         if (trans.type < 0) {
-            transactionView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
-            transactionView.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.credit_background));
+            transactionView.setTextColor(mRes.getColor(R.color.dark_soft_green));
+            transactionView.setBackground(mRes.getDrawable(R.drawable.credit_background));
         }
         else {
-            transactionView.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
-            transactionView.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.expense_background));
+            transactionView.setTextColor(mRes.getColor(R.color.dark_soft_red));
+            transactionView.setBackground(mRes.getDrawable(R.drawable.expense_background));
         }
         // Add a long click event to delete the transaction
         transactionView.setTag(trans.id);
@@ -254,12 +251,12 @@ public class AccountHistoryActivity {
     private void updateTransactionView(TextView view, AccountDAO.TransactionInfo transaction) {
         view.setText(formatTransactionText(transaction));
         if (transaction.type < 0) {
-            view.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_green));
-            view.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.credit_background));
+            view.setTextColor(mRes.getColor(R.color.dark_soft_green));
+            view.setBackground(mRes.getDrawable(R.drawable.credit_background));
         }
         else {
-            view.setTextColor(ContextCompat.getColor(mRootActivity, R.color.dark_soft_red));
-            view.setBackground(ContextCompat.getDrawable(mRootActivity, R.drawable.expense_background));
+            view.setTextColor(mRes.getColor(R.color.dark_soft_red));
+            view.setBackground(mRes.getDrawable(R.drawable.expense_background));
         }
     }
 
@@ -319,7 +316,7 @@ public class AccountHistoryActivity {
         builder.setTitle(titleId);
         // Set the view of the alert dialog
         LayoutInflater inflater = mRootActivity.getLayoutInflater();
-        final View alertView = inflater.inflate(R.layout.add_modify_transaction, null);
+        final View alertView = inflater.inflate(R.layout.add_edit_transaction, null);
         builder.setView(alertView);
         // Get useful views
         final RadioButton expenseRadioButton = (RadioButton) alertView.findViewById(R.id.expense_radio_button);

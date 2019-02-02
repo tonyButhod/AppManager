@@ -6,10 +6,13 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+
+import buthod.tony.appManager.pedometer.PedometerManager;
 
 /**
  * Created by Tony on 10/08/2017.
@@ -100,13 +103,15 @@ public class RootActivity extends Activity {
         if (event.getAction() == MotionEvent.ACTION_UP) {
             View v = getCurrentFocus();
             if (v instanceof EditText) {
-                Rect outRect = new Rect();
-                v.getGlobalVisibleRect(outRect);
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY())) {
+                int pos[] = new int[2];
+                v.getLocationOnScreen(pos);
+                float x = event.getRawX(), y = event.getRawY();
+                if (x < pos[0] || x > pos[0] + v.getWidth() || y < pos[1] || y > pos[1] + v.getHeight()) {
                     v.clearFocus();
                     InputMethodManager imm =
                             (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    if (imm != null)
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
             }
         }

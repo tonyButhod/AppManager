@@ -1,4 +1,4 @@
-package buthod.tony.appManager;
+package buthod.tony.appManager.utils;
 
 import android.content.ClipData;
 import android.content.Context;
@@ -14,6 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
+
+import buthod.tony.appManager.R;
 
 public class DragAndDropLinearLayout implements View.OnDragListener {
     /** Fields initialized when the class is allocated **/

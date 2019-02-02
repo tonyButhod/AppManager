@@ -1,4 +1,4 @@
-package buthod.tony.appManager;
+package buthod.tony.appManager.utils;
 
 import android.Manifest;
 import android.app.Activity;
@@ -19,6 +19,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import buthod.tony.appManager.R;
 
 public class Utils {
 

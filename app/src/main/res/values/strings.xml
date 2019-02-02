@@ -125,6 +125,8 @@
     <string name="ingredients_management">Gestion des ingrédients</string>
     <string name="add_conversion">Ajouter une conversion</string>
     <string name="conversion_factor_error">Facteur de conversion incorrect</string>
+    <string name="conversion_unit_error">Veuillez spécifier les unités de conversion.</string>
+    <string name="conversion_already_exists_error">Une conversion du même genre existe déjà.</string>
 
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>

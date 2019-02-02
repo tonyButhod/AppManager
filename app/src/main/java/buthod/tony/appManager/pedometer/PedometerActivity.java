@@ -1,17 +1,14 @@
-package buthod.tony.appManager;
+package buthod.tony.appManager.pedometer;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 import java.util.SortedMap;
 
 import com.jjoe64.graphview.DefaultLabelFormatter;
@@ -23,10 +20,8 @@ import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.PointsGraphSeries;
 import com.jjoe64.graphview.series.Series;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-
-import buthod.tony.appManager.database.PedometerDAO;
+import buthod.tony.appManager.R;
+import buthod.tony.appManager.RootActivity;
 
 /**
  * Created by Tony on 22/07/2017.

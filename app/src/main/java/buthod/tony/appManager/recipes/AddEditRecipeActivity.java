@@ -11,7 +11,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -28,10 +27,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,14 +35,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import buthod.tony.appManager.CustomAlertDialog;
-import buthod.tony.appManager.DragAndDropLinearLayout;
+import buthod.tony.appManager.utils.CustomAlertDialog;
+import buthod.tony.appManager.utils.DragAndDropLinearLayout;
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.DatabaseHandler;
 import buthod.tony.appManager.database.RecipesDAO;
 

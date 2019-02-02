@@ -18,7 +18,8 @@
         android:layout_height="40dp"
         android:gravity="center_vertical"
         android:layout_toEndOf="@id/factor_one_view"
-        android:layout_toRightOf="@id/factor_one_view"/>
+        android:layout_toRightOf="@id/factor_one_view"
+        android:background="@android:color/transparent"/>
 
     <TextView
         android:id="@+id/equal_view"
@@ -47,7 +48,8 @@
         android:layout_height="40dp"
         android:gravity="center_vertical"
         android:layout_toEndOf="@id/factor_view"
-        android:layout_toRightOf="@id/factor_view"/>
+        android:layout_toRightOf="@id/factor_view"
+        android:background="@android:color/transparent"/>
 
     <TextView
         android:id="@+id/error_message"

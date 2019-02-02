@@ -1,7 +1,6 @@
 package buthod.tony.appManager.recipes;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -10,7 +9,7 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.DatabaseHandler;
 import buthod.tony.appManager.database.RecipesDAO;
 

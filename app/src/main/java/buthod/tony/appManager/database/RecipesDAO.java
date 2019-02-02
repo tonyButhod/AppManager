@@ -6,21 +6,17 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 import android.util.LongSparseArray;
-import android.util.SparseLongArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.recipes.UnitsConversion;
 
 /**
@@ -733,12 +729,16 @@ public class RecipesDAO extends DAOBase {
 
     //region CONVERSION
 
-    public List<IngredientConversions> getIngredientsWithConversions() {
+    public List<IngredientConversions> getIngredientsWithConversions(long[] ingredientsId) {
         List<IngredientConversions> ingredients = new ArrayList<>();
         LongSparseArray<Integer> idToIndex = new LongSparseArray<Integer>();
-        // First get all ingredients
+        String ingredientsIdInQuery = (ingredientsId != null ? formatLongArrayForInQuery(ingredientsId) : null);
+        // First get ingredients
+        String whereClause  = "";
+        if (ingredientsIdInQuery != null)
+            whereClause = " Where " + DatabaseHandler.INGREDIENTS_KEY + " In " + ingredientsIdInQuery;
         Cursor c = mDb.rawQuery("Select * From " + DatabaseHandler.INGREDIENTS_TABLE_NAME +
-                        " Order By " + DatabaseHandler.INGREDIENTS_NAME + " ASC;",
+                        whereClause + " Order By " + DatabaseHandler.INGREDIENTS_NAME + " ASC;",
                 new String[0]);
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             long id = c.getLong(c.getColumnIndex(DatabaseHandler.INGREDIENTS_KEY));
@@ -747,9 +747,12 @@ public class RecipesDAO extends DAOBase {
             idToIndex.put(id, ingredients.size() - 1);
         }
         c.close();
-        // Then get all conversions linked with ingredients
+        // Then get conversions linked with ingredients
+        whereClause = "";
+        if (ingredientsIdInQuery != null)
+            whereClause = " Where " + DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT + " In " + ingredientsIdInQuery;
         c = mDb.rawQuery("Select * From " + DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME +
-                        " Order By " + DatabaseHandler.RECIPES_CONVERSIONS_KEY + " ASC;",
+                        whereClause + " Order By " + DatabaseHandler.RECIPES_CONVERSIONS_KEY + " ASC;",
                 new String[0]);
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             Conversion conversion = new Conversion(
@@ -766,6 +769,9 @@ public class RecipesDAO extends DAOBase {
         c.close();
         return ingredients;
     }
+    public List<IngredientConversions> getIngredientsWithConversions() {
+        return getIngredientsWithConversions(null);
+    }
 
     public long addEditConversion(long ingredientId, Conversion conversion) {
         ContentValues value = new ContentValues();
@@ -779,7 +785,7 @@ public class RecipesDAO extends DAOBase {
         else
             mDb.update(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME, value,
                     DatabaseHandler.RECIPES_CONVERSIONS_KEY + " = ?",
-                    new String[]{String.valueOf(ingredientId)});
+                    new String[]{String.valueOf(conversionId)});
         return conversionId;
     }
 
@@ -787,6 +793,27 @@ public class RecipesDAO extends DAOBase {
         return mDb.delete(DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME,
                 DatabaseHandler.RECIPES_CONVERSIONS_KEY + " = ?",
                 new String[]{String.valueOf(conversionId)});
+    }
+
+    /**
+     * Get the list of ingredient for the given ingredient id.
+     */
+    public List<Conversion> getConversions(long ingredientId) {
+        Cursor c = mDb.rawQuery(
+                "Select * From " + DatabaseHandler.RECIPES_CONVERSIONS_TABLE_NAME +
+                        " Where " + DatabaseHandler.RECIPES_CONVERSIONS_INGREDIENT + " = ?;",
+                new String[]{String.valueOf(ingredientId)});
+        List<Conversion> conversions = new ArrayList<>();
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            conversions.add(new Conversion(
+                c.getLong(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_KEY)),
+                c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_FROM)),
+                c.getInt(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_UNIT_TO)),
+                c.getFloat(c.getColumnIndex(DatabaseHandler.RECIPES_CONVERSIONS_FACTOR))
+            ));
+        }
+        c.close();
+        return conversions;
     }
 
     //endregion

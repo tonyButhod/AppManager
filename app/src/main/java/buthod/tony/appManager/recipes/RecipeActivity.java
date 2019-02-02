@@ -6,7 +6,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
+import android.util.LongSparseArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,9 +15,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.DatabaseHandler;
 import buthod.tony.appManager.database.RecipesDAO;
 
@@ -43,6 +46,7 @@ public class RecipeActivity extends RootActivity {
 
     private long mRecipeId = -1;
     private RecipesDAO.Recipe mRecipe = null;
+    private List<IngredientViewManagement> mIngredients = null;
 
     private String[] mRecipeTypes, mUnits;
 
@@ -96,11 +100,7 @@ public class RecipeActivity extends RootActivity {
         // Delete and edit buttons listeners
         mDeleteRecipe.setOnClickListener(mOnDeleteListener);
         mEditRecipe.setOnClickListener(mOnEditListener);
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
         populateWithRecipe(mRecipeId);
     }
 
@@ -110,6 +110,7 @@ public class RecipeActivity extends RootActivity {
      */
     private void populateWithRecipe(long recipeId) {
         mRecipe = mDao.getRecipe(recipeId);
+        mIngredients = new ArrayList<>();
         Resources res = getResources();
         // Set the recipe information
         mRecipeName.setText(mRecipe.name);
@@ -135,14 +136,38 @@ public class RecipeActivity extends RootActivity {
         for (int i = 0; i < mRecipe.separations.size(); ++i) {
             addSeparationView(mRecipe.separations.get(i));
         }
-        if (mPeople.getText().toString().isEmpty()) // Otherwise, the same number of people is kept.
-            mPeople.setText(String.valueOf(mRecipe.people));
+        mPeople.setText(String.valueOf(mRecipe.people));
         // Update quantities with the number of people
         updateIngredientQuantities(Utils.parseFloatWithDefault(mPeople.getText().toString(), 0));
         // Load the image
         Bitmap bitmap = Utils.loadLocalImage(this, getExternalFilesDir(null),
                 RecipesActivity.getImageNameFromId(mRecipe.id));
         mImageView.setImageBitmap(bitmap);
+        // Add unit conversion
+        enableUnitConversionsForIngredients();
+    }
+
+    /**
+     * Load conversions in database and set it for each ingredient to enable the unit selection.
+     */
+    private void enableUnitConversionsForIngredients() {
+        // First needed ingredient conversions
+        long[] ingredientsId = new long[mRecipe.ingredients.size()];
+        for (int i = 0; i < mRecipe.ingredients.size(); ++i)
+            ingredientsId[i] = mRecipe.ingredients.get(i).idIngredient;
+        List<RecipesDAO.IngredientConversions> ingredientConversions =
+                mDao.getIngredientsWithConversions(ingredientsId);
+        LongSparseArray<RecipesDAO.IngredientConversions> conversions = new LongSparseArray<>();
+        for (int i = 0; i < ingredientConversions.size(); ++i)
+            conversions.append(ingredientConversions.get(i).ingredientId, ingredientConversions.get(i));
+        // Then for each ingredient with conversions, set the conversion list.
+        RecipesDAO.IngredientConversions conversionsFound = null;
+        for (int i = 0; i < mRecipe.ingredients.size(); ++i) {
+            RecipesDAO.Ingredient ingredient = mRecipe.ingredients.get(i);
+            if ((conversionsFound = conversions.get(ingredient.idIngredient, null)) != null) {
+                mIngredients.get(i).setConversion(this, conversionsFound.conversions);
+            }
+        }
     }
 
     /**
@@ -151,18 +176,11 @@ public class RecipeActivity extends RootActivity {
      */
     private void addIngredientView(final RecipesDAO.Ingredient ingredient) {
         // Add the view
-        View ingredientView = getLayoutInflater().inflate(R.layout.ingredient_view, null);
+        IngredientViewManagement ingredientManagement = new IngredientViewManagement(this);
+        ingredientManagement.setIngredient(ingredient);
+        View ingredientView = ingredientManagement.getView();
         mIngredientsLayout.addView(ingredientView, mIngredientsLayout.getChildCount());
-        // Update text view information
-        TextView quantityView = (TextView) ingredientView.findViewById(R.id.quantity_view);
-        quantityView.setText(Utils.floatToString(ingredient.quantity));
-        if (ingredient.quantity == 0)
-            quantityView.setVisibility(View.GONE);
-        ((TextView) ingredientView.findViewById(R.id.unit_view)).setText(mUnits[ingredient.idUnit]);
-        ((TextView) ingredientView.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
-        ingredientView.findViewById(R.id.optional_view).setVisibility(
-                ingredient.type == RecipesDAO.Ingredient.OPTIONAL_TYPE ? View.VISIBLE : View.GONE);
-        ingredientView.invalidate();
+        mIngredients.add(ingredientManagement);
     }
 
     /**
@@ -200,15 +218,15 @@ public class RecipeActivity extends RootActivity {
      * Update quantities with the new number of people set by the user.
      */
     private void updateIngredientQuantities(float people) {
-        for (int i = 0; i < mRecipe.ingredients.size(); ++i) {
-            RecipesDAO.Ingredient ingredient = mRecipe.ingredients.get(i);
-            View ingredientView = mIngredientsLayout.getChildAt(ingredient.number);
-            ((TextView) ingredientView.findViewById(R.id.quantity_view)).setText(
-                    String.valueOf(ingredient.quantity * people / mRecipe.people)
-            );
+        for (int i = 0; i < mIngredients.size(); ++i) {
+            mIngredients.get(i).setQuantityFactor(people / mRecipe.people);
         }
         mIngredientsLayout.invalidate();
     }
+
+    //region EDITION
+
+    private static int EDIT_RECIPE_REQUEST = 1;
 
     /**
      * Listener to delete a recipe. Show a confirmation dialog before deletion.
@@ -236,9 +254,21 @@ public class RecipeActivity extends RootActivity {
         public void onClick(View view) {
             Intent intent = new Intent(RecipeActivity.this, AddEditRecipeActivity.class);
             intent.putExtra(DatabaseHandler.RECIPES_KEY, mRecipe.id);
-            startActivity(intent);
+            startActivityForResult(intent, EDIT_RECIPE_REQUEST);
         }
     };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == EDIT_RECIPE_REQUEST) {
+                // The recipe might have been edited, than populate the activity with new data.
+                populateWithRecipe(mRecipeId);
+            }
+        }
+    }
+
+    //endregion
 
     @Override
     protected void onDestroy() {

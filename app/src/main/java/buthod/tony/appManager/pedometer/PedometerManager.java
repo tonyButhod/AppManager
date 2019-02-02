@@ -1,4 +1,4 @@
-package buthod.tony.appManager;
+package buthod.tony.appManager.pedometer;
 
 import android.content.Context;
 import android.hardware.Sensor;

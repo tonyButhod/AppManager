@@ -11,38 +11,39 @@ import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import buthod.tony.appManager.CustomAlertDialog;
+import buthod.tony.appManager.utils.CustomAlertDialog;
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
-import buthod.tony.appManager.Utils;
+import buthod.tony.appManager.utils.CustomSpinnerAdapter;
+import buthod.tony.appManager.utils.Utils;
 import buthod.tony.appManager.database.RecipesDAO;
 
 /**
  * Created by Tony on 14/12/2018.
  */
-
 public class IngredientsManagementActivity extends RootActivity {
+
+    private static final int MIN_SPINNER_WIDTH = 50;
 
     private RecipesDAO mDao = null;
 
     private LinearLayout mIngredientsList;
     private LongSparseArray<View> mIngredientViews;
+    private LongSparseArray<RecipesDAO.IngredientConversions> mConversions;
     private EditText mSearchField = null;
 
     private String[] mUnits;
-    private ArrayAdapter<CharSequence> mUnitsAdapter;
+    private CustomSpinnerAdapter mUnitsFromAdapter, mUnitsToAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,13 +55,21 @@ public class IngredientsManagementActivity extends RootActivity {
 
         mIngredientsList = (LinearLayout) findViewById(R.id.ingredients_list);
         mIngredientViews = new LongSparseArray<>();
+        mConversions = new LongSparseArray<>();
         mSearchField = (EditText) findViewById(R.id.search_field);
 
         Resources res = getResources();
         mUnits = res.getStringArray(R.array.units_array);
-        mUnitsAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
-        mUnitsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mUnitsAdapter.addAll(mUnits);
+        mUnitsFromAdapter = new CustomSpinnerAdapter(this,
+                R.layout.simple_spinner_item,
+                R.layout.simple_spinner_dropdown_item,
+                mUnits);
+        mUnitsToAdapter = new CustomSpinnerAdapter(this,
+                R.layout.simple_spinner_item,
+                R.layout.simple_spinner_dropdown_item,
+                mUnits);
+        mUnitsFromAdapter.setMinWidth(MIN_SPINNER_WIDTH);
+        mUnitsToAdapter.setMinWidth(MIN_SPINNER_WIDTH);
 
         // Finish the activity if back button is pressed
         findViewById(R.id.back_button).setOnClickListener(new View.OnClickListener() {
@@ -89,11 +98,14 @@ public class IngredientsManagementActivity extends RootActivity {
     private void populateListWithIngredients() {
         mIngredientsList.removeAllViews();
         mIngredientViews.clear();
+        mConversions.clear();
 
         LayoutInflater inflater = getLayoutInflater();
         List<RecipesDAO.IngredientConversions> ingredients = mDao.getIngredientsWithConversions();
         for (int i = 0; i < ingredients.size(); ++i) {
             RecipesDAO.IngredientConversions ingredientConversions = ingredients.get(i);
+            mConversions.append(ingredientConversions.ingredientId, ingredientConversions);
+            // Create the ingredient view.
             View v = inflater.inflate(R.layout.ingredient_management_view, null);
             ((TextView) v.findViewById(R.id.ingredient_id)).setText(String.valueOf(ingredientConversions.ingredientId));
             ((TextView) v.findViewById(R.id.ingredient_name)).setText(ingredientConversions.ingredientName);
@@ -111,7 +123,7 @@ public class IngredientsManagementActivity extends RootActivity {
             addConversionButton.setOnClickListener(mOnAddConversionListener);
             for (int j = 0; j < ingredientConversions.conversions.size(); ++j) {
                 RecipesDAO.Conversion conversion = ingredientConversions.conversions.get(j);
-                addEditConversion(ingredientConversions.ingredientId, conversion, null);
+                addEditConversionView(ingredientConversions.ingredientId, conversion, null);
             }
         }
     }
@@ -208,17 +220,17 @@ public class IngredientsManagementActivity extends RootActivity {
         builder.setView(alertView);
         // Get and set useful widget
         mUnitFromSpinnerDialog = (Spinner) alertView.findViewById(R.id.unit_from_spinner);
-        mUnitFromSpinnerDialog.setAdapter(mUnitsAdapter);
+        mUnitFromSpinnerDialog.setAdapter(mUnitsFromAdapter);
         mUnitToSpinnerDialog = (Spinner) alertView.findViewById(R.id.unit_to_spinner);
-        mUnitToSpinnerDialog.setAdapter(mUnitsAdapter);
+        mUnitToSpinnerDialog.setAdapter(mUnitsToAdapter);
         final EditText factorEdit = (EditText) alertView.findViewById(R.id.factor_view);
         final TextView errorView = (TextView) alertView.findViewById(R.id.error_message);
         // Set default values if ingredient is not null
         if (v != null) {
-            mUnitFromSpinnerDialog.setSelection(mUnitsAdapter.getPosition(
-                    ((TextView)v.findViewById(R.id.unit_from_view)).getText()));
-            mUnitToSpinnerDialog.setSelection(mUnitsAdapter.getPosition(
-                    ((TextView)v.findViewById(R.id.unit_to_view)).getText()));
+            mUnitFromSpinnerDialog.setSelection(mUnitsFromAdapter.getPosition(
+                    ((TextView)v.findViewById(R.id.unit_from_view)).getText().toString()));
+            mUnitToSpinnerDialog.setSelection(mUnitsToAdapter.getPosition(
+                    ((TextView)v.findViewById(R.id.unit_to_view)).getText().toString()));
             factorEdit.setText(((TextView)v.findViewById(R.id.factor_view)).getText());
         }
         // Updates available units in spinners when one is selected.
@@ -267,13 +279,17 @@ public class IngredientsManagementActivity extends RootActivity {
                         String errorMessage = "";
                         if (conversion.factor <= 0)
                             errorMessage = res.getString(R.string.conversion_factor_error);
+                        else if (conversion.unitFrom == 0 || conversion.unitTo == 0)
+                            errorMessage = res.getString(R.string.conversion_unit_error);
+                        else if (conversionAlreadyExists(ingredientId, conversion))
+                            errorMessage = res.getString(R.string.conversion_already_exists_error);
                         if (!errorMessage.isEmpty()) {
                             // Ingredient data are not valid
                             errorView.setText(errorMessage);
                             errorView.setVisibility(View.VISIBLE);
                             return;
                         }
-                        // Add or modify the ingredient
+                        // Add or edit the conversion
                         addEditConversion(ingredientId, conversion, v);
                         mUnitFromSpinnerDialog = null;
                         mUnitToSpinnerDialog = null;
@@ -286,18 +302,41 @@ public class IngredientsManagementActivity extends RootActivity {
     }
     private void showAddEditConversionDialog(long ingredientId) { showAddEditConversionDialog(ingredientId, null);}
 
-    private void addEditConversion(long ingredientId, RecipesDAO.Conversion conversion, View v) {
+    private void addEditConversionView(long ingredientId, RecipesDAO.Conversion conversion, View v) {
+        // Update view and fields.
         if (v == null) {
             LayoutInflater inflater = getLayoutInflater();
             v = inflater.inflate(R.layout.conversion_view, null);
             ((LinearLayout) mIngredientViews.get(ingredientId).findViewById(R.id.conversions_list)).addView(v);
             v.setOnClickListener(mOnConversionClickListener);
         }
+        // Edit the view
         ((TextView) v.findViewById(R.id.id_conversion)).setText(String.valueOf(conversion.id));
         ((TextView) v.findViewById(R.id.unit_from_view)).setText(mUnits[conversion.unitFrom]);
         ((TextView) v.findViewById(R.id.unit_to_view)).setText(mUnits[conversion.unitTo]);
         ((TextView) v.findViewById(R.id.factor_view)).setText(Utils.floatToString(conversion.factor));
-        mDao.addEditConversion(ingredientId, conversion);
+    }
+
+    private void addEditConversion(long ingredientId, RecipesDAO.Conversion conversion, View v) {
+        boolean isNew = (conversion.id == -1);
+        conversion.id = mDao.addEditConversion(ingredientId, conversion);
+        // Update the view
+        addEditConversionView(ingredientId, conversion, v);
+        // Update private field
+        if (isNew) {
+            // Add the conversion in private field.
+            mConversions.get(ingredientId).conversions.add(conversion);
+        }
+        else {
+            // Update values in field
+            List<RecipesDAO.Conversion> conversions = mConversions.get(ingredientId).conversions;
+            for (int i = 0; i < conversions.size(); ++i)
+                if (conversions.get(i).id == conversion.id) {
+                    conversions.get(i).unitTo = conversion.unitTo;
+                    conversions.get(i).unitFrom = conversion.unitFrom;
+                    conversions.get(i).factor = conversion.factor;
+                }
+        }
     }
 
     private Spinner.OnItemSelectedListener mOnConversionUnitSelectedListener = new AdapterView.OnItemSelectedListener() {
@@ -305,35 +344,23 @@ public class IngredientsManagementActivity extends RootActivity {
         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
             // An item is selected in the unit from spinner.
             ArrayList<Integer> indexesToRemove = new ArrayList<>();
-            if (i == 1 || i == 2) {
-                indexesToRemove.add(1);
-                indexesToRemove.add(2);
+            if (i == UnitsConversion.g || i == UnitsConversion.kg) {
+                indexesToRemove.add(UnitsConversion.g);
+                indexesToRemove.add(UnitsConversion.kg);
             }
-            else if (i == 3 || i == 4) {
-                indexesToRemove.add(3);
-                indexesToRemove.add(4);
+            else if (i == UnitsConversion.cL || i == UnitsConversion.L) {
+                indexesToRemove.add(UnitsConversion.cL);
+                indexesToRemove.add(UnitsConversion.L);
             }
             else if (i != 0) { // The default value
                 indexesToRemove.add(i);
             }
-            // Build the new adapter
-            String[] newValues = new String[mUnits.length - indexesToRemove.size()];
-            int index = 0;
-            for (int j = 0; j < mUnits.length; ++j) {
-                if (!indexesToRemove.contains(j))
-                    newValues[index++] = mUnits[j];
+            // Set positions to hide in unit to spinner.
+            mUnitsToAdapter.setPositionsToHide(indexesToRemove);
+            // If the selected item is hidden, set selection to default.
+            if (indexesToRemove.contains(mUnitToSpinnerDialog.getSelectedItemPosition())) {
+                mUnitToSpinnerDialog.setSelection(0);
             }
-            ArrayAdapter<CharSequence> newAdapter= new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_spinner_item);
-            newAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            newAdapter.addAll(newValues);
-            // Try to keep the same item selected in unit to.
-            String selectedItem = mUnitToSpinnerDialog.getSelectedItem().toString();
-            mUnitToSpinnerDialog.setAdapter(newAdapter);
-            for (int j = 0; j < newValues.length; ++j)
-                if (newValues[j].equals(selectedItem)) {
-                    mUnitToSpinnerDialog.setSelection(j);
-                    break;
-                }
         }
 
         @Override
@@ -341,6 +368,25 @@ public class IngredientsManagementActivity extends RootActivity {
 
         }
     };
+
+    /**
+     * Check if a conversion of the same kind already exists.
+     */
+    private boolean conversionAlreadyExists(long ingredientId, RecipesDAO.Conversion conversion) {
+        boolean alreadyExists = false;
+        List<RecipesDAO.Conversion> conversions = mConversions.get(ingredientId).conversions;
+        for (int i = 0; i < conversions.size(); ++i) {
+            RecipesDAO.Conversion c = conversions.get(i);
+            if ((UnitsConversion.isSameMeasurementType(c.unitFrom, conversion.unitFrom)
+                    && UnitsConversion.isSameMeasurementType(c.unitTo, conversion.unitTo))
+                || (UnitsConversion.isSameMeasurementType(c.unitFrom, conversion.unitTo)
+                    && UnitsConversion.isSameMeasurementType(c.unitTo, conversion.unitFrom))) {
+                alreadyExists = true;
+                break;
+            }
+        }
+        return alreadyExists;
+    }
 
     //endregion
 
