@@ -3,6 +3,7 @@ package buthod.tony.appManager.recipes;
 import android.app.Activity;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.RelativeLayout;
@@ -67,8 +68,15 @@ public class IngredientViewManagement {
      */
     public void setIngredient(RecipesDAO.Ingredient ingredient) {
         mQuantityView.setText(Utils.floatToString(ingredient.quantity));
+        if (ingredient.quantity == 0) {
+            mQuantityView.setVisibility(View.GONE);
+            mUnitView.setVisibility(View.GONE);
+        }
+        else {
+            mQuantityView.setVisibility(View.VISIBLE);
+            mUnitView.setVisibility(View.VISIBLE);
+        }
         mUnitView.setText(mUnits[ingredient.idUnit]);
-        mUnitView.setVisibility(View.VISIBLE);
         mUnitSpinner.setVisibility(View.GONE);
         mIngredientName.setText(ingredient.name);
         mOptionalView.setVisibility(ingredient.type == RecipesDAO.Ingredient.OPTIONAL_TYPE ?
@@ -106,6 +114,7 @@ public class IngredientViewManagement {
         CustomSpinnerAdapter adapter = new CustomSpinnerAdapter(context,
                 R.layout.simple_spinner_item, R.layout.simple_spinner_dropdown_item, values);
         adapter.setTextColor(context.getResources().getColor(R.color.colorAccent));
+        adapter.setTextStyle(Typeface.DEFAULT_BOLD);
         mUnitSpinner.setAdapter(adapter);
         mUnitSpinner.setSelection(defaultSelectedIndex);
     }

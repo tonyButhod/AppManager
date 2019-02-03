@@ -37,11 +37,7 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginEnd="10dp">
+            android:layout_height="wrap_content">
 
             <EditText
                 android:id="@+id/name"
@@ -51,14 +47,22 @@
                 android:hint="@string/recipe_name"
                 android:maxLength="64"
                 android:nextFocusUp="@id/name"
-                android:nextFocusLeft="@id/name"/>
+                android:nextFocusLeft="@id/name"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
 
             <LinearLayout
                 android:id="@+id/type_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_below="@id/name">
+                android:layout_below="@id/name"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
                 <TextView
                     android:id="@+id/type_label"
@@ -71,7 +75,8 @@
                 <Spinner
                     android:id="@+id/type"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent">
 
                 </Spinner>
 
@@ -84,7 +89,11 @@
                 android:textColor="@color/colorPrimary"
                 android:textSize="18sp"
                 android:text="@string/recipe_difficulty"
-                android:layout_below="@id/type_layout"/>
+                android:layout_below="@id/type_layout"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
 
             <TextView
                 android:id="@+id/difficulty"
@@ -95,7 +104,11 @@
                 android:text="1"
                 android:layout_below="@id/type_layout"
                 android:layout_toEndOf="@id/difficulty_label"
-                android:layout_toRightOf="@id/difficulty_label" />
+                android:layout_toRightOf="@id/difficulty_label"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp" />
 
             <SeekBar
                 android:id="@+id/difficulty_seek_bar"
@@ -105,7 +118,11 @@
                 android:progress="0"
                 android:max="4"
                 android:layout_toEndOf="@id/difficulty"
-                android:layout_toRightOf="@id/difficulty">
+                android:layout_toRightOf="@id/difficulty"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
             </SeekBar>
 
@@ -116,7 +133,11 @@
                 android:textColor="@color/colorPrimary"
                 android:textSize="18sp"
                 android:text="@string/recipe_grade"
-                android:layout_below="@id/difficulty_label"/>
+                android:layout_below="@id/difficulty_label"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
 
             <TextView
                 android:id="@+id/grade"
@@ -127,7 +148,11 @@
                 android:text="1"
                 android:layout_below="@id/difficulty_label"
                 android:layout_toEndOf="@id/grade_label"
-                android:layout_toRightOf="@id/grade_label" />
+                android:layout_toRightOf="@id/grade_label"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp" />
 
             <SeekBar
                 android:id="@+id/grade_seek_bar"
@@ -137,7 +162,11 @@
                 android:progress="0"
                 android:max="4"
                 android:layout_toEndOf="@id/grade"
-                android:layout_toRightOf="@id/grade">
+                android:layout_toRightOf="@id/grade"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
             </SeekBar>
 
@@ -146,7 +175,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/grade_label"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
 
                 <TextView
@@ -170,7 +203,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/time_section"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
 
                 <TextView
@@ -191,10 +228,13 @@
 
             <TextView
                 android:id="@+id/ingredients_label"
-                android:layout_width="150dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/people_section"
+                android:padding="5dp"
+                android:background="@color/light_soft_blue"
                 android:textColor="@color/colorPrimary"
+                android:textAlignment="center"
                 android:textSize="18sp"
                 android:text="@string/ingredients"/>
 
@@ -203,7 +243,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/ingredients_label"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
             </LinearLayout>
 
@@ -212,7 +256,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/ingredients_list"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
                 <Button
                     android:id="@+id/add_ingredient_button"
@@ -232,10 +280,13 @@
 
             <TextView
                 android:id="@+id/steps_label"
-                android:layout_width="150dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/ingredients_buttons"
+                android:padding="5dp"
+                android:background="@color/light_soft_blue"
                 android:textColor="@color/colorPrimary"
+                android:textAlignment="center"
                 android:textSize="18sp"
                 android:text="@string/steps"/>
 
@@ -244,7 +295,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/steps_label"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
             </LinearLayout>
 
@@ -253,7 +308,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/steps_list"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
                 <Button
                     android:id="@+id/add_step_button"
@@ -275,7 +334,11 @@
                 android:id="@+id/image_view_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/steps_buttons">
+                android:layout_below="@id/steps_buttons"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp">
 
                 <ImageView
                     android:id="@+id/image_view"
@@ -342,14 +405,22 @@
                 android:textSize="16sp"
                 android:visibility="gone"
                 android:textColor="@color/red"
-                android:gravity="center"/>
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
 
             <Button
                 android:id="@+id/add_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/error_message"
-                android:text="@string/add"/>
+                android:text="@string/add"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"/>
 
         </RelativeLayout>
 

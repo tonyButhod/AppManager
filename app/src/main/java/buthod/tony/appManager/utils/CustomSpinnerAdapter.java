@@ -2,6 +2,7 @@ package buthod.tony.appManager.utils;
 
 import android.app.ActionBar;
 import android.content.Context;
+import android.graphics.Typeface;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ public class CustomSpinnerAdapter extends ArrayAdapter<String> {
     private int mMinWidth = 0;
     private boolean[] mViewIsGone = null;
     private int mTextColor;
+    private Typeface mStyle;
 
     public CustomSpinnerAdapter(@NonNull Context context, @LayoutRes int resourceId, @NonNull String[] values) {
         this(context, resourceId, R.layout.simple_spinner_dropdown_item, values);
@@ -42,6 +44,7 @@ public class CustomSpinnerAdapter extends ArrayAdapter<String> {
         mDropdownResourceId = R.layout.simple_spinner_dropdown_item;
         mViewIsGone = new boolean[mValues.length];
         mTextColor = mContext.getResources().getColor(R.color.dark_grey);
+        mStyle = Typeface.DEFAULT;
     }
 
     @Override
@@ -68,6 +71,7 @@ public class CustomSpinnerAdapter extends ArrayAdapter<String> {
         textView.setText(mValues[selectedItemPosition]);
         textView.setMinimumWidth(mMinWidth);
         textView.setTextColor(mTextColor);
+        textView.setTypeface(mStyle);
 
         return v;
     }
@@ -111,5 +115,12 @@ public class CustomSpinnerAdapter extends ArrayAdapter<String> {
      */
     public void setTextColor(int color) {
         mTextColor = color;
+    }
+
+    /**
+     * Set the text style of the spinner view.
+     */
+    public void setTextStyle(Typeface style) {
+        mStyle = style;
     }
 }

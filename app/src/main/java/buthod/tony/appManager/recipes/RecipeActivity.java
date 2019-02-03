@@ -164,7 +164,8 @@ public class RecipeActivity extends RootActivity {
         RecipesDAO.IngredientConversions conversionsFound = null;
         for (int i = 0; i < mRecipe.ingredients.size(); ++i) {
             RecipesDAO.Ingredient ingredient = mRecipe.ingredients.get(i);
-            if ((conversionsFound = conversions.get(ingredient.idIngredient, null)) != null) {
+            if ((conversionsFound = conversions.get(ingredient.idIngredient, null)) != null
+                    && conversionsFound.conversions.size() > 0) {
                 mIngredients.get(i).setConversion(this, conversionsFound.conversions);
             }
         }

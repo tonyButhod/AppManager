@@ -227,12 +227,13 @@
 
             <TextView
                 android:id="@+id/ingredients_label"
-                android:layout_width="150dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/third_line"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
+                android:padding="5dp"
+                android:background="@color/light_soft_blue"
                 android:textColor="@color/colorPrimary"
+                android:textAlignment="center"
                 android:textSize="18sp"
                 android:text="@string/ingredients"/>
 
@@ -251,12 +252,13 @@
 
             <TextView
                 android:id="@+id/steps_label"
-                android:layout_width="150dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginStart="5dp"
                 android:layout_below="@id/ingredients_list"
+                android:padding="5dp"
+                android:background="@color/light_soft_blue"
                 android:textColor="@color/colorPrimary"
+                android:textAlignment="center"
                 android:textSize="18sp"
                 android:text="@string/steps"/>
 

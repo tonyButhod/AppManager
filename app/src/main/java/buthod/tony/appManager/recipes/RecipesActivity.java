@@ -11,11 +11,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.LongSparseArray;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -118,13 +120,29 @@ public class RecipesActivity extends RootActivity {
     protected void onResume() {
         super.onResume();
         populateListWithRecipes();
+        if (DROP_DOWN_MENU_HEIGHT == 0)
+            computeDropDownMenuHeight();
     }
 
     //region DROP_DOWN
 
     private boolean mIsMenuDown = false;
-    private static int DROP_DOWN_MENU_HEIGHT = 250;
+    private static int DROP_DOWN_MENU_HEIGHT = 0;
     private static int DROP_DOWN_DURATION = 200;
+
+    private void computeDropDownMenuHeight() {
+        final ViewTreeObserver vto = mDropDownMenu.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                DROP_DOWN_MENU_HEIGHT = mDropDownMenu.getHeight();
+                mDropDownMenu.getLayoutParams().height = 0;
+                mDropDownMenu.requestLayout();
+                ViewTreeObserver obs = mDropDownMenu.getViewTreeObserver();
+                obs.removeOnGlobalLayoutListener(this);
+            }
+        });
+    }
 
     private View.OnClickListener mOnDropDownClickListener = new View.OnClickListener() {
         @Override

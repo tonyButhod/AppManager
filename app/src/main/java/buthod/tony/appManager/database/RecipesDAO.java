@@ -767,6 +767,7 @@ public class RecipesDAO extends DAOBase {
             }
         }
         c.close();
+
         return ingredients;
     }
     public List<IngredientConversions> getIngredientsWithConversions() {

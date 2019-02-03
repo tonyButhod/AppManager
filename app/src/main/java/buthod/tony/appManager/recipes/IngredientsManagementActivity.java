@@ -244,8 +244,7 @@ public class IngredientsManagementActivity extends RootActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             ((LinearLayout) v.getParent()).removeView(v);
-                            if (id >= 0)
-                                mDao.deleteConversion(id);
+                            deleteConversion(ingredientId, id);
                             mUnitFromSpinnerDialog = null;
                             mUnitToSpinnerDialog = null;
                             dialog.cancel();
@@ -281,7 +280,7 @@ public class IngredientsManagementActivity extends RootActivity {
                             errorMessage = res.getString(R.string.conversion_factor_error);
                         else if (conversion.unitFrom == 0 || conversion.unitTo == 0)
                             errorMessage = res.getString(R.string.conversion_unit_error);
-                        else if (conversionAlreadyExists(ingredientId, conversion))
+                        else if (id == -1 && conversionAlreadyExists(ingredientId, conversion))
                             errorMessage = res.getString(R.string.conversion_already_exists_error);
                         if (!errorMessage.isEmpty()) {
                             // Ingredient data are not valid
@@ -337,6 +336,17 @@ public class IngredientsManagementActivity extends RootActivity {
                     conversions.get(i).factor = conversion.factor;
                 }
         }
+    }
+
+    private void deleteConversion(long ingredientId, long conversionId) {
+        if (conversionId != -1)
+            mDao.deleteConversion(conversionId);
+        List<RecipesDAO.Conversion> conversions =  mConversions.get(ingredientId).conversions;
+        for (int i = 0; i < conversions.size(); i++)
+            if (conversions.get(i).id == conversionId) {
+                conversions.remove(i);
+                break;
+            }
     }
 
     private Spinner.OnItemSelectedListener mOnConversionUnitSelectedListener = new AdapterView.OnItemSelectedListener() {

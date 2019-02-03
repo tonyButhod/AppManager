@@ -37,6 +37,7 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 
 import buthod.tony.appManager.utils.CustomAlertDialog;
+import buthod.tony.appManager.utils.CustomSpinnerAdapter;
 import buthod.tony.appManager.utils.DragAndDropLinearLayout;
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.RootActivity;
@@ -70,9 +71,10 @@ public class AddEditRecipeActivity extends RootActivity {
     private Button mGetWebRecipeButton = null;
 
     private ArrayAdapter<CharSequence>
-            mRecipeTypes = null,
-            mUnits = null,
             mIngredientsNames = null;
+    private CustomSpinnerAdapter
+            mRecipeTypes = null,
+            mUnits = null;
 
     // Fields containing recipes_activity information
     private long mRecipeId = -1; // If -1, new recipe_activity, otherwise, recipe_activity modified
@@ -121,12 +123,10 @@ public class AddEditRecipeActivity extends RootActivity {
         mStepsToDelete = new ArrayList<>();
         mSeparationsToDelete = new ArrayList<>();
         // Get string array resources for spinners
-        mRecipeTypes = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
-        mRecipeTypes.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mRecipeTypes.addAll(getResources().getStringArray(R.array.recipe_types));
-        mUnits = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item);
-        mUnits.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mUnits.addAll(getResources().getStringArray(R.array.units_array));
+        mRecipeTypes = new CustomSpinnerAdapter(this, R.layout.simple_spinner_item,
+                R.layout.simple_spinner_dropdown_item, getResources().getStringArray(R.array.recipe_types));
+        mUnits = new CustomSpinnerAdapter(this, R.layout.simple_spinner_item,
+                R.layout.simple_spinner_dropdown_item, getResources().getStringArray(R.array.units_array));
         mIngredientsNames = new ArrayAdapter<CharSequence>(this, android.R.layout.simple_spinner_item);
         mIngredientsNames.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mDragAndDrop = new DragAndDropLinearLayout(getBaseContext());
@@ -368,8 +368,11 @@ public class AddEditRecipeActivity extends RootActivity {
         RecipesDAO.Ingredient ingredient = new RecipesDAO.Ingredient();
         ingredient.idQuantity = Long.parseLong(
                 ((TextView)v.findViewById(R.id.id_view)).getText().toString());
-        ingredient.quantity = Float.parseFloat(
-                ((TextView)v.findViewById(R.id.quantity_view)).getText().toString());
+        String quantityString = ((TextView)v.findViewById(R.id.quantity_view)).getText().toString();
+        if (quantityString.isEmpty())
+            ingredient.quantity = 0;
+        else
+            ingredient.quantity = Utils.parseFloatWithDefault(quantityString, -1);
         ingredient.name = ((TextView)v.findViewById(R.id.ingredient_name_view)).getText().toString();
         ingredient.idUnit = Integer.parseInt(
                 ((TextView)v.findViewById(R.id.id_unit_view)).getText().toString());
@@ -468,7 +471,12 @@ public class AddEditRecipeActivity extends RootActivity {
                         ingredient.idQuantity = id;
                         ingredient.idUnit = unitSpinner.getSelectedItemPosition();
                         ingredient.name = autoCompleteView.getText().toString();
-                        ingredient.quantity = Utils.parseFloatWithDefault(quantity.getText().toString(), -1);
+                        String quantityString = quantity.getText().toString();
+                        if (quantityString.isEmpty() && ingredient.idUnit == 0)
+                            // Offer the possibility to not specify the quantity
+                            ingredient.quantity = 0;
+                        else
+                            ingredient.quantity = Utils.parseFloatWithDefault(quantityString, -1);
                         ingredient.type = optionalCheckBox.isChecked() ?
                                 RecipesDAO.Ingredient.OPTIONAL_TYPE : RecipesDAO.Ingredient.NORMAL_TYPE;
                         // Check ingredient data
@@ -514,11 +522,22 @@ public class AddEditRecipeActivity extends RootActivity {
         }
         // Update text view information
         ((TextView) v.findViewById(R.id.id_view)).setText(String.valueOf(ingredient.idQuantity));
-        ((TextView) v.findViewById(R.id.quantity_view)).setText(String.valueOf(ingredient.quantity));
         ((TextView) v.findViewById(R.id.id_unit_view)).setText(String.valueOf(ingredient.idUnit));
-        ((TextView) v.findViewById(R.id.unit_view)).setText(mUnits.getItem(ingredient.idUnit));
-        ((TextView) v.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
         ((TextView) v.findViewById(R.id.id_ingredient_view)).setText(String.valueOf(ingredient.idIngredient));
+        TextView quantityView = (TextView) v.findViewById(R.id.quantity_view);
+        TextView unitView = (TextView) v.findViewById(R.id.unit_view);
+        if (ingredient.quantity == 0) {
+            quantityView.setText("");
+            quantityView.setVisibility(View.GONE);
+            unitView.setVisibility(View.GONE);
+        }
+        else {
+            quantityView.setText(Utils.floatToString(ingredient.quantity));
+            quantityView.setVisibility(View.VISIBLE);
+            unitView.setVisibility(View.VISIBLE);
+        }
+        unitView.setText(mUnits.getItem(ingredient.idUnit));
+        ((TextView) v.findViewById(R.id.ingredient_name_view)).setText(ingredient.name);
         v.findViewById(R.id.optional_view).setVisibility(ingredient.type == RecipesDAO.Ingredient.OPTIONAL_TYPE ?
                 View.VISIBLE : View.GONE);
         v.invalidate();
