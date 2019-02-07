@@ -68,7 +68,8 @@ public class CustomSpinnerAdapter extends ArrayAdapter<String> {
             v = LayoutInflater.from(mContext).inflate(mResourceId, parent, false);
         }
         TextView textView = ((TextView) v.findViewById(R.id.text1));
-        textView.setText(mValues[selectedItemPosition]);
+        if (selectedItemPosition >= 0 && selectedItemPosition < mValues.length)
+            textView.setText(mValues[selectedItemPosition]);
         textView.setMinimumWidth(mMinWidth);
         textView.setTextColor(mTextColor);
         textView.setTypeface(mStyle);

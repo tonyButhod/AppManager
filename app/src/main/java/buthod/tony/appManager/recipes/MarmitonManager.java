@@ -134,7 +134,6 @@ public class MarmitonManager {
                 "([^0-9]*)"
         );
         Matcher m = p.matcher(ingredientString);
-        Log.d("Debug", "Result for : " + ingredientString + " -> " + m.matches() + "/" + m.groupCount());
         if (m.matches()) {
             String quantity = m.group(1);
             if (quantity != null && !quantity.isEmpty()) {
