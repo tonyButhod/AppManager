@@ -127,8 +127,8 @@ public class RecipesActivity extends RootActivity {
     //region DROP_DOWN
 
     private boolean mIsMenuDown = false;
-    private static int DROP_DOWN_MENU_HEIGHT = 0;
-    private static int DROP_DOWN_DURATION = 200;
+    private int DROP_DOWN_MENU_HEIGHT = 0;
+    private int DROP_DOWN_DURATION = 200;
 
     private void computeDropDownMenuHeight() {
         final ViewTreeObserver vto = mDropDownMenu.getViewTreeObserver();

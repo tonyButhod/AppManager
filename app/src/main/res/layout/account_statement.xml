@@ -51,13 +51,53 @@
 
         </com.github.mikephil.charting.charts.LineChart>
 
+        <LinearLayout
+            android:id="@+id/line_chart_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/line_chart"
+            android:orientation="horizontal"
+            android:gravity="right"
+            android:visibility="invisible">
+
+            <TextView
+                android:id="@+id/selected_date_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="15dp"
+                android:layout_marginEnd="15dp"
+                android:textSize="7pt"
+                android:textAlignment="center"/>
+
+            <TextView
+                android:id="@+id/selected_expense_value_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:layout_marginEnd="10dp"
+                android:textSize="7pt"
+                android:textColor="@color/dark_soft_red"
+                android:textAlignment="center"/>
+
+            <TextView
+                android:id="@+id/selected_credit_value_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:layout_marginEnd="5dp"
+                android:textSize="7pt"
+                android:textAlignment="center"
+                android:textColor="@color/dark_soft_green"/>
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/statement_value_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_below="@+id/line_chart"
+            android:layout_below="@+id/line_chart_info"
             android:layout_margin="10dp"
             android:text="@string/statement_value_label"
             android:textSize="10pt" />

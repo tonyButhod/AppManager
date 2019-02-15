@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import buthod.tony.appManager.utils.Utils;
@@ -187,7 +188,7 @@ public class AccountDAO extends DAOBase {
      * @param credits If true, compute statements on credits. Else, compute it on expenses.
      * @return An array of statements of size 'yearsNumber'.
      */
-    public int[] getYearsStatement(int yearsNumber, boolean credits) {
+    public int[] getYearsStatement(int yearsNumber, boolean credits, String inClauseTypes) {
         // Get the starting and ending dates
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.DAY_OF_YEAR, cal.getActualMaximum(Calendar.DAY_OF_YEAR));
@@ -195,12 +196,17 @@ public class AccountDAO extends DAOBase {
         cal.add(Calendar.YEAR, -yearsNumber+1);
         cal.set(Calendar.DAY_OF_YEAR, cal.getActualMinimum(Calendar.DAY_OF_YEAR));
         Date startDate = cal.getTime();
+        String inClause = "";
+        if (inClauseTypes != null) {
+            inClause = " AND " + TYPE + " IN " + inClauseTypes;
+        }
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select strftime('%Y', " + DATE + ") as year, SUM(" + PRICE + ")" +
                         " From " + TABLE_NAME +
                         " Where " + DATE + ">= ? And " + DATE + "<= ? " +
                         "   And " + TYPE + (credits?" < 0":">= 0") + // Get positive or negative statements
+                        inClause +
                         " Group by year;",
                 new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
         int[] yearsStatement = new int[yearsNumber];
@@ -233,7 +239,7 @@ public class AccountDAO extends DAOBase {
      * @param credits If true, compute statements on credits. Else, compute it on expenses.
      * @return An array of statements of size 'monthsNumber'.
      */
-    public int[] getMonthsStatement(int monthsNumber, boolean credits) {
+    public int[] getMonthsStatement(int monthsNumber, boolean credits, String inClauseTypes) {
         // Get the starting and ending dates
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
@@ -241,12 +247,17 @@ public class AccountDAO extends DAOBase {
         cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
         cal.add(Calendar.MONTH, -monthsNumber+1);
         Date startDate = cal.getTime();
+        String inClause = "";
+        if (inClauseTypes != null) {
+            inClause = " AND " + TYPE + " IN " + inClauseTypes;
+        }
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select strftime('%Y', " + DATE + ") as year, strftime('%m', " + DATE + ") as month, SUM(" + PRICE + ")" +
                 " From " + TABLE_NAME +
                 " Where " + DATE + ">= ? And " + DATE + "<= ? " +
                 "   And " + TYPE + (credits?" < 0":" >= 0") + // Get positive or negative statements
+                inClause +
                 " Group by year, month;",
                 new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
         int[] monthsStatement = new int[monthsNumber];
@@ -289,18 +300,23 @@ public class AccountDAO extends DAOBase {
      * @param credits If true, compute statements on credits. Else, compute it on expenses.
      * @return An array of statements of size 'daysNumber'.
      */
-    public int[] getDaysStatement(int daysNumber, boolean credits) {
+    public int[] getDaysStatement(int daysNumber, boolean credits, String inClauseTypes) {
         // Get the starting and ending dates
         Calendar cal = Calendar.getInstance();
         Date endDate = cal.getTime();
         cal.add(Calendar.DATE, -daysNumber+1);
         Date startDate = cal.getTime();
+        String inClause = "";
+        if (inClauseTypes != null) {
+            inClause = " AND " + TYPE + " IN " + inClauseTypes;
+        }
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select " + DATE + " as date, SUM(" + PRICE + ")" +
                         " From " + TABLE_NAME +
                         " Where " + DATE + ">= ? And " + DATE + "<= ? " +
-                        "   And " + TYPE + (credits?" < 0":" >= 0") + 
+                        "   And " + TYPE + (credits?" < 0":" >= 0") +
+                        inClause +
                         " Group by date;",
                 new String[]{mDateFormatter.format(startDate), mDateFormatter.format(endDate)});
         int[] daysStatement = new int[daysNumber];
@@ -330,15 +346,22 @@ public class AccountDAO extends DAOBase {
      * Get the statement between 2 dates by category.
      * @param start The starting date.
      * @param end The ending date.
+     * @param inClauseTypes Types to take into account.
      * @return A SparseIntArray with the type as key and the price as value.
      */
-    public SparseIntArray getStatementByCategory(Date start, Date end) {
+    public SparseIntArray getStatementByCategory(Date start, Date end, String inClauseTypes) {
         SparseIntArray result = new SparseIntArray();
+        // Build where clause with types
+        String inClause = "";
+        if (inClauseTypes != null) {
+            inClause = " And " + TYPE + " IN " + inClauseTypes + " ";
+        }
         // Execute query
         Cursor c = mDb.rawQuery(
                 "Select " + TYPE + ", SUM(" + PRICE + ")" +
                         " From " + TABLE_NAME +
                         " Where " + DATE + ">= ? And " + DATE + "<= ? " +
+                        inClause +
                         " Group By " + TYPE + ";",
                 new String[]{mDateFormatter.format(start), mDateFormatter.format(end)}
         );

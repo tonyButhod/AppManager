@@ -39,7 +39,7 @@ import buthod.tony.appManager.database.AccountDAO;
  */
 public class AccountPieChartActivity {
     // Fields used for the page viewer
-    private Activity mRootActivity = null;
+    private AccountActivity mRootActivity = null;
     private View mAccountView = null;
 
     private Button mStartDateButton = null;
@@ -73,7 +73,7 @@ public class AccountPieChartActivity {
      * @param rootActivity The activity containing the page viewer.
      * @param dao The account DAO. DAO need to be opened by AccountActivity.
      */
-    public void onCreate(Activity rootActivity, AccountDAO dao) {
+    public void onCreate(AccountActivity rootActivity, AccountDAO dao) {
         mRootActivity = rootActivity;
         mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_pie_chart, null);
@@ -110,6 +110,14 @@ public class AccountPieChartActivity {
         mCreditsPieChart.setDrawEntryLabels(false);
         mCreditsPieChart.getLegend().setWordWrapEnabled(true);
         mCreditsPieChart.getLegend().setTextSize(LEGEND_TEXT_SIZE);
+
+        // Add to types listeners the update the pie chart on type selection
+        mRootActivity.onTypesUpdatedListeners.add(new Runnable() {
+            @Override
+            public void run() {
+                updateView();
+            }
+        });
     }
 
     /**
@@ -187,7 +195,8 @@ public class AccountPieChartActivity {
             // Do nothing
         }
 
-        SparseIntArray statementByCategory = mDao.getStatementByCategory(startDate, endDate);
+        SparseIntArray statementByCategory = mDao.getStatementByCategory(startDate, endDate,
+                mRootActivity.buildInClauseFromSelectedTypes());
 
         String[] expenseLabels = mRootActivity.getResources().getStringArray(R.array.expense_types);
         String[] creditLabels = mRootActivity.getResources().getStringArray(R.array.credit_types);

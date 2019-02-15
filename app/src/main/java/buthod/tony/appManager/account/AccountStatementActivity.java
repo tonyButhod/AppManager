@@ -1,10 +1,8 @@
 package buthod.tony.appManager.account;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
-import android.os.Bundle;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -12,7 +10,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
-import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -24,7 +22,9 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Locale;
 
 import buthod.tony.appManager.R;
-import buthod.tony.appManager.RootActivity;
 import buthod.tony.appManager.database.AccountDAO;
 
 /**
@@ -42,7 +41,7 @@ import buthod.tony.appManager.database.AccountDAO;
  */
 public class AccountStatementActivity {
     // Fields used for the page viewer
-    private Activity mRootActivity = null;
+    private AccountActivity mRootActivity = null;
     private View mAccountView = null;
 
     private AccountDAO mDao = null;
@@ -50,12 +49,19 @@ public class AccountStatementActivity {
     private Button mPeriodNumberButton = null;
     private Spinner mPeriodTypeSpinner = null;
     private TextView mStatementValueView = null;
+
     private LineChart mLineChart = null;
+    private LinearLayout mLineChartInfo = null;
+    private TextView mSelectedCreditValueText, mSelectedExpenseValueText, mSelectedDateText;
+
     private TextView mMeanExpenseView = null;
     private TextView mMeanCreditView = null;
     private TextView mLastExpenseView = null;
     private TextView mLastCreditView = null;
     private CheckBox mCumulativeCheckbox = null;
+
+    private List<Entry> mExpenseEntries, mCreditEntries;
+    private IAxisValueFormatter xAxisValueFormatter;
 
     /**
      * @return The created view to use in the page viewer.
@@ -68,7 +74,7 @@ public class AccountStatementActivity {
      * Instantiate all elements needed and update the account view with transactions' history.
      * @param rootActivity The activity containing the page viewer.
      */
-    public void onCreate(Activity rootActivity, AccountDAO dao) {
+    public void onCreate(AccountActivity rootActivity, AccountDAO dao) {
         mRootActivity = rootActivity;
         mDao = dao;
         mAccountView = mRootActivity.getLayoutInflater().inflate(R.layout.account_statement, null);
@@ -77,11 +83,16 @@ public class AccountStatementActivity {
         mPeriodTypeSpinner = (Spinner) mAccountView.findViewById(R.id.period_type_spinner);
         mStatementValueView = (TextView) mAccountView.findViewById(R.id.statement_value);
         mLineChart = (LineChart) mAccountView.findViewById(R.id.line_chart);
+        mLineChartInfo = (LinearLayout) mAccountView.findViewById(R.id.line_chart_info);
+        mSelectedCreditValueText = (TextView) mAccountView.findViewById(R.id.selected_credit_value_text);
+        mSelectedExpenseValueText = (TextView) mAccountView.findViewById(R.id.selected_expense_value_text);
+        mSelectedDateText = (TextView) mAccountView.findViewById(R.id.selected_date_text);
         mMeanExpenseView = (TextView) mAccountView.findViewById(R.id.mean_expense);
         mMeanCreditView = (TextView) mAccountView.findViewById(R.id.mean_credit);
         mLastExpenseView = (TextView) mAccountView.findViewById(R.id.last_expense);
         mLastCreditView = (TextView) mAccountView.findViewById(R.id.last_credit);
         mCumulativeCheckbox = (CheckBox) mAccountView.findViewById(R.id.cumulative_checkbox);
+        mCumulativeCheckbox.setVisibility(View.GONE);
 
         // Add listener in the activity
         mPeriodNumberButton.setText("31");
@@ -123,8 +134,16 @@ public class AccountStatementActivity {
         mLineChart.getDescription().setEnabled(false);
         mLineChart.setOnClickListener(null);
         mLineChart.setOnChartGestureListener(null);
-        mLineChart.setOnChartValueSelectedListener(null);
+        mLineChart.setOnChartValueSelectedListener(onChartValueSelectedListener);
         mLineChart.setOnHoverListener(null);
+
+        // Add to types listeners the update the pie chart on type selection
+        mRootActivity.onTypesUpdatedListeners.add(new Runnable() {
+            @Override
+            public void run() {
+                updateView();
+            }
+        });
     }
 
     /**
@@ -180,7 +199,6 @@ public class AccountStatementActivity {
     private void computeStatements() {
         int[] creditStatements = null;
         int[] expenseStatements = null;
-        IAxisValueFormatter xAxisValueFormatter = null;
         Resources resources = mRootActivity.getResources();
         // Compute financial statement depending on the the selected information
         int periodNumber = Integer.valueOf(mPeriodNumberButton.getText().toString());
@@ -188,10 +206,11 @@ public class AccountStatementActivity {
         String selectedPeriodType = mPeriodTypeSpinner.getSelectedItem().toString();
         String[] periodTypes = resources.getStringArray(R.array.dayMonthYear);
         final Date now = new Date();
+        String selectedTypes = mRootActivity.buildInClauseFromSelectedTypes();
         // If DAY is selected
         if (selectedPeriodType.equals( periodTypes[0] )) {
-            creditStatements = mDao.getDaysStatement(periodNumber, true);
-            expenseStatements = mDao.getDaysStatement(periodNumber, false);
+            creditStatements = mDao.getDaysStatement(periodNumber, true, selectedTypes);
+            expenseStatements = mDao.getDaysStatement(periodNumber, false, selectedTypes);
             xAxisValueFormatter = new IAxisValueFormatter() {
                 private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM", Locale.FRANCE);
                 private Calendar cal = Calendar.getInstance();
@@ -206,8 +225,8 @@ public class AccountStatementActivity {
         }
         // If MONTH is selected
         else if (selectedPeriodType.equals( periodTypes[1] )) {
-            creditStatements = mDao.getMonthsStatement(periodNumber, true);
-            expenseStatements = mDao.getMonthsStatement(periodNumber, false);
+            creditStatements = mDao.getMonthsStatement(periodNumber, true, selectedTypes);
+            expenseStatements = mDao.getMonthsStatement(periodNumber, false, selectedTypes);
             xAxisValueFormatter = new IAxisValueFormatter() {
                 private SimpleDateFormat dateFormat = new SimpleDateFormat("MMM", Locale.FRANCE);
                 private Calendar cal = Calendar.getInstance();
@@ -222,8 +241,8 @@ public class AccountStatementActivity {
         }
         // If YEAR is selected
         else if (selectedPeriodType.equals( periodTypes[2] )) {
-            creditStatements = mDao.getYearsStatement(periodNumber, true);
-            expenseStatements = mDao.getYearsStatement(periodNumber, false);
+            creditStatements = mDao.getYearsStatement(periodNumber, true, selectedTypes);
+            expenseStatements = mDao.getYearsStatement(periodNumber, false, selectedTypes);
             xAxisValueFormatter = new IAxisValueFormatter() {
                 private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy", Locale.FRANCE);
                 private Calendar cal = Calendar.getInstance();
@@ -238,35 +257,31 @@ public class AccountStatementActivity {
         }
 
         // Creates entries dataset and compute the final statement over the period
-        List<Entry> creditEntries = new ArrayList<>();
-        List<Entry> expenseEntries = new ArrayList<>();
+        mCreditEntries = new ArrayList<>();
+        mExpenseEntries = new ArrayList<>();
         int cumulativeCredits = 0;
         int cumulativeExpenses = 0;
         for (int i = 0; i < periodNumber; ++i) {
             boolean isFirstOrLast = i == 0 || i == periodNumber - 1;
             // Add a new entry only if the statement is not zero for intermediate values
-            if (creditStatements[i] != 0 || isFirstOrLast) {
-                cumulativeCredits += creditStatements[i];
-                if (isCumulative)
-                    creditEntries.add(new Entry(i + 1 - periodNumber, cumulativeCredits / 100.0f));
-                else
-                    creditEntries.add(new Entry(i + 1 - periodNumber, creditStatements[i] / 100.0f));
+            cumulativeCredits += creditStatements[i];
+            cumulativeExpenses += expenseStatements[i];
+            if (isCumulative) {
+                mCreditEntries.add(new Entry(i + 1 - periodNumber, cumulativeCredits / 100.0f));
+                mExpenseEntries.add(new Entry(i + 1 - periodNumber, cumulativeExpenses / 100.0f));
             }
-            if (expenseStatements[i] != 0 || isFirstOrLast) {
-                cumulativeExpenses += expenseStatements[i];
-                if (isCumulative)
-                    expenseEntries.add(new Entry(i + 1 - periodNumber, cumulativeExpenses / 100.0f));
-                else
-                    expenseEntries.add(new Entry(i + 1 - periodNumber, expenseStatements[i] / 100.0f));
+            else {
+                mCreditEntries.add(new Entry(i + 1 - periodNumber, creditStatements[i] / 100.0f));
+                mExpenseEntries.add(new Entry(i + 1 - periodNumber, expenseStatements[i] / 100.0f));
             }
         }
         // Update lines of the line chart
-        LineDataSet creditDataset = new LineDataSet(creditEntries,
+        LineDataSet creditDataset = new LineDataSet(mCreditEntries,
                 resources.getString(isCumulative ? R.string.cumulative_credits : R.string.credits));
         creditDataset.setColor(ContextCompat.getColor(mRootActivity, R.color.green));
         creditDataset.setCircleColor(ContextCompat.getColor(mRootActivity, R.color.green));
         creditDataset.setDrawValues(false);
-        LineDataSet expenseDataset = new LineDataSet(expenseEntries,
+        LineDataSet expenseDataset = new LineDataSet(mExpenseEntries,
                 resources.getString(isCumulative ? R.string.cumulative_expenses : R.string.expenses));
         expenseDataset.setColor(ContextCompat.getColor(mRootActivity, R.color.red));
         expenseDataset.setCircleColor(ContextCompat.getColor(mRootActivity, R.color.red));
@@ -280,6 +295,7 @@ public class AccountStatementActivity {
         xAxis.setGranularity(1);
         xAxis.setValueFormatter(xAxisValueFormatter);
         mLineChart.invalidate();
+        onChartValueSelectedListener.onNothingSelected();
 
         // Update the final statement over the selected period
         int finalStatement = (cumulativeCredits - cumulativeExpenses);
@@ -300,4 +316,25 @@ public class AccountStatementActivity {
         mLastExpenseView.setText(String.valueOf(expenseStatements[periodNumber - 1] / 100.0f) + "€");
         mLastCreditView.setText(String.valueOf(creditStatements[periodNumber - 1] / 100.0f) + "€");
     }
+
+    /**
+     * Listener on value selected on line chart.
+     */
+    private OnChartValueSelectedListener onChartValueSelectedListener = new OnChartValueSelectedListener() {
+        @Override
+        public void onValueSelected(Entry e, Highlight h) {
+            mLineChartInfo.setVisibility(View.VISIBLE);
+            int entryIndex = mCreditEntries.indexOf(e);
+            if (entryIndex < 0)
+                entryIndex = mExpenseEntries.indexOf(e);
+            mSelectedCreditValueText.setText(String.valueOf(mCreditEntries.get(entryIndex).getY()) + "€");
+            mSelectedExpenseValueText.setText(String.valueOf(mExpenseEntries.get(entryIndex).getY()) + "€");
+            mSelectedDateText.setText(xAxisValueFormatter.getFormattedValue(e.getX(), null));
+        }
+
+        @Override
+        public void onNothingSelected() {
+            mLineChartInfo.setVisibility(View.INVISIBLE);
+        }
+    };
 }

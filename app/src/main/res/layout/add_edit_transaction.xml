@@ -31,7 +31,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/radio_group"
-        android:background="@android:color/transparent">
+        android:background="@android:color/transparent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="5dp">
 
     </Spinner>
 
@@ -69,7 +72,8 @@
         android:layout_height="wrap_content"
         android:datePickerMode="spinner"
         android:calendarViewShown="false"
-        android:layout_below="@id/price_layout">
+        android:layout_below="@id/price_layout"
+        android:layout_centerHorizontal="true">
 
     </DatePicker>
 
@@ -79,13 +83,15 @@
         android:layout_height="wrap_content"
         android:text="@string/comment"
         android:layout_below="@id/date"
-        android:textSize="16sp"/>
+        android:textSize="16sp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginStart="5dp"/>
 
     <EditText
         android:id="@+id/comment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxLength="50"
-        android:layout_below="@id/comment_label"/>
+        android:layout_below="@id/comment_label" />
 
 </RelativeLayout>
