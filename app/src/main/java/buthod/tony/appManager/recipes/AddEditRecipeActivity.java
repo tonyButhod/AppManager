@@ -244,7 +244,8 @@ public class AddEditRecipeActivity extends RootActivity {
      */
     private void fillActivityWithRecipe(RecipesDAO.Recipe recipe) {
         mRecipeName.setText(recipe.name);
-        mRecipeTypeSpinner.setSelection(recipe.type);
+        if (recipe.type != -1)
+            mRecipeTypeSpinner.setSelection(recipe.type);
         mDifficultySeekBar.setProgress(recipe.difficulty - 1);
         mGradeSeekBar.setProgress(recipe.grade - 1);
         mTimeEdit.setText(String.valueOf(recipe.time));

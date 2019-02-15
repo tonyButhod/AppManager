@@ -100,9 +100,9 @@ public class ShoppingActivity extends RootActivity {
             if ((conversionsFound = conversions.get(ingredient.idIngredient, null)) != null
                     && conversionsFound.conversions.size() > 0) {
                 ingredientView.setConversion(this, conversionsFound.conversions);
-                mQuantitiesLayout.addView(ingredientView.getView());
-                mIngredients.add(ingredientView);
             }
+            mQuantitiesLayout.addView(ingredientView.getView());
+            mIngredients.add(ingredientView);
         }
     }
 
