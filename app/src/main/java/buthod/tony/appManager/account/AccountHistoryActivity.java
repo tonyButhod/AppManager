@@ -1,8 +1,8 @@
 package buthod.tony.appManager.account;
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.annotation.StringRes;
 import android.widget.PopupMenu;
@@ -12,9 +12,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
@@ -25,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,6 +34,7 @@ import buthod.tony.appManager.utils.CustomAlertDialog;
 import buthod.tony.appManager.R;
 import buthod.tony.appManager.database.AccountDAO;
 import buthod.tony.appManager.utils.CustomSpinnerAdapter;
+import buthod.tony.appManager.utils.Utils;
 
 /**
  * Class used in AccountActivity to display the history of all transactions in a page viewer.
@@ -59,8 +59,6 @@ public class AccountHistoryActivity {
     private Date mLastTransactionDate = null;
     private long mLastTransactionId = -1;
 
-    private SimpleDateFormat mDateFormatter = null;
-
     /**
      * @return The created view to use in the page viewer.
      */
@@ -84,7 +82,6 @@ public class AccountHistoryActivity {
         mAddTransaction = (ImageButton) mAccountView.findViewById(R.id.add_transaction);
         mTransactionsLayout = (LinearLayout) mAccountView.findViewById(R.id.transactions_layout);
         mAppendTransactions = (Button) mAccountView.findViewById(R.id.append_transactions_button);
-        mDateFormatter = new SimpleDateFormat("dd-MM-yyyy", Locale.FRANCE);
 
         // Add type of expenses and credits
         mExpenseTypes = new CustomSpinnerAdapter(mRootActivity,
@@ -183,17 +180,8 @@ public class AccountHistoryActivity {
      */
     private void addTransactionToLayout(final AccountDAO.TransactionInfo trans) {
         // Display information about the expense/credit
-        TextView transactionView = new TextView(mRootActivity);
-        transactionView.setText( formatTransactionText(trans) );
-        transactionView.setTextSize(12f);
-        if (trans.type < 0) {
-            transactionView.setTextColor(mRes.getColor(R.color.dark_soft_green));
-            transactionView.setBackground(mRes.getDrawable(R.drawable.credit_background));
-        }
-        else {
-            transactionView.setTextColor(mRes.getColor(R.color.dark_soft_red));
-            transactionView.setBackground(mRes.getDrawable(R.drawable.expense_background));
-        }
+        View transactionView = mRootActivity.getLayoutInflater().inflate(R.layout.transaction_view, null);
+        setTransactionViewContent(transactionView, trans);
         // Add a long click event to delete the transaction
         transactionView.setTag(trans.id);
         transactionView.setOnLongClickListener(mTransactionOnLongClick);
@@ -203,7 +191,7 @@ public class AccountHistoryActivity {
 
     private View.OnLongClickListener mTransactionOnLongClick = new View.OnLongClickListener() {
         @Override
-        public boolean onLongClick(View v) {
+        public boolean onLongClick(final View v) {
             final long id = (long) v.getTag();
             // Set the view as selected
             v.setSelected(true);
@@ -212,20 +200,19 @@ public class AccountHistoryActivity {
             final PopupMenu popup = new PopupMenu(mRootActivity, v);
             popup.inflate(R.menu.transaction_menu);
             // Registering clicks on the popup menu
-            final TextView currentView = (TextView) v;
             popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     popup.dismiss();
                     switch(item.getItemId()) {
                         case R.id.modify:
-                            modifyTransactionDialog(id, currentView);
+                            modifyTransactionDialog(id, v);
                             break;
                         case R.id.duplicate:
                             duplicateTransactionDialog(id);
                             break;
                         case R.id.delete:
-                            deleteTransactionDialog(id, currentView);
+                            deleteTransactionDialog(id, v);
                             break;
                     }
                     return true;
@@ -235,7 +222,7 @@ public class AccountHistoryActivity {
                 @Override
                 public void onDismiss(PopupMenu menu) {
                     // Deselect the view
-                    currentView.setSelected(false);
+                    v.setSelected(false);
                 }
             });
             popup.show();
@@ -244,39 +231,43 @@ public class AccountHistoryActivity {
     };
 
     /**
-     * Update a transaction view. It updates its text and color.
+     * Set transaction view content.
+     * @param view The transaction view.
+     * @param trans The transaction information.
      */
-    private void updateTransactionView(TextView view, AccountDAO.TransactionInfo transaction) {
-        view.setText(formatTransactionText(transaction));
-        if (transaction.type < 0) {
-            view.setTextColor(mRes.getColor(R.color.dark_soft_green));
-            view.setBackground(mRes.getDrawable(R.drawable.credit_background));
-        }
-        else {
-            view.setTextColor(mRes.getColor(R.color.dark_soft_red));
-            view.setBackground(mRes.getDrawable(R.drawable.expense_background));
-        }
-    }
-
-    /**
-     * Format a transaction as a text easily readable.
-     * @param trans The transaction data.
-     * @return The string resuming the transaction.
-     */
-    private String formatTransactionText(AccountDAO.TransactionInfo trans) {
-        String resumeText = "";
-        resumeText += mDateFormatter.format(trans.date) + " :    ";
-        resumeText += (trans.price / 100.0f) + "€    ";
+    private void setTransactionViewContent(View view, AccountDAO.TransactionInfo trans) {
+        TextView dayView = (TextView) view.findViewById(R.id.date_day);
+        TextView monthView = (TextView) view.findViewById(R.id.date_month);
+        TextView yearView = (TextView) view.findViewById(R.id.date_year);
+        TextView typeView = (TextView) view.findViewById(R.id.type);
+        TextView commentView = (TextView) view.findViewById(R.id.comment);
+        TextView priceView = (TextView) view.findViewById(R.id.price);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
+        String[] dateString = sdf.format(trans.date).split("-");
+        dayView.setText(dateString[0]);
+        monthView.setText(dateString[1]);
+        yearView.setText(dateString[2]);
+        typeView.setText(trans.type < 0 ?
+                mCreditTypes.getItem( - trans.type - 1) : mExpenseTypes.getItem(trans.type));
+        commentView.setText(trans.comment);
+        priceView.setText(Utils.floatToString(trans.price / 100f, 2) + "€");
+        int textColor;
+        Drawable background;
         if (trans.type < 0) {
-            // It is a credit
-            resumeText += "--- " + mCreditTypes.getItem(- trans.type - 1);
+            textColor  = mRes.getColor(R.color.dark_soft_green);
+            background = mRes.getDrawable(R.drawable.credit_background);
         }
         else {
-            // It is an expense
-            resumeText += "--- " + mExpenseTypes.getItem(trans.type);
+            textColor  = mRes.getColor(R.color.dark_soft_red);
+            background = mRes.getDrawable(R.drawable.expense_background);
         }
-        resumeText += "\n   " + trans.comment;
-        return resumeText;
+        view.setBackground(background);
+        dayView.setTextColor(textColor);
+        monthView.setTextColor(textColor);
+        yearView.setTextColor(textColor);
+        typeView.setTextColor(textColor);
+        commentView.setTextColor(textColor);
+        priceView.setTextColor(textColor);
     }
 
     /**
@@ -433,13 +424,13 @@ public class AccountHistoryActivity {
      * @param transactionId The transaction id to modify.
      * @param transactionView The transaction view to modify.
      */
-    private void modifyTransactionDialog(final long transactionId, final TextView transactionView) {
+    private void modifyTransactionDialog(final long transactionId, final View transactionView) {
         showTransactionDialog(R.string.modify_transaction, mDao.getTransaction(transactionId),
                 new TransactionCallback() {
                     @Override
                     public void onPositiveResult(AccountDAO.TransactionInfo editedTransaction) {
                         mDao.modifyTransaction(editedTransaction);
-                        updateTransactionView(transactionView, editedTransaction);
+                        setTransactionViewContent(transactionView, editedTransaction);
                     }
 
                     @Override

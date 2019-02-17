@@ -6,11 +6,6 @@
                 <shape>
                     <solid
                         android:color="@color/soft_green" />
-                    <padding
-                        android:bottom="10dp"
-                        android:left="10dp"
-                        android:right="10dp"
-                        android:top="10dp"/>
                 </shape>
             </item>
         </layer-list>
@@ -21,11 +16,6 @@
                 <shape>
                     <solid
                         android:color="@color/soft_green" />
-                    <padding
-                        android:bottom="10dp"
-                        android:left="10dp"
-                        android:right="10dp"
-                        android:top="10dp"/>
                 </shape>
             </item>
         </layer-list>
@@ -36,11 +26,6 @@
                 <shape>
                     <solid
                         android:color="@color/light_soft_green" />
-                    <padding
-                        android:bottom="10dp"
-                        android:left="10dp"
-                        android:right="10dp"
-                        android:top="10dp"/>
                 </shape>
             </item>
         </layer-list>
