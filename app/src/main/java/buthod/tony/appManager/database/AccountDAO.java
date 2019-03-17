@@ -90,13 +90,7 @@ public class AccountDAO extends DAOBase {
             long id = c.getInt(0);
             int type = c.getInt(1);
             int price = c.getInt(2);
-            Date date = null;
-            try {
-                date = mDateFormatter.parse(c.getString(3));
-            }
-            catch (ParseException e) {
-                e.fillInStackTrace();
-            }
+            Date date = Utils.parseDate(mDateFormatter, c.getString(3));
             String comment = c.getString(4);
             c.close();
             return new TransactionInfo(id, type, price, date, comment);

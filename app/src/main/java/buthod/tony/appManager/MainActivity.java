@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 
 import buthod.tony.appManager.account.AccountActivity;
+import buthod.tony.appManager.checkList.CheckListGroupsActivity;
 import buthod.tony.appManager.pedometer.PedometerActivity;
 import buthod.tony.appManager.pedometer.PedometerManager;
 import buthod.tony.appManager.recipes.RecipesActivity;
@@ -102,6 +103,15 @@ public class MainActivity extends RootActivity {
             public void onClick(View v) {
                 Intent recipesIntent = new Intent(getBaseContext(), RecipesActivity.class);
                 startActivity(recipesIntent);
+            }
+        });
+
+        //////////////// Check list /////////////////
+        findViewById(R.id.check_lists_section).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent checkListsIntent = new Intent(getBaseContext(), CheckListGroupsActivity.class);
+                startActivity(checkListsIntent);
             }
         });
     }

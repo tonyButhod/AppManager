@@ -70,6 +70,16 @@
             android:label="@string/recipes_section_label"
             android:screenOrientation="portrait">
         </activity>
+        <activity
+            android:name="buthod.tony.appManager.checkList.CheckListGroupsActivity"
+            android:label="@string/check_lists_section_label"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name="buthod.tony.appManager.checkList.CheckListElementsActivity"
+            android:label="@string/check_lists_section_label"
+            android:screenOrientation="portrait">
+        </activity>
     </application>
 
 </manifest>

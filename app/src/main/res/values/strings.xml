@@ -128,6 +128,10 @@
     <string name="conversion_unit_error">Veuillez spécifier les unités de conversion.</string>
     <string name="conversion_already_exists_error">Une conversion du même genre existe déjà.</string>
 
+    <!-- Check lists -->
+    <string name="check_lists_section_label">Check lists</string>
+    <string name="restore_group_confirmation">Tous les éléments vont être décochés, voulez vous continuer ?</string>
+
     <!-- Settings -->
     <string name="step_counter_on_start">Launch step counter on start</string>
     <string name="save_data">Save data to external storage</string>
@@ -151,6 +155,7 @@
     <string name="apply">Appliquer</string>
     <string name="search">Rechercher</string>
     <string name="save">Sauvegarder</string>
+    <string name="title">Titre</string>
     <string name="data_saved_success">Données sauvegardées sur stockage externe</string>
     <string name="data_saved_error">Erreur lors de la sauvegarde des données sur stockage externe</string>
     <string name="data_loaded_success">Données chargées depuis stockage externe</string>

@@ -160,6 +160,42 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     //endregion
 
+    //region CHECK LIST
+
+    public static final int CheckListTitleLength = 32;
+    public static final String
+            CHECK_LIST_GROUP_TABLE_NAME = "CheckListGroup",
+            CHECK_LIST_GROUP_KEY = "id",
+            CHECK_LIST_GROUP_TITLE = "title",
+            CHECK_LIST_GROUP_DATE = "date",
+            CHECK_LIST_GROUP_STATE = "state",
+            CHECK_LIST_GROUP_TABLE_CREATE =
+                    "Create Table " + CHECK_LIST_GROUP_TABLE_NAME + " (" +
+                            CHECK_LIST_GROUP_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            CHECK_LIST_GROUP_TITLE + " VARCHAR(" + CheckListTitleLength + "), " +
+                            CHECK_LIST_GROUP_DATE + " DATE, " +
+                            CHECK_LIST_GROUP_STATE + " INTEGER);",
+            CHECK_LIST_GROUP_TABLE_DROP =
+                    "Drop Table If Exists " + CHECK_LIST_GROUP_TABLE_NAME + ";";
+
+    public static final int CheckListElementNameLength = 64;
+    public static final String
+            CHECK_LIST_ELEMENT_TABLE_NAME = "CheckListElement",
+            CHECK_LIST_ELEMENT_KEY = "id",
+            CHECK_LIST_ELEMENT_NAME = "name",
+            CHECK_LIST_ELEMENT_GROUP = "group_from",
+            CHECK_LIST_ELEMENT_STATE = "state",
+            CHECK_LIST_ELEMENT_TABLE_CREATE =
+                    "Create Table " + CHECK_LIST_ELEMENT_TABLE_NAME + " (" +
+                            CHECK_LIST_ELEMENT_KEY + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                            CHECK_LIST_ELEMENT_NAME + " VARCHAR(" + CheckListElementNameLength + "), " +
+                            CHECK_LIST_ELEMENT_GROUP + " INTEGER, " +
+                            CHECK_LIST_ELEMENT_STATE + " INTEGER);",
+            CHECK_LIST_ELEMENT_TABLE_DROP =
+                    "Drop Table If Exists " + CHECK_LIST_GROUP_TABLE_NAME + ";";
+
+    //endregion
+
     public DatabaseHandler(Context context, String name, SQLiteDatabase.CursorFactory factory,
                            int version) {
         super(context, name, factory, version);
@@ -174,6 +210,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(STEPS_TABLE_CREATE);
         db.execSQL(RECIPES_TABLE_CREATE);
         db.execSQL(RECIPES_SEPARATION_TABLE_CREATE);
+        db.execSQL(CHECK_LIST_GROUP_TABLE_CREATE);
+        db.execSQL(CHECK_LIST_ELEMENT_TABLE_CREATE);
     }
 
     @Override
@@ -196,6 +234,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         }
         if (oldVersion < 4) {
             db.execSQL(RECIPES_CONVERSIONS_TABLE_CREATE);
+        }
+        if (oldVersion < 5) {
+            db.execSQL(CHECK_LIST_GROUP_TABLE_CREATE);
+            db.execSQL(CHECK_LIST_ELEMENT_TABLE_CREATE);
         }
     }
 }

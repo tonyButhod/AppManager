@@ -19,6 +19,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import buthod.tony.appManager.R;
 
@@ -84,6 +87,20 @@ public class Utils {
             result = defaultValue;
         }
         return result;
+    }
+
+    /**
+     * Parse a string to date with exception handled. Returns null in case of error.
+     */
+    public static Date parseDate(SimpleDateFormat formatter, String s) {
+        Date date = null;
+        try {
+            date = formatter.parse(s);
+        }
+        catch (ParseException e) {
+            e.fillInStackTrace();
+        }
+        return date;
     }
 
     //endregion
