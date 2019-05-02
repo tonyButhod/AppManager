@@ -9,8 +9,7 @@
     <string name="foot_steps_label">Nombre de pas effectués : </string>
     <string name="on">On</string>
     <string name="off">Off</string>
-    <string name="pedometer_section_label">Pedometer</string>
-    <string name="show_graph">Show graph steps</string>
+    <string name="pedometer_section_label">Podomètre</string>
 
     <!-- Account -->
     <string name="account_section_label">Dépenses / Crédits</string>
@@ -133,16 +132,18 @@
     <string name="restore_group_confirmation">Tous les éléments vont être décochés, voulez vous continuer ?</string>
 
     <!-- Settings -->
-    <string name="step_counter_on_start">Launch step counter on start</string>
-    <string name="save_data">Save data to external storage</string>
-    <string name="load_data">Load data from external storage</string>
-    <string name="write_error">Error writing data</string>
-    <string name="read_error">Error reading data</string>
-    <string name="save_data_success">Data saved to external storage</string>
-    <string name="load_data_success">Data loaded from external storage</string>
+    <string name="step_counter_on_start">Lancer le podomère au démarrage</string>
+    <string name="save_data">Sauvegarder sur stockage externe</string>
+    <string name="load_data">Télécharger depuis stockage externe</string>
+    <string name="write_error">Erreur lors de la sauvegarde</string>
+    <string name="read_error">Erreur lors du téléchargement</string>
+    <string name="save_data_success">Données sauvegardées</string>
+    <string name="load_data_success">Données téléchargées</string>
+    <string name="confirm_save_data">Confirmer la sauvergarde sur stockage externe ?</string>
+    <string name="confirm_load_data">Confirmer le téléchargement depuis stockage externe ?</string>
 
     <!-- Main -->
-    <string name="settings">Settings</string>
+    <string name="settings">Paramètres</string>
     <string name="cancel">Annuler</string>
     <string name="add">Ajouter</string>
     <string name="modify">Modifier</string>

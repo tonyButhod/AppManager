@@ -1,8 +1,10 @@
 package buthod.tony.appManager.pedometer;
 
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -30,6 +32,7 @@ import buthod.tony.appManager.RootActivity;
 public class PedometerActivity extends RootActivity {
 
     private ImageButton mBackButton = null;
+    private Button mOnOffButton = null;
     private TextView mStepsView = null;
     private TextView mTapInformation = null;
     private GraphView mGraph = null;
@@ -42,6 +45,7 @@ public class PedometerActivity extends RootActivity {
         setContentView(R.layout.pedometer);
 
         mBackButton = (ImageButton) findViewById(R.id.back_button);
+        mOnOffButton = (Button) findViewById(R.id.on_off_button);
         mStepsView = (TextView) findViewById(R.id.steps);
         mTapInformation = (TextView) findViewById(R.id.tap_information);
         mGraph = (GraphView) findViewById(R.id.graph);
@@ -53,6 +57,31 @@ public class PedometerActivity extends RootActivity {
                 finish();
             }
         });
+        // On / Off
+        final Resources res = getResources();
+        mOnOffButton.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View v) {
+               if (mPedometer.isDetecting()) {
+                    mPedometer.stopDetection();
+                    mOnOffButton.setTextColor(res.getColor(R.color.red));
+                    mOnOffButton.setText(R.string.off);
+               }
+               else {
+                   mPedometer.startDetection();
+                   mOnOffButton.setTextColor(res.getColor(R.color.green));
+                   mOnOffButton.setText(R.string.on);
+               }
+           }
+        });
+        if (mPedometer.isDetecting()) {
+            mOnOffButton.setTextColor(res.getColor(R.color.green));
+            mOnOffButton.setText(R.string.on);
+        }
+        else {
+            mOnOffButton.setTextColor(res.getColor(R.color.red));
+            mOnOffButton.setText(R.string.off);
+        }
         // Update steps view every time new steps are detected
         mPedometer.setOnNewStepsListener(new PedometerManager.OnNewStepsListener() {
             @Override

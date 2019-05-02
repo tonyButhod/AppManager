@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import buthod.tony.appManager.account.AccountActivity;
 import buthod.tony.appManager.database.DAOBase;
 import buthod.tony.appManager.recipes.RecipesActivity;
+import buthod.tony.appManager.utils.Utils;
 
 /**
  * Created by Tony on 06/08/2017.
@@ -36,24 +37,15 @@ public class SettingsActivity extends RootActivity {
 
     protected SharedPreferences mPreferences = null;
 
-    private ImageButton mBackButton = null;
-    private Button mSaveDataButton = null;
-    private Button mLoadDataButton = null; // Button used for development to avoid loosing data
-    private CheckBox mStepCounterOnStart = null;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.settings);
 
         mPreferences = getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
-        mSaveDataButton = (Button) findViewById(R.id.save_data);
-        mLoadDataButton = (Button) findViewById(R.id.load_data); // This button is not displayed by default
-        mBackButton = (ImageButton) findViewById(R.id.back_button);
-        mStepCounterOnStart = (CheckBox) findViewById(R.id.step_counter_on_start);
 
         // Finish the activity if back button is pressed
-        mBackButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.back_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -61,21 +53,34 @@ public class SettingsActivity extends RootActivity {
         });
 
         // Set value depending on preferences
-        mStepCounterOnStart.setChecked(mPreferences.getBoolean(PREF_STEP_COUNTER_ON_START, false));
         // Add different listeners
-        mSaveDataButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.save_data).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DAOBase.saveDataExternalStorage(SettingsActivity.this);
+                Utils.showConfirmDeleteDialog(SettingsActivity.this, R.string.confirm_save_data,
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                DAOBase.saveDataExternalStorage(SettingsActivity.this);
+                            }
+                        });
             }
         });
-        mLoadDataButton.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.load_data).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DAOBase.loadDataExternalStorage(SettingsActivity.this);
+                Utils.showConfirmDeleteDialog(SettingsActivity.this, R.string.confirm_load_data,
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                DAOBase.loadDataExternalStorage(SettingsActivity.this);
+                            }
+                        });
             }
         });
-        mStepCounterOnStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        CheckBox stepCounterOnStart = (CheckBox) findViewById(R.id.step_counter_on_start);
+        stepCounterOnStart.setChecked(mPreferences.getBoolean(PREF_STEP_COUNTER_ON_START, false));
+        stepCounterOnStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 // Save the change in preferences
